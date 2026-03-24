@@ -11,7 +11,7 @@ This repository is used for coursework in CS 4132/5132 at the University of Minn
 
 1. Setup
 - git clone https://github.umn.edu/umdInnovation-sp26/Health-Equity.git
-- cd northequity
+- cd healthequitynorthland
 - npm install
 - npm install pnpm
 - pnpm install firebase
@@ -29,10 +29,10 @@ This repository is used for coursework in CS 4132/5132 at the University of Minn
 ## Links
 
 Firebase
-https://console.firebase.google.com/u/0/project/healthequitynorthlandweb/overview
+- https://console.firebase.google.com/u/0/project/healthequitynorthlandweb/overview
 
 Development Slides
-https://docs.google.com/presentation/d/1Jiv7N0y4LED5oaCVFeyplC6r9KJLDyu_Ra1kaz74sB8/edit?usp=sharing
+- https://docs.google.com/presentation/d/1Jiv7N0y4LED5oaCVFeyplC6r9KJLDyu_Ra1kaz74sB8/edit?usp=sharing
 
 ## License
 This project is licensed under the Apache License 2.0.
