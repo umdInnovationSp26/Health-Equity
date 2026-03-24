@@ -10,14 +10,16 @@ This repository is used for coursework in CS 4132/5132 at the University of Minn
 ## Project Details
 
 1. Setup
+- Install Node.js - https://nodejs.org/en/download (check installation: node -v), v21.2.0
 - git clone https://github.umn.edu/umdInnovation-sp26/Health-Equity.git
 - cd healthequitynorthland
-- npm install
+- npm install (check installation: npm -v), 10.2.0
 - npm install pnpm
 - pnpm install firebase
 - pnpm install lucide-react
 - pnpm i @vercel/analytics
 - pnpm i @vercel/speed-insights
+- Run localhost: pnpm dev
 
 2. Private Keys
 - Create .env file & input private keys from Firebase
