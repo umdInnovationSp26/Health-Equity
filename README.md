@@ -4,27 +4,27 @@
 This repository is used for coursework in CS 4132/5132 at the University of Minnesota Duluth.
 
 ## Tech Stack
-Next.js (React Framework), Vercel (Website Hosting), Firebase (Authentication & Cloud Firestore)
-TypeScript, HTML, Tailwind CSS
+- Next.js (React Framework), Vercel (Website Hosting), Firebase (Authentication & Cloud Firestore)
+- TypeScript, HTML, Tailwind CSS
 
 ## Project Details
 
 1. Setup
-git clone https://github.umn.edu/umdInnovation-sp26/Health-Equity.git
-cd northequity
-npm install
-npm install pnpm
-pnpm install firebase
-pnpm install lucide-react
-pnpm i @vercel/analytics
-pnpm i @vercel/speed-insights
+- git clone https://github.umn.edu/umdInnovation-sp26/Health-Equity.git
+- cd northequity
+- npm install
+- npm install pnpm
+- pnpm install firebase
+- pnpm install lucide-react
+- pnpm i @vercel/analytics
+- pnpm i @vercel/speed-insights
 
 2. Private Keys
-Create .env file & input private keys from Firebase
+- Create .env file & input private keys from Firebase
 
 3. Development
-Switch branch, example: dev-owen
-Merge branch to main
+- Switch branch, example: dev-owen
+-Merge branch to main
 
 ## Links
 
