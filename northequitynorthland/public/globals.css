@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+:root {
+  --background: #000000;
+  --foreground: #ffffff;
+
+  --colorAccent: #90c1e9;
+}
+
+.font-montserrat-normal {
+  font-family: var(--font-montserrat);
+  font-weight: 400;
+}
+
+.font-montserrat-bold {
+  font-family: var(--font-montserrat);
+  font-weight: 700;
+}
+
+.font-montserrat-extrabold {
+  font-family: var(--font-montserrat);
+  font-weight: 800;
+}
+
+.font-bagelfatone {
+  font-family: var(--font-bagelfatone);
+  font-weight: 400;
+}
