@@ -29,14 +29,10 @@ export const createOrUpdateUserDoc = async (user: any) => {
       email: user.email,
       displayName: user.displayName || user.email?.split("@")[0],
       darkMode: false,
-      boughtSub1: false,
       emailVerified: user.emailVerified,
       createdAt: serverTimestamp(),
-      liked: [],
-      disliked: [],
       avatar: "",
       title: "",
-      status: "Deactivated",
     });
   } else {
     await updateDoc(userDocRef, {
