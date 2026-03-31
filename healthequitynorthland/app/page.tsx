@@ -29,6 +29,10 @@ export default function LandingPage() {
               <div className="text-gray-500 text-2xl font-normal leading-tight">
                 Manage your events, check-ins, and produce all in one place
               </div>
+              <button
+                className="cursor-pointer hover:scale-105 transition w-full bg-[var(--colorAccent)] text-white py-3 rounded-full">
+                  Events
+              </button>
             </div>
           </div>
 
