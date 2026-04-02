@@ -73,7 +73,7 @@ export default function SignUpPage() {
   return (
     <main className="text-black bg-white relative min-h-[100dvh] w-full flex items-center justify-center text-center">
       <Navbar />
-      <div className="relative z-10 w-[90%] max-w-2xl rounded-4xl p-10">
+      <div className="bg-white border-3 border-gray-200 rounded-xl relative z-10 w-[90%] max-w-xl p-10">
         <h1 className="text-6xl md:text-8xl font-extrabold mb-6 md:mb-12 tracking-tight">
           Sign Up
         </h1>
@@ -85,7 +85,7 @@ export default function SignUpPage() {
             value={email}
             disabled={loading}
             onChange={(e) => setEmail(e.target.value.trim())}
-            className="bg-black border-3 border-white w-full rounded-full px-6 py-3 text-white placeholder-gray-400 outline-none transition"
+            className="bg-white border-3 border-gray-200 w-full rounded-xl px-6 py-3 text-black placeholder-gray-400 outline-none transition"
           />
 
           {/* Password */}
@@ -96,12 +96,12 @@ export default function SignUpPage() {
               value={password}
               disabled={loading}
               onChange={(e) => setPassword(e.target.value)}
-              className="bg-black border-3 border-white w-full rounded-full px-6 py-3 text-white placeholder-gray-400 outline-none transition"
+              className="bg-white border-3 border-gray-200 w-full rounded-xl px-6 py-3 text-black placeholder-gray-400 outline-none transition"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-white font-bold cursor-pointer"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-black font-bold cursor-pointer"
             >
               {showPassword ? "Hide" : "Show"}
             </button>
@@ -115,12 +115,12 @@ export default function SignUpPage() {
               value={confirmPassword}
               disabled={loading}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="bg-black border-3 border-white w-full rounded-full px-6 py-3 text-black placeholder-gray-400 outline-none transition"
+              className="bg-white border-3 border-gray-200 w-full rounded-xl px-6 py-3 text-black placeholder-gray-400 outline-none transition"
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-white font-bold cursor-pointer"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-black font-bold cursor-pointer"
             >
               {showConfirmPassword ? "Hide" : "Show"}
             </button>
@@ -135,7 +135,7 @@ export default function SignUpPage() {
           <button
             onClick={handleEmailSignUp}
             disabled={loading}
-            className="cursor-pointer hover:scale-105 transition w-full bg-[var(--colorAccent)] text-white py-3 rounded-full"
+            className="text-lg font-bold bg-black text-white hover:scale-105 cursor-pointer transition w-full py-3 rounded-xl active:scale-95 flex items-center justify-center gap-2"
           >
             {loading ? "Creating account..." : "Create Account"}
           </button>
@@ -143,7 +143,7 @@ export default function SignUpPage() {
           <button
             onClick={handleGoogleSignUp}
             disabled={loading}
-            className="bg-[var(--colorAccent)] text-white hover:scale-105 cursor-pointer w-full rounded-full py-3 active:scale-95 transition flex items-center justify-center gap-2"
+            className="text-lg font-bold bg-black text-white hover:scale-105 cursor-pointer transition w-full py-3 rounded-xl active:scale-95 flex items-center justify-center gap-2"
           >
             <svg
               className="w-5 h-5"
@@ -159,12 +159,14 @@ export default function SignUpPage() {
             </svg>
             {loading ? "Please wait..." : "Sign Up with Google"}
           </button>
+        </div>
 
+        <div className="mt-6 text-center text-md">
           <Link
             href="/signin"
-            className="text-black hover:underline text-md cursor-pointer"
+            className="text-black hover:underline cursor-pointer"
           >
-            Already have an account?
+             Already have an account? | Sign In
           </Link>
         </div>
       </div>
