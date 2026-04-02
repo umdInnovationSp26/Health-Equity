@@ -6,6 +6,7 @@ import Footer from "@/app/components/footer";
 import { useEffect, useState } from "react";
 import { auth, db } from "@/app/lib/firebaseClient";
 import { doc, onSnapshot } from "firebase/firestore";
+import Profile from "@/app/components/profile";
 
 export default function ProfilePage() {
   const [themeColor, setThemeColor] = useState<string>("#f8f7ffff");
@@ -35,7 +36,7 @@ export default function ProfilePage() {
     >
       <div className="flex-1">
         <Navbar />
-        <Footer />
+        <Profile />
       </div>
     </div>
   );

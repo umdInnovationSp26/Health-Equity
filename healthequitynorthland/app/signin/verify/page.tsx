@@ -12,10 +12,10 @@ import {
 import { auth, db } from "@/app/lib/firebaseClient";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { Loader } from "lucide-react";
+import Navbar from "@/app/components/navbar";
 
 const ADMIN_BYPASS_EMAILS = [
   "123@gmail.com",
-  "12355@gmail.com",
   "owenmcrandall@gmnail.com",
   // add other admin emails here
 ];
@@ -166,23 +166,24 @@ export default function VerifyPage() {
   // -----------------------
   return (
     <main className="text-black bg-white relative min-h-[100dvh] w-full flex items-center justify-center text-center">
-      <div className="relative z-10 w-[90%] max-w-2xl rounded-3xl p-10">
-        <h1 className="mb-4 text-3xl md:text-6xl font-extrabold tracking-tight">
+      <Navbar />
+      <div className="bg-white border-3 border-gray-200 rounded-xl relative z-10 w-[90%] max-w-xl p-10">
+        <h1 className="mb-4 text-3xl font-extrabold tracking-tight">
           Email Verification
         </h1>
 
         <div className="flex flex-col gap-5">
-          <p className="text-xl md:text-2xl">Signed in as {user.email}</p>
+          <p className="text-xl">Signed in as {user.email}</p>
 
           {/* RESEND BUTTON */}
           <button
             onClick={handleResend}
             disabled={cooldown > 0}
-            className={`hover:scale-105 scursor-pointertransition transition text-xl px-6 py-2 rounded-full text-white
+            className={`hover:scale-105 scursor-pointertransition transition text-xl px-6 py-2 rounded-xl text-white
             ${
               cooldown > 0
                 ? "bg-gray-400 cursor-not-allowed"
-                : "cursor-pointer bg-[var(--colorAccent)] hover:scale-110"
+                : "cursor-pointer bg-black hover:scale-110"
             }`}
           >
             {cooldown > 0
@@ -195,17 +196,11 @@ export default function VerifyPage() {
           {/* REFRESH BUTTON */}
           <button
             onClick={handleRefresh}
-            className="hover:scale-105 cursor-pointer transition text-xl px-6 py-2 rounded-full bg-[var(--colorAccent)] text-white"
+            className="hover:scale-105 cursor-pointer transition text-xl px-6 py-2 rounded-xl bg-black text-white"
           >
             Refresh
           </button>
-          {/* LOGOUT BUTTON */}
-          <button
-            onClick={handleLogout}
-            className="text-black hover:underline text-md cursor-pointer"
-          >
-            Back to Sign In
-          </button>
+          
 
           {/* MESSAGE */}
           {message && (
@@ -215,6 +210,17 @@ export default function VerifyPage() {
             </p>
           )}
         </div>
+
+
+        
+          {/* LOGOUT BUTTON */}
+          <button
+            onClick={handleLogout}
+            className="mt-6 text-black hover:underline text-md cursor-pointer"
+          >
+            Back to Sign In
+          </button>
+
       </div>
     </main>
   );

@@ -64,6 +64,7 @@ export default function Settings() {
           emailVerified: currentUser.emailVerified,
           title: data.title,
           avatar: data.avatar,
+          createdAt: data.createdAt?.toDate(),
         };
 
         setProfile(newProfile);
@@ -114,7 +115,7 @@ export default function Settings() {
         }
       }, 500);
     },
-    [user, originalProfile]
+    [user, originalProfile],
   );
 
   const handleChange = (key: keyof Profile, value: any) => {
@@ -147,7 +148,7 @@ export default function Settings() {
   }, [router, user]);
 
   return (
-    <main className="p-6 max-w-6xl mx-auto space-y-6 overflow-y-auto max-h-[calc(100vh-65px)]">
+    <main className="pt-20 p-6 max-w-3xl mx-auto space-y-6 min-h-screen overflow-y-auto">
       <EditableField
         label="Name"
         value={profile.displayName}
@@ -162,18 +163,25 @@ export default function Settings() {
         change=""
       />
 
+      <Card
+        title="Account Created"
+        value={
+          profile.createdAt ? profile.createdAt.toLocaleDateString() : "N/A"
+        }
+      />
+      
       {/* Sign Out + Delete */}
-      <div className="flex flex-col md:flex-row justify-between gap-4 mt-8">
+      <div className="flex flex-col md:flex-row justify-between gap-4">
         <button
           onClick={handleSignOut}
-          className="text-base cursor-pointer hover:scale-105 bg-white text-black px-6 py-3 transition border border-gray-200"
+          className="text-base cursor-pointer hover:scale-105 bg-white text-black px-6 py-3 transition border-3 border-gray-200"
         >
           Sign Out
         </button>
 
         <button
           onClick={() => setShowDeleteModal(true)}
-          className="text-base cursor-pointer hover:scale-105 bg-white text-black px-6 py-3 transition border border-gray-200"
+          className="text-base cursor-pointer hover:scale-105 bg-white text-black px-6 py-3 transition border-3 border-gray-200"
         >
           Delete Account
         </button>
@@ -200,14 +208,14 @@ function EditableField({
   onChange: (v: string) => void;
 }) {
   return (
-    <div className="bg-white border border-gray-200 p-3">
+    <div className="bg-white border-3 border-gray-200 p-3">
       <h3 className="text-base">{label}</h3>
       <input
         type="text"
         placeholder={`Enter your ${label.toLowerCase()}`}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="border border-gray-200 p-2 mt-2 text-base font-bold focus:outline-none transition"
+        className="border-3 border-gray-200 p-2 mt-2 text-base font-bold focus:outline-none transition"
       />
     </div>
   );
@@ -226,17 +234,16 @@ function DeleteModal({
       <div className="bg-black text-white p-6 w-full max-w-lg space-y-4">
         <h2 className="text-2xl font-bold">Delete Account?</h2>
         <p className="text-lg">All your account data will be deleted.</p>
-        <p className="text-lg">Subscriptions will be deactivated.</p>
         <div className="flex justify-end gap-4 pt-4">
           <button
             onClick={onCancel}
-            className="text-xl cursor-pointer hover:scale-105 bg-white text-black px-6 py-3 text-sm transition border border-gray-200"
+            className="text-xl cursor-pointer hover:scale-105 bg-white text-black px-6 py-3 text-sm transition border-3 border-gray-200"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="text-xl cursor-pointer hover:scale-105 bg-white text-black px-6 py-3 text-sm transition border border-gray-200"
+            className="text-xl cursor-pointer hover:scale-105 bg-white text-black px-6 py-3 text-sm transition border-3 border-gray-200"
           >
             Delete
           </button>

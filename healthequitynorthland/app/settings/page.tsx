@@ -37,7 +37,6 @@ export default function DashboardPage() {
       <div className="flex-1">
         <Navbar />
         <Settings />
-        <Footer />
       </div>
     </div>
   );
