@@ -21,6 +21,9 @@ This repository is used for coursework in CS 4132/5132 at the University of Minn
 - "pnpm i @vercel/speed-insights"
 - Run localhost: "pnpm dev"
 
+New package for logos
+- npm install react-icons
+
 2. Private Keys
 - Create .env file & input private keys from Firebase
 
