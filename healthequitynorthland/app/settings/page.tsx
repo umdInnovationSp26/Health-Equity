@@ -9,7 +9,7 @@ import { doc, onSnapshot } from "firebase/firestore";
 import Settings from "@/app/components/settings";
 
 export default function DashboardPage() {
-  const [themeColor, setThemeColor] = useState<string>("#ffffff");
+  const [themeColor, setThemeColor] = useState<string>("#ffffffff");
 
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged((user) => {
