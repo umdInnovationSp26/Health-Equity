@@ -64,8 +64,8 @@ export default function SignInPage() {
   return (
     <main className="text-black bg-white relative min-h-[100dvh] w-full flex items-center justify-center text-center">
       <Navbar />
-      <div className="bg-black relative z-10 w-[90%] max-w-2xl rounded-xl p-10">
-        <h1 className="text-white text-6xl md:text-8xl font-extrabold mb-6 md:mb-12 tracking-tight">
+      <div className="bg-white border-3 border-gray-200 rounded-xl relative z-10 w-[90%] max-w-xl p-10">
+        <h1 className="text-black text-6xl md:text-8xl font-bold mb-6 md:mb-12">
           Sign In
         </h1>
 
@@ -76,7 +76,7 @@ export default function SignInPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value.trim())}
             disabled={loading}
-            className="bg-black border-3 border-white w-full rounded-full px-6 py-3 text-white placeholder-gray-400 outline-none transition"
+            className="bg-white border-3 border-gray-200 w-full rounded-xl px-6 py-3 text-black placeholder-gray-400 outline-none transition"
           />
 
           <div className="relative">
@@ -86,12 +86,12 @@ export default function SignInPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
-              className="bg-black border-3 border-white w-full rounded-full px-6 py-3 text-white placeholder-gray-400 outline-none transition"
+              className="bg-white border-3 border-gray-200 w-full rounded-xl px-6 py-3 text-black placeholder-gray-400 outline-none transition"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="cursor-pointer absolute right-4 top-1/2 -translate-y-1/2 text-white font-bold "
+              className="cursor-pointer absolute right-4 top-1/2 -translate-y-1/2 text-black font-bold "
             >
               {showPassword ? "Hide" : "Show"}
             </button>
@@ -106,7 +106,7 @@ export default function SignInPage() {
           <button
             onClick={handleEmailSignIn}
             disabled={loading}
-            className="text-lg bg-[var(--colorAccent)] text-white hover:scale-105 cursor-pointer transition w-full py-3 rounded-full"
+            className="text-lg font-bold bg-black text-white hover:scale-105 cursor-pointer transition w-full py-3 rounded-xl"
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
@@ -114,7 +114,7 @@ export default function SignInPage() {
           <button
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="text-lg bg-[var(--colorAccent)] text-white hover:scale-105 cursor-pointer transition w-full py-3 rounded-full active:scale-95 flex items-center justify-center gap-2"
+            className="text-lg font-bold bg-black text-white hover:scale-105 cursor-pointer transition w-full py-3 rounded-xl active:scale-95 flex items-center justify-center gap-2"
           >
             <svg
               className="w-5 h-5"
@@ -130,14 +130,24 @@ export default function SignInPage() {
             </svg>
             {loading ? "Please wait..." : "Sign In with Google"}
           </button>
+        </div>
 
+        <div className="mt-6 text-center text-md">
           <Link
             href="/signin/resetpassword"
-            className="text-white hover:underline text-md cursor-pointer"
+            className="text-black hover:underline cursor-pointer"
           >
             Forgot password?
           </Link>
+          <span className="mx-2">|</span>
+          <Link
+            href="/signup"
+            className="text-black hover:underline cursor-pointer"
+          >
+            Sign Up
+          </Link>
         </div>
+        
       </div>
     </main>
   );
