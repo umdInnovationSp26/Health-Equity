@@ -2,10 +2,14 @@
 import Head from "next/head";
 import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
+import Image from 'next/image'
+import calendar_svg from "@/public/calendar.svg";
+import pin_svg from "@/public/pin.svg";
+import { getEventType } from "@/app/lib/eventTypeUtil";
 
 import { useEffect, useState } from "react";
 import { auth, db } from "@/app/lib/firebaseClient";
-import { doc, collection, query, onSnapshot } from "firebase/firestore";
+import { doc, collection, query, onSnapshot, orderBy } from "firebase/firestore";
 
 interface Event {
   id: string;         
@@ -13,44 +17,76 @@ interface Event {
   description: string;
   category: string;    
   location: string;    
-  date: string;       
+  dateStart: string;
+  dateEnd: string;            
   attendees: number; 
 }  
 
 export default function EventsPage() {
 
   const [searchTerm, setSearchTerm] = useState('');
-  //const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
   // TODO: REMOVE BELOW AND UNCOMMENT ABOVE WHEN DB SET UP
-  const [events, setEvents] = useState<Event[]>([
-    {
-      id: "111",
-      title: "Bingo Night",
-      description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-      category: "Community",
-      location: "Duluth, MN",
-      date: "12-20-2025",
-      attendees: 150
-    } 
-    ]);
+  // const [events, setEvents] = useState<Event[]>([
+  //   {
+  //     id: "111",
+  //     title: "Bingo Night",
+  //     description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+  //     category: "Community",
+  //     location: "Duluth, MN",
+  //     date: "12-20-2025",
+  //     attendees: 150
+  //   } 
+  //   ]);
 
-  // fetch Data from Firestore - TODO UNCOMMENT WHEN DB SET UP
-  // useEffect(() => {
-  //   const q = query(collection(db, "events")); // Assumes a collection named 'events'
-  //   const unsubscribe = onSnapshot(q, (snapshot) => {
-  //     const data = snapshot.docs.map(doc => ({
-  //       id: "111",
-  //       title: "Bingo Night",
-  //       description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-  //       category: "Community",
-  //       location: "Duluth, MN",
-  //       date: "12-20-2025",
-  //       attendees: 150
-  //     } as Event));
-  //     setEvents(data);
-  //   });
-  //   return () => unsubscribe();
-  // }, []);
+  // 2. Fetch and Format Data
+  useEffect(() => {
+    // We order by date so upcoming events appear first
+    const q = query(collection(db, "events"), orderBy("date", "asc"));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(doc => {
+        const docData = doc.data();
+
+        // Convert Firebase Timestamp to a readable string - TODO: Move to a util class
+        const dateStartObj = docData.timestampStart?.toDate ? docData.timestampStart.toDate() : new Date();
+        const formattedStartDate = dateStartObj.toLocaleString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        }).replace(',', ' -');
+
+        const dateEndObj = docData.timestampEnd?.toDate ? docData.timestampEnd.toDate() : new Date();
+        const formattedEndDate = dateEndObj.toLocaleString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        }).replace(',', ' -');
+
+        // Manual mapping to our Event interface
+        return {
+          id: doc.id,
+          title: docData.title || "Unknown",
+          description: docData.description || "",
+          category: getEventType(docData.category),
+          location: docData.location || "TBD",
+          attendees: docData.attendees || 0,
+          dateStart: formattedStartDate,
+          dateEnd: formattedEndDate
+        } as Event;
+      });
+      
+      setEvents(data);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // Filter Logic
   const filteredEvents = (searchTerm == "") ? events : events.filter(event =>
@@ -120,26 +156,28 @@ export default function EventsPage() {
               <p className="text-sm text-gray-500 line-clamp-2">{event.description}</p>
             </div>
 
-            <div className="hidden md:flex flex-col gap-2 text-sm text-gray-600">
+            <div className="flex flex-col gap-2 text-sm text-gray-600">
               <div className="flex items-center gap-2">
-                <img 
-                  src="\public\pin.svg" 
-                  alt="Calendar Icon" 
-                  className="w-5 h-5 text-gray-400" // Styled with Tailwind
+                <Image
+                  src={pin_svg}
+                  width={15}
+                  height={15}
+                  alt="Picture of the author"
                 />
                 {event.location}
               </div>
               <div className="flex items-center gap-2">
-                <img 
-                  src="\public\calendar.svg" 
-                  alt="Calendar Icon" 
-                  className="w-5 h-5 text-gray-400" // Styled with Tailwind
+                <Image
+                  src={calendar_svg}
+                  width={15}
+                  height={15}
+                  alt="Picture of the author"
                 />
-                {event.date}
+                {event.dateStart}
               </div>
             </div>
 
-            <div className="flex items-center gap-8">
+            <div className="hidden md:flex items-center gap-8">
               <div className="flex flex-col items-center justify-center bg-gray-50 rounded-xl p-4 min-w-[120px]">
                 <span className="text-xs text-gray-500 font-medium">Attendees</span>
                 <span className="text-3xl font-bold text-blue-600">{event.attendees}</span>
