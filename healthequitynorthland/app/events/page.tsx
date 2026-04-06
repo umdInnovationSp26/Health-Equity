@@ -42,12 +42,10 @@ export default function EventsPage() {
   // 2. Fetch and Format Data
   useEffect(() => {
     // We order by date so upcoming events appear first
-    const q = query(collection(db, "events"), orderBy("date", "asc"));
-    
+    const q = query(collection(db, "event"), orderBy("timestampStart", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => {
         const docData = doc.data();
-
         // Convert Firebase Timestamp to a readable string - TODO: Move to a util class
         const dateStartObj = docData.timestampStart?.toDate ? docData.timestampStart.toDate() : new Date();
         const formattedStartDate = dateStartObj.toLocaleString('en-US', {
@@ -82,16 +80,24 @@ export default function EventsPage() {
         } as Event;
       });
       
+
+
       setEvents(data);
     });
+
+    
 
     return () => unsubscribe();
   }, []);
 
-  // Filter Logic
-  const filteredEvents = (searchTerm == "") ? events : events.filter(event =>
-    event.title?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+
+  const filteredEvents = events.filter(event => {
+    // If search is empty or just whitespace, show everything
+    if (!searchTerm.trim()) return true;
+    
+    // Check if title includes search term and return the searched list
+    return event.title.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
 
 
@@ -148,7 +154,7 @@ export default function EventsPage() {
             href={`/events/${event.id}`} 
             className="flex items-center justify-between w-full p-6 bg-white border border-gray-200 rounded-xl transition-transform duration-200 hover:scale-[1.01] shadow-sm"
           >
-            <div className="flex flex-col gap-2 max-w-sm">
+            <div className="w-full flex flex-col gap-2 max-w-sm">
               <span className="w-fit px-3 py-1 text-xs font-medium bg-indigo-100 text-indigo-700 rounded-full">
                 {event.category || 'Event'}
               </span>
@@ -188,7 +194,7 @@ export default function EventsPage() {
         ))}
 
         {filteredEvents.length === 0 && (
-          <p className="text-center text-gray-400 mt-10">No events found"</p>
+          <p className="text-center text-gray-400 mt-10">No events found</p>
         )}
       </div>
 
