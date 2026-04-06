@@ -40,7 +40,7 @@ export default function CreateEvent() {
       const combinedStartDateTime = new Date(`${date}T${startTime}`);
       const combinedEndDateTime = new Date(`${date}T${endTime}`);
 
-      await addDoc(collection(db, "events"), {
+      await addDoc(collection(db, "event"), {
         title: name,
         location: location,
         description: description,
