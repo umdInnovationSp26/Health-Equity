@@ -22,8 +22,8 @@ const fontMono = JetBrains_Mono({
 
 //not sure if we need this
 export const metadata: Metadata = {
-  title: "HealthEquityNorthland",
-  description: "HealthEquityNorthland",
+  title: "Health Equity Northland",
+  description: "Health Equity Northland",
 };
 
 export default function RootLayout({
