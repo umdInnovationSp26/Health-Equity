@@ -58,26 +58,25 @@ export default function Navbar() {
         hidden ? "-translate-y-full" : "translate-y-0"
       }`}
     >
-      <div className="flex items-center justify-between h-15 border-b-3 border-gray-200 px-6 md:px-16">
-        <div className="flex items-center gap-8">
+      <div className="flex items-center justify-between h-20 border-b-3 border-gray-100 px-6 md:px-16">
+        {/* Logo */}
+        <Image src="/navbar.webp" alt="Navbar" width={116} height={116} />
+
+        <div className="flex items-center gap-8 text-base">
           <Link href="/" className={linkClass("/")}>
             Home
-          </Link>
-
-          <Link href="/calendar" className={linkClass("/calendar")}>
-            Calendar
           </Link>
 
           <Link href="/events" className={linkClass("/events")}>
             Events
           </Link>
 
-          <Link href="/resources" className={linkClass("/resources")}>
-            Resources
+          <Link href="/produce" className={linkClass("/calendar")}>
+            Produce
           </Link>
 
-          <Link href="/profile" className={linkClass("/profile")}>
-            Profile
+          <Link href="/contacts" className={linkClass("/resources")}>
+            Contacts
           </Link>
         </div>
 
