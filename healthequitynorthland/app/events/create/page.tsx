@@ -4,7 +4,7 @@ import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
 import { useState } from 'react';
 import { auth, db } from "@/app/lib/firebaseClient";
-import { getFirestore, collection, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
 import * as eventTypeUtil from "@/app/lib/eventTypeUtil";
@@ -12,18 +12,18 @@ import * as eventTypeUtil from "@/app/lib/eventTypeUtil";
 
 export default function CreateEvent() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // variable for waiting for db to save data
 
-  const eventTypeList = eventTypeUtil.getEventTypeSelect();
+  const eventTypeList = eventTypeUtil.getEventTypeSelect(); // list of types in int, string format to make html select options easier to create
 
-  const [selectedType, setSelectedType] = useState<number | null>(null);
+  const [selectedType, setSelectedType] = useState<number | null>(null); // var to control which type of event is selected
 
-  // Modern handle using the native FormData API
+  // Submit the form to the db
   async function handleSubmit(event: any) {
     event.preventDefault();
     setLoading(true);
 
-    // Extract values directly from the form elements
+    // get the values
     const formData = new FormData(event.currentTarget);
     const name = formData.get('eventName') as string;
     const date = formData.get('date') as string;
@@ -37,6 +37,7 @@ export default function CreateEvent() {
     const feedbackText = formData.get('eventFeedback') as string;
 
     try {
+      // create date objects from the string data
       const combinedStartDateTime = new Date(`${date}T${startTime}`);
       const combinedEndDateTime = new Date(`${date}T${endTime}`);
 
@@ -44,19 +45,22 @@ export default function CreateEvent() {
         title: name,
         location: location,
         description: description,
-        eventType: Number(type) || -1,
+        eventType: Number(type) || -1, // save the int that correlates with the event type
         attendees: 0,
-        timestampStart: Timestamp.fromDate(combinedStartDateTime),
-        timestampEnd: Timestamp.fromDate(combinedEndDateTime),
+        timestampStart: Timestamp.fromDate(combinedStartDateTime),  // Change dates to firebase's timestamp
+        timestampEnd: Timestamp.fromDate(combinedEndDateTime),  // Change dates to firebase's timestamp
         notes: notes,
         suppliesInformation: suppliesInfo,
         feedbackText: feedbackText
       });
 
-      router.push('/');
+      // Navigate to the events list page
+      router.push('/events');
+
     } catch (error) {
-      console.error(error);
-      alert("Error saving event. Please try again later.");
+      console.error(error); // print out error
+      alert("Error saving event. Please try again later."); // display error popup on page
+
     } finally {
       setLoading(false);
     }
@@ -71,7 +75,7 @@ export default function CreateEvent() {
       </Head>
 
       <Navbar />
-      <div className="min-h-screen pt-20 bg-gray-50 flex justify-center p-4">
+      <div className="min-h-screen pt-25 bg-gray-50 flex justify-center p-4">
         <form onSubmit={handleSubmit} className="w-full max-w-3xl bg-white rounded-2xl shadow-sm border border-gray-100 p-12 space-y-6">
           <h1 className="text-2xl font-bold text-slate-800 text-center mb-10">Edit Event</h1>
 
@@ -122,6 +126,7 @@ export default function CreateEvent() {
             </select>
           </div>
 
+          {/* Outreach and tabling options */}
           {(selectedType == eventTypeUtil.getOutreachId() || selectedType == eventTypeUtil.getTablingId()) && (
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">Supplies Information</label>
@@ -129,6 +134,7 @@ export default function CreateEvent() {
             </div>
           )}
 
+          {/* Outreach only option */}
           {selectedType == eventTypeUtil.getOutreachId() && (
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">Event Feedback</label>
@@ -141,6 +147,7 @@ export default function CreateEvent() {
               <textarea name="notes" rows={2} placeholder="Add any additional notes" className="w-full p-3 bg-gray-100 rounded-lg outline-none" />
             </div>
 
+          {/* Submit button */}
           <div className="pt-6 flex justify-center">
             <button 
               type="submit" 

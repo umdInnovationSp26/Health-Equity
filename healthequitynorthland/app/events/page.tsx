@@ -6,11 +6,13 @@ import Image from 'next/image'
 import calendar_svg from "@/public/calendar.svg";
 import pin_svg from "@/public/pin.svg";
 import { getEventType } from "@/app/lib/eventTypeUtil";
+import { useRouter } from 'next/navigation';
 
 import { useEffect, useState } from "react";
 import { auth, db } from "@/app/lib/firebaseClient";
-import { doc, collection, query, onSnapshot, orderBy } from "firebase/firestore";
+import { collection, query, onSnapshot, orderBy } from "firebase/firestore";
 
+// Define an event. These should match the fields on firebase.
 interface Event {
   id: string;         
   title: string;     
@@ -23,26 +25,18 @@ interface Event {
 }  
 
 export default function EventsPage() {
+  
+  const router = useRouter();
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [events, setEvents] = useState<Event[]>([]);
-  // TODO: REMOVE BELOW AND UNCOMMENT ABOVE WHEN DB SET UP
-  // const [events, setEvents] = useState<Event[]>([
-  //   {
-  //     id: "111",
-  //     title: "Bingo Night",
-  //     description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-  //     category: "Community",
-  //     location: "Duluth, MN",
-  //     date: "12-20-2025",
-  //     attendees: 150
-  //   } 
-  //   ]);
+  const [searchTerm, setSearchTerm] = useState(''); // variable to store the search term 
+  const [events, setEvents] = useState<Event[]>([]); // variable to store the events
 
-  // 2. Fetch and Format Data
+  // Run this on page load and when searchbox is updated
   useEffect(() => {
-    // We order by date so upcoming events appear first
+    // Ordered by date in descending order, so the most future event is on top, and the oldest is on the bottom
     const q = query(collection(db, "event"), orderBy("timestampStart", "desc"));
+
+    // Grab data from the db
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => {
         const docData = doc.data();
@@ -67,7 +61,7 @@ export default function EventsPage() {
           hour12: true
         }).replace(',', ' -');
 
-        // Manual mapping to our Event interface
+        // map grabbed db variables to an event
         return {
           id: doc.id,
           title: docData.title || "Unknown",
@@ -79,23 +73,22 @@ export default function EventsPage() {
           dateEnd: formattedEndDate
         } as Event;
       });
-      
 
-
-      setEvents(data);
+      setEvents(data); // update the event list
     });
-
-    
 
     return () => unsubscribe();
   }, []);
 
 
+  // filter the events on the search term. Will run on load and when the searchbox is updated
   const filteredEvents = events.filter(event => {
     // If search is empty or just whitespace, show everything
-    if (!searchTerm.trim()) return true;
+    if (!searchTerm.trim()) {
+      return true;
+    }
     
-    // Check if title includes search term and return the searched list
+    // Otherwise, check if title includes search term and return the searched list
     return event.title.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
@@ -110,18 +103,18 @@ export default function EventsPage() {
       </Head>
 
       <Navbar />
-      <main className="min-h-screen pt-20">
-        {/* Dark overlay for contrast */}
+      <main className="min-h-screen pt-25">
+        {/* Top bar with search */}
         <div className="grid grid-cols-3 gap-1 border-b-2 border-gray-200 pb-4">
             <div className="content-start px-4">
                 <button className="mx-4">
-                    &lt; 
+                    &lt; {/* Left facing arrow*/}
                 </button>
                 <button className="outline mx-4">
                     By Date
                 </button>
-                <button className="outline mx-4">
-                    Alphabetical
+                <button className="outline mx-4"> {/* TODO: Implement alphabetical sorting */}
+                    Alphabetical 
                 </button>
             </div>
             
@@ -132,71 +125,71 @@ export default function EventsPage() {
                 className="w-full p-4 pl-12 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <span className="absolute left-4 top-4 text-gray-400">&#x1F50E;&#xFE0E;</span>
+              <span className="absolute left-4 top-4 text-gray-400">&#x1F50E;&#xFE0E;</span> {/* Magnifying glass icon */}
             </div>
 
             <div className="content-end">
               <button className="outline mx-4">
-                    View Calendar
+                    View Calendar {/* TODO: Need to connect google calendar */}
                 </button>
-                <button className="outline mx-4">
+                <button  onClick={() => router.push('/events/create')} className="outline mx-4">
                     Add New Event
                 </button>
             </div>
-
         </div>
         
-        {/* Results List */}
-      <div className="flex flex-col gap-4 m-4">
-        {filteredEvents.map((event) => (
-          <a 
-            key={event.id}
-            href={`/events/${event.id}`} 
-            className="flex items-center justify-between w-full p-6 bg-white border border-gray-200 rounded-xl transition-transform duration-200 hover:scale-[1.01] shadow-sm"
-          >
-            <div className="w-full flex flex-col gap-2 max-w-sm">
-              <span className="w-fit px-3 py-1 text-xs font-medium bg-indigo-100 text-indigo-700 rounded-full">
-                {event.category || 'Event'}
-              </span>
-              <h3 className="text-xl font-bold text-slate-800">{event.title}</h3>
-              <p className="text-sm text-gray-500 line-clamp-2">{event.description}</p>
-            </div>
-
-            <div className="flex flex-col gap-2 text-sm text-gray-600">
-              <div className="flex items-center gap-2">
-                <Image
-                  src={pin_svg}
-                  width={15}
-                  height={15}
-                  alt="Picture of the author"
-                />
-                {event.location}
+        {/*Event cards */}
+        <div className="flex flex-col gap-4 m-4">
+          {filteredEvents.map((event) => (
+            <a 
+              key={event.id}
+              href={`/events/${event.id}`} 
+              className="flex items-center justify-between w-full p-6 bg-white border border-gray-200 rounded-xl transition-transform duration-200 hover:scale-[1.01] shadow-sm"
+            >
+              <div className="w-full flex flex-col gap-2 max-w-sm">
+                <span className="w-fit px-3 py-1 text-xs font-medium bg-indigo-100 text-indigo-700 rounded-full">
+                  {event.category}
+                </span>
+                <h3 className="text-xl font-bold text-slate-800">{event.title}</h3>
+                <p className="text-sm text-gray-500 line-clamp-2">{event.description}</p>
               </div>
-              <div className="flex items-center gap-2">
-                <Image
-                  src={calendar_svg}
-                  width={15}
-                  height={15}
-                  alt="Picture of the author"
-                />
-                {event.dateStart}
-              </div>
-            </div>
 
-            <div className="hidden md:flex items-center gap-8">
-              <div className="flex flex-col items-center justify-center bg-gray-50 rounded-xl p-4 min-w-[120px]">
-                <span className="text-xs text-gray-500 font-medium">Attendees</span>
-                <span className="text-3xl font-bold text-blue-600">{event.attendees}</span>
+              <div className="flex flex-col gap-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <Image
+                    src={pin_svg}
+                    width={15}
+                    height={15}
+                    alt="Picture of the author"
+                  />
+                  {event.location}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Image
+                    src={calendar_svg}
+                    width={15}
+                    height={15}
+                    alt="Picture of the author"
+                  />
+                  {event.dateStart}
+                </div>
               </div>
-              <span className="text-gray-400 text-2xl">›</span>
-            </div>
-          </a>
-        ))}
 
-        {filteredEvents.length === 0 && (
-          <p className="text-center text-gray-400 mt-10">No events found</p>
-        )}
-      </div>
+              <div className="hidden md:flex items-center gap-8">
+                <div className="flex flex-col items-center justify-center bg-gray-50 rounded-xl p-4 min-w-[120px]">
+                  <span className="text-xs text-gray-500 font-medium">Attendees</span>
+                  <span className="text-3xl font-bold text-blue-600">{event.attendees}</span>
+                </div>
+                <span className="text-gray-400 text-2xl">›</span>
+              </div>
+            </a>
+          ))}
+
+          {/*If no events, show not found text */}
+          {filteredEvents.length === 0 && (
+            <p className="text-center text-gray-400 mt-10">No events found</p>
+          )}
+        </div>
 
       </main>
 
