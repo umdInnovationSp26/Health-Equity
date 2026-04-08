@@ -2,32 +2,22 @@
 import Head from "next/head";
 import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
+
 import Image from 'next/image'
+import { FaArrowLeft } from "react-icons/fa";
+
 import calendar_svg from "@/public/calendar.svg";
 import pin_svg from "@/public/pin.svg";
-import { getEventType } from "@/app/lib/eventTypeUtil";
 import { useRouter } from 'next/navigation';
-import { convertTimestampToDate } from '@/app/lib/dateTimeUtil';
+import { getDateTimeString } from '@/app/lib/dateTimeUtil';
+import { Event, mapDocToEvent } from '@/app/lib/eventInterface'
 
 import { useEffect, useState } from "react";
 import { auth, db } from "@/app/lib/firebaseClient";
 import { collection, query, onSnapshot, orderBy } from "firebase/firestore";
 
-// Define an event. These should match the fields on firebase.
-interface Event {
-  id: string;         
-  title: string;     
-  description: string;
-  category: string;    
-  location: string;    
-  dateStart: string;
-  dateEnd: string;            
-  attendees: number; 
-  rawTimeStart: number; // used for sorting on this page only
-}  
-
 export default function EventsPage() {
-  
+
   const router = useRouter();
 
   const [searchTerm, setSearchTerm] = useState(''); // variable to store the search term 
@@ -42,26 +32,7 @@ export default function EventsPage() {
 
     // Grab data from the db
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => {
-        const docData = doc.data();
-
-        // Convert Firebase Timestamp to a readable string 
-        const formattedStartDate = convertTimestampToDate(docData.timestampStart);
-        const formattedEndDate = convertTimestampToDate(docData.timestampEnd);
-
-        // map grabbed db variables to an event
-        return {
-          id: doc.id,
-          title: docData.title || "Unknown",
-          description: docData.description || "",
-          category: getEventType(docData.category),
-          location: docData.location || "TBD",
-          attendees: docData.attendees || 0,
-          dateStart: formattedStartDate,
-          dateEnd: formattedEndDate,
-          rawTimeStart: docData.timestampStart?.seconds || Number.MAX_VALUE // used for sorting after grabbing the data
-        } as Event;
-      });
+      const data = snapshot.docs.map(doc => mapDocToEvent(doc.id, doc.data()))
 
       setEvents(data); // update the event list
     });
@@ -76,14 +47,14 @@ export default function EventsPage() {
     if (!searchTerm.trim()) {
       return true;
     }
-    
+
     // Otherwise, check if title includes search term and return the searched list
     return event.title.toLowerCase().includes(searchTerm.toLowerCase());
   }).sort((a, b) => {
-    if(sortBy === "title"){
+    if (sortBy === "title") {
       return a.title.localeCompare(b.title);
     }
-    else if(sortBy === "timestampStart"){
+    else if (sortBy === "timestampStart") {
       return b.rawTimeStart - a.rawTimeStart;
     }
     else {
@@ -102,47 +73,47 @@ export default function EventsPage() {
       </Head>
 
       <Navbar />
-      <main className="min-h-screen pt-25">
+      <main className="min-h-screen">
         {/* Top bar with search */}
-        <div className="grid grid-cols-3 gap-1 border-b-2 border-gray-200 pb-4">
-            <div className="content-start px-4">
-                <button className="mx-4">
-                    &lt; {/* Left facing arrow*/}
-                </button>
-                <button onClick={() => setSortBy("timestampStart")} className="outline mx-4">
-                    By Date
-                </button>
-                <button onClick={() => setSortBy("title")} className="outline mx-4">
-                    Alphabetical 
-                </button>
-            </div>
+        <div className="pt-25 grid grid-cols-3 gap-1 border-b-2 border-gray-200 pb-4 bg-white items-center">
+          <div className="content-start px-4">
+            <button onClick={() => router.push('/')} className="mx-4">
+              <FaArrowLeft />
+            </button>
+            <button onClick={() => setSortBy("timestampStart")} className="outline mx-4">
+              By Date
+            </button>
+            <button onClick={() => setSortBy("title")} className="outline mx-4">
+              Alphabetical
+            </button>
+          </div>
             
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search by name"
-                className="w-full p-4 pl-12 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <span className="absolute left-4 top-4 text-gray-400">&#x1F50E;&#xFE0E;</span> {/* Magnifying glass icon */}
-            </div>
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search by name"
+              className="w-full p-4 pl-12 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <span className="absolute left-4 top-4 text-gray-400">&#x1F50E;&#xFE0E;</span> {/* Magnifying glass icon */}
+          </div>
 
-            <div className="content-end">
-              <button className="outline mx-4">
-                    View Calendar {/* TODO: Need to connect google calendar */}
-                </button>
-                <button  onClick={() => router.push('/events/create')} className="outline mx-4">
-                    Add New Event
-                </button>
-            </div>
+          <div className="content-end text-right ">
+            <button className="outline mx-4">
+              View Calendar {/* TODO: Need to connect google calendar */}
+            </button>
+            <button onClick={() => router.push('/events/create')} className="outline mx-4">
+              Add New Event
+            </button>
+          </div>
         </div>
-        
+
         {/*Event cards */}
         <div className="flex flex-col gap-4 m-4">
           {filteredEvents.map((event) => (
-            <a 
+            <a
               key={event.id}
-              href={`/events/${event.id}`} 
+              href={`/events/${event.id}`}
               className="flex items-center justify-between w-full p-6 bg-white border border-gray-200 rounded-xl transition-transform duration-200 hover:scale-[1.01] shadow-sm"
             >
               <div className="w-full flex flex-col gap-2 max-w-sm">
@@ -159,7 +130,7 @@ export default function EventsPage() {
                     src={pin_svg}
                     width={15}
                     height={15}
-                    alt="Picture of the author"
+                    alt="icon for location"
                   />
                   {event.location}
                 </div>
@@ -168,9 +139,9 @@ export default function EventsPage() {
                     src={calendar_svg}
                     width={15}
                     height={15}
-                    alt="Picture of the author"
+                    alt="icon for date"
                   />
-                  {event.dateStart}
+                  {getDateTimeString(event.dateStart)}
                 </div>
               </div>
 
