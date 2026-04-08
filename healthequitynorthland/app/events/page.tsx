@@ -7,6 +7,7 @@ import calendar_svg from "@/public/calendar.svg";
 import pin_svg from "@/public/pin.svg";
 import { getEventType } from "@/app/lib/eventTypeUtil";
 import { useRouter } from 'next/navigation';
+import { convertTimestampToDate } from '@/app/lib/dateTimeUtil';
 
 import { useEffect, useState } from "react";
 import { auth, db } from "@/app/lib/firebaseClient";
@@ -22,6 +23,7 @@ interface Event {
   dateStart: string;
   dateEnd: string;            
   attendees: number; 
+  rawTimeStart: number; // used for sorting on this page only
 }  
 
 export default function EventsPage() {
@@ -31,35 +33,21 @@ export default function EventsPage() {
   const [searchTerm, setSearchTerm] = useState(''); // variable to store the search term 
   const [events, setEvents] = useState<Event[]>([]); // variable to store the events
 
+  const [sortBy, setSortBy] = useState('timestampStart'); // store sort specification
+
   // Run this on page load and when searchbox is updated
   useEffect(() => {
     // Ordered by date in descending order, so the most future event is on top, and the oldest is on the bottom
-    const q = query(collection(db, "event"), orderBy("timestampStart", "desc"));
+    const q = query(collection(db, "event"), orderBy(sortBy, "desc"));
 
     // Grab data from the db
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => {
         const docData = doc.data();
-        // Convert Firebase Timestamp to a readable string - TODO: Move to a util class
-        const dateStartObj = docData.timestampStart?.toDate ? docData.timestampStart.toDate() : new Date();
-        const formattedStartDate = dateStartObj.toLocaleString('en-US', {
-          month: 'long',
-          day: 'numeric',
-          year: 'numeric',
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true
-        }).replace(',', ' -');
 
-        const dateEndObj = docData.timestampEnd?.toDate ? docData.timestampEnd.toDate() : new Date();
-        const formattedEndDate = dateEndObj.toLocaleString('en-US', {
-          month: 'long',
-          day: 'numeric',
-          year: 'numeric',
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true
-        }).replace(',', ' -');
+        // Convert Firebase Timestamp to a readable string 
+        const formattedStartDate = convertTimestampToDate(docData.timestampStart);
+        const formattedEndDate = convertTimestampToDate(docData.timestampEnd);
 
         // map grabbed db variables to an event
         return {
@@ -70,7 +58,8 @@ export default function EventsPage() {
           location: docData.location || "TBD",
           attendees: docData.attendees || 0,
           dateStart: formattedStartDate,
-          dateEnd: formattedEndDate
+          dateEnd: formattedEndDate,
+          rawTimeStart: docData.timestampStart?.seconds || Number.MAX_VALUE // used for sorting after grabbing the data
         } as Event;
       });
 
@@ -90,6 +79,16 @@ export default function EventsPage() {
     
     // Otherwise, check if title includes search term and return the searched list
     return event.title.toLowerCase().includes(searchTerm.toLowerCase());
+  }).sort((a, b) => {
+    if(sortBy === "title"){
+      return a.title.localeCompare(b.title);
+    }
+    else if(sortBy === "timestampStart"){
+      return b.rawTimeStart - a.rawTimeStart;
+    }
+    else {
+      return 0; // don't sort if the sortBy variable is not working
+    }
   });
 
 
@@ -110,10 +109,10 @@ export default function EventsPage() {
                 <button className="mx-4">
                     &lt; {/* Left facing arrow*/}
                 </button>
-                <button className="outline mx-4">
+                <button onClick={() => setSortBy("timestampStart")} className="outline mx-4">
                     By Date
                 </button>
-                <button className="outline mx-4"> {/* TODO: Implement alphabetical sorting */}
+                <button onClick={() => setSortBy("title")} className="outline mx-4">
                     Alphabetical 
                 </button>
             </div>
