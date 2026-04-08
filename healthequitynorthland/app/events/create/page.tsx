@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { auth, db } from "@/app/lib/firebaseClient";
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
+import { convertDateToTimestamp } from '@/app/lib/dateTimeUtil';
 
 import * as eventTypeUtil from "@/app/lib/eventTypeUtil";
 
@@ -47,8 +48,8 @@ export default function CreateEvent() {
         description: description,
         eventType: Number(type) || -1, // save the int that correlates with the event type
         attendees: 0,
-        timestampStart: Timestamp.fromDate(combinedStartDateTime),  // Change dates to firebase's timestamp
-        timestampEnd: Timestamp.fromDate(combinedEndDateTime),  // Change dates to firebase's timestamp
+        timestampStart: convertDateToTimestamp(combinedStartDateTime),  // Change dates to firebase's timestamp
+        timestampEnd: convertDateToTimestamp(combinedEndDateTime),  // Change dates to firebase's timestamp
         notes: notes,
         suppliesInformation: suppliesInfo,
         feedbackText: feedbackText
