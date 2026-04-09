@@ -61,7 +61,7 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
             {/* Top bar with search */}
             <div className="pt-25 grid grid-cols-3 gap-1 border-b-2 border-gray-200 pb-4 bg-white items-center">
                 <div className="content-start px-4">
-                    <button onClick={() => router.push('/events')} className="mx-4">
+                    <button onClick={() => router.push('/events')} className="p-2 hover:scale-105 transition hover:cursor-pointer">
                         <FaArrowLeft />
                     </button>
                 </div>
@@ -70,8 +70,8 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
                     Event Details
                 </h3>
 
-                <div className="content-end text-right ">
-                    <button className="outline mx-4">
+                <div className="content-end text-right pr-4">
+                    <button className="bg-blue-100 rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base">
                         Open in Calendar {/* TODO: Need to connect google calendar */}
                     </button>
                 </div>

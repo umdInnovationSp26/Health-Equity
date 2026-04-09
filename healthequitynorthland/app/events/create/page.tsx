@@ -82,7 +82,7 @@ export default function CreateEvent() {
       {/* Top bar with search */}
       <div className="pt-25 grid grid-cols-3 gap-1 border-b-2 border-gray-200 pb-4 bg-white items-center">
           <div className="content-start px-4">
-              <button onClick={() => router.push('/events')} className="mx-4">
+              <button onClick={() => router.push('/events')} className="p-2 hover:scale-105 transition hover:cursor-pointer">
                   <FaArrowLeft />
               </button>
           </div>
@@ -169,7 +169,7 @@ export default function CreateEvent() {
             <button 
               type="submit" 
               disabled={loading}
-              className="w-full md:w-64 py-3 font-bold rounded-xl disabled:opacity-50 transition-colors"
+              className="w-full md:w-64 bg-blue-500 text-white rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base"
             >
               {loading ? 'Saving...' : 'Save'}
             </button>

@@ -1,5 +1,4 @@
 "use client";
-import Head from "next/head";
 import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
 
@@ -9,7 +8,6 @@ import { FaArrowLeft } from "react-icons/fa";
 import calendar_svg from "@/public/calendar.svg";
 import pin_svg from "@/public/pin.svg";
 import { useRouter } from "next/navigation";
-import { convertTimestampToDate } from "@/app/lib/dateTimeUtil";
 import { getDateTimeString } from '@/app/lib/dateTimeUtil';
 import { Event, mapDocToEvent } from '@/app/lib/eventInterface'
 
@@ -70,19 +68,18 @@ export default function EventsPage() {
         <div className="bg-white shadow-sm flex flex-wrap items-center justify-between p-4 gap-2">
           {/* Left controls */}
           <div className="flex items-center space-x-2 flex-shrink-0">
-            <button className="p-2 hover:scale-105 transition">
-              {" "}
-              {/* Left arrow placeholder */}{" "}
+            <button className="p-2 hover:scale-105 transition hover:cursor-pointer  ">
+              <FaArrowLeft/>
             </button>
             <button
               onClick={() => setSortBy("timestampStart")}
-              className="bg-gray-100 rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base"
+              className={`rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base ${sortBy === 'timestampStart' ? 'bg-gray-300 ' : 'bg-gray-100 '}`}
             >
               By Date
             </button>
             <button
               onClick={() => setSortBy("title")}
-              className="bg-gray-100 rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base"
+              className={`rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base ${sortBy === 'title' ? 'bg-gray-300 ' : 'bg-gray-100 '}`}
             >
               Alphabetical
             </button>
