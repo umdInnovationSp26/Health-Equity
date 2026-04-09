@@ -40,7 +40,7 @@ export default function VerifyPage() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       if (!u) {
-        router.push("/signin");
+        router.push("/");
         return;
       }
 
@@ -48,7 +48,7 @@ export default function VerifyPage() {
 
       // 1) If Firebase Auth says verified, go to dashboard (authoritative).
       if (u.emailVerified) {
-        router.push("/profile");
+        router.push("/");
         return;
       }
 

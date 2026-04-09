@@ -297,7 +297,7 @@ export default function Profile() {
     setEditing(false);
   };
 
-  /* Avatar upload */
+  /* Avatar upload - Base64 string directly in Firestore */ 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;

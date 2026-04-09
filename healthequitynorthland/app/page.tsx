@@ -33,7 +33,7 @@ Chart.register(
   Filler,
   Tooltip,
   ArcElement,
-  DoughnutController
+  DoughnutController,
 );
 
 /* ─── Types ─────────────────────────────────────────────── */
@@ -41,8 +41,8 @@ type Event = {
   id: string;
   title: string;
   category: "Outreach" | "Produce Supply" | "Volunteer" | "Community";
-  date: string;       // ISO string
-  startTime: string;  // e.g. "1:00 PM"
+  date: string; // ISO string
+  startTime: string; // e.g. "1:00 PM"
   endTime: string;
   location: string;
   imageUrl?: string;
@@ -166,7 +166,13 @@ function EventIllustration({ category }: { category: Event["category"] }) {
       <div className="flex h-[72px] w-[72px] flex-shrink-0 items-center justify-center rounded-xl bg-blue-100">
         <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
           <circle cx="18" cy="13" r="5" fill="#85B7EB" />
-          <path d="M8 30c0-5.52 4.48-10 10-10s10 4.48 10 10" stroke="#378ADD" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <path
+            d="M8 30c0-5.52 4.48-10 10-10s10 4.48 10 10"
+            stroke="#378ADD"
+            strokeWidth="2"
+            fill="none"
+            strokeLinecap="round"
+          />
         </svg>
       </div>
     );
@@ -174,7 +180,10 @@ function EventIllustration({ category }: { category: Event["category"] }) {
   return (
     <div className="flex h-[72px] w-[72px] flex-shrink-0 items-center justify-center rounded-xl bg-amber-100">
       <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-        <path d="M18 6l3.09 6.26L28 13.27l-5 4.87 1.18 6.86L18 22l-6.18 3-1.18-6.86-5-4.87 6.91-1.01L18 6z" fill="#EF9F27" />
+        <path
+          d="M18 6l3.09 6.26L28 13.27l-5 4.87 1.18 6.86L18 22l-6.18 3-1.18-6.86-5-4.87 6.91-1.01L18 6z"
+          fill="#EF9F27"
+        />
       </svg>
     </div>
   );
@@ -228,7 +237,15 @@ function MetaRow({
   return (
     <div className="flex items-center gap-1.5 text-xs text-gray-500">
       {icon === "calendar" && (
-        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="flex-shrink-0">
+        <svg
+          width="11"
+          height="11"
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          className="flex-shrink-0"
+        >
           <rect x="2" y="3" width="12" height="11" rx="1" />
           <line x1="5" y1="1" x2="5" y2="5" />
           <line x1="11" y1="1" x2="11" y2="5" />
@@ -236,13 +253,29 @@ function MetaRow({
         </svg>
       )}
       {icon === "location" && (
-        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="flex-shrink-0">
+        <svg
+          width="11"
+          height="11"
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          className="flex-shrink-0"
+        >
           <circle cx="8" cy="7" r="3" />
           <path d="M8 2C5.24 2 3 4.24 3 7c0 4 5 9 5 9s5-5 5-9c0-2.76-2.24-5-5-5z" />
         </svg>
       )}
       {icon === "clock" && (
-        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="flex-shrink-0">
+        <svg
+          width="11"
+          height="11"
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          className="flex-shrink-0"
+        >
           <circle cx="8" cy="8" r="6" />
           <polyline points="8 5 8 8 10 10" />
         </svg>
@@ -328,7 +361,12 @@ function AttendanceChart({ data }: { data: AttendanceStat[] }) {
         scales: {
           x: {
             grid: { display: false },
-            ticks: { font: { size: 11 }, color: "#888780", maxRotation: 0, autoSkip: false },
+            ticks: {
+              font: { size: 11 },
+              color: "#888780",
+              maxRotation: 0,
+              autoSkip: false,
+            },
           },
           y: {
             min: 80,
@@ -383,7 +421,9 @@ function ProduceChart({ data }: { data: ProduceStat[] }) {
         cutout: "50%",
         plugins: {
           legend: { display: false },
-          tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.parsed} lbs` } },
+          tooltip: {
+            callbacks: { label: (ctx) => `${ctx.label}: ${ctx.parsed} lbs` },
+          },
         },
       },
     });
@@ -402,14 +442,19 @@ function ProduceChart({ data }: { data: ProduceStat[] }) {
       </div>
       <div className="space-y-2">
         {data.map((item, i) => (
-          <div key={item.name} className="flex items-center gap-2 text-xs text-gray-500">
+          <div
+            key={item.name}
+            className="flex items-center gap-2 text-xs text-gray-500"
+          >
             <div
               className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
               style={{ background: PRODUCE_COLORS[i] }}
             />
             <span>
               {item.name}{" "}
-              <span className="font-semibold text-gray-900">{item.lbs} lbs</span>
+              <span className="font-semibold text-gray-900">
+                {item.lbs} lbs
+              </span>
             </span>
           </div>
         ))}
@@ -530,69 +575,73 @@ export default function HomePage() {
 
       <Navbar />
       <main className="pt-30 min-h-screen px-4 py-10">
-      <div className="mx-auto max-w-2xl space-y-5">
+        <div className="mx-auto max-w-2xl space-y-5">
+          {/* Greeting */}
+          <h1 className="text-xl font-semibold">
+            Welcome{firstName ? `, ${firstName}` : ""}
+          </h1>
 
-        {/* Greeting */}
-        <h1 className="text-xl font-semibold text-gray-900">
-          Welcome{firstName ? `, ${firstName}` : ""}
-        </h1>
+          {/* Stat pills */}
+          <div className="grid grid-cols-3 gap-3">
+            <StatCard label="Upcoming events" value={upcomingEvents.length} />
+            <StatCard label="Produce this month" value={`${totalLbs} lbs`} />
+            <StatCard label="Peak attendance" value={`${peakAttendance}`} />
+          </div>
 
-        {/* Stat pills */}
-        <div className="grid grid-cols-3 gap-3">
-          <StatCard label="Upcoming events" value={upcomingEvents.length} />
-          <StatCard label="Produce this month" value={`${totalLbs} lbs`} />
-          <StatCard label="Peak attendance" value={`${peakAttendance}`} />
+          {/* Upcoming events */}
+          <div className="shadow-sm rounded-xl bg-blue-50 p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-gray-900">
+                Upcoming events
+              </h2>
+              <Link
+                href="/events"
+                className="flex items-center gap-1 text-xs font-medium text-blue-500 hover:text-blue-700"
+              >
+                View all
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <polyline points="6 4 10 8 6 12" />
+                </svg>
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {upcomingEvents.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+              {upcomingEvents.length === 0 && (
+                <p className="col-span-2 py-4 text-center text-sm text-gray-400">
+                  No upcoming events
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Charts row */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="shadow-sm rounded-xl border border-gray-100 bg-white p-5">
+              <h2 className="mb-4 text-sm font-semibold text-gray-500">
+                Average event attendance (monthly)
+              </h2>
+              <AttendanceChart data={attendance} />
+            </div>
+
+            <div className="shadow-sm rounded-xl border border-gray-100 bg-white p-5">
+              <h2 className="mb-4 text-sm font-semibold text-gray-500">
+                Produce sold this month
+              </h2>
+              <ProduceChart data={produce} />
+            </div>
+          </div>
         </div>
-
-        {/* Upcoming events */}
-        <div className="shadow-sm rounded-xl bg-blue-50 p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-900">Upcoming events</h2>
-            <Link
-              href="/events"
-              className="flex items-center gap-1 text-xs font-medium text-blue-500 hover:text-blue-700"
-            >
-              View all
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="6 4 10 8 6 12" />
-              </svg>
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {upcomingEvents.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-            {upcomingEvents.length === 0 && (
-              <p className="col-span-2 py-4 text-center text-sm text-gray-400">
-                No upcoming events
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Charts row */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-
-          <div className="shadow-sm rounded-xl border border-gray-100 bg-white p-5">
-            <h2 className="mb-4 text-sm font-semibold text-gray-500">
-              Average event attendance (monthly)
-            </h2>
-            <AttendanceChart data={attendance} />
-          </div>
-
-          <div className="shadow-sm rounded-xl border border-gray-100 bg-white p-5">
-            <h2 className="mb-4 text-sm font-semibold text-gray-500">
-              Produce sold this month
-            </h2>
-            <ProduceChart data={produce} />
-          </div>
-
-        </div>
-      </div>
-      
-    </main>    
-    <Footer />
-
+      </main>
+      <Footer />
     </>
   );
 }
