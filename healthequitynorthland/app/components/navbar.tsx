@@ -21,6 +21,7 @@ export default function Navbar() {
   });
   const [hidden, setHidden] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Hide navbar on scroll
   useEffect(() => {
@@ -54,6 +55,13 @@ export default function Navbar() {
     return () => unsubAuth();
   }, []);
 
+  const pages = [
+    { name: "Home", href: "/" },
+    { name: "Events", href: "/events" },
+    { name: "Produce", href: "/produce" },
+    { name: "Profile", href: "/profile" },
+  ];
+
   return (
     <header
       className={`bg-white shadow-md fixed top-0 left-0 w-full z-50 transition-transform duration-300 ${
@@ -72,39 +80,24 @@ export default function Navbar() {
           />
         </Link>
 
-        {/* Navigation */}
-        <div className="text-black flex items-center gap-8 text-base">
-          <Link
-            href="/"
-            className={pathname === "/" ? "font-bold" : "font-normal"}
-          >
-            Home
-          </Link>
-          <Link
-            href="/events"
-            className={pathname === "/events" ? "font-bold" : "font-normal"}
-          >
-            Events
-          </Link>
-          <Link
-            href="/produce"
-            className={pathname === "/produce" ? "font-bold" : "font-normal"}
-          >
-            Produce
-          </Link>
-          <Link
-            href="/contacts"
-            className={pathname === "/contacts" ? "font-bold" : "font-normal"}
-          >
-            Contacts
-          </Link>
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center gap-8 text-base text-black">
+          {pages.map((page) => (
+            <Link
+              key={page.href}
+              href={page.href}
+              className={pathname === page.href ? "font-bold" : "font-normal"}
+            >
+              {page.name}
+            </Link>
+          ))}
         </div>
 
-        {/* Profile avatar only, fixed circle size */}
-        <div className="flex items-center">
+        {/* Profile + Mobile Burger */}
+        <div className="flex items-center relative">
           <Link
             href="/profile"
-            className="block w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200"
+            className="hidden md:block w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200"
           >
             <Image
               src={profile.avatar || "/HEN.webp"} // fallback if no avatar
@@ -114,6 +107,46 @@ export default function Navbar() {
               className="object-cover w-full h-full"
             />
           </Link>
+
+          {/* Mobile burger menu */}
+          <button
+            className="md:hidden ml-2 flex flex-col justify-between w-6 h-6"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            <span
+              className={`block h-0.5 w-full bg-black transition-transform duration-300 ${
+                mobileMenuOpen ? "rotate-45 translate-y-2.5" : ""
+              }`}
+            />
+            <span
+              className={`block h-0.5 w-full bg-black transition-opacity duration-300 ${
+                mobileMenuOpen ? "opacity-0" : "opacity-100"
+              }`}
+            />
+            <span
+              className={`block h-0.5 w-full bg-black transition-transform duration-300 ${
+                mobileMenuOpen ? "-rotate-45 -translate-y-3" : ""
+              }`}
+            />
+          </button>
+
+          {/* Mobile dropdown */}
+          {mobileMenuOpen && (
+            <div className="absolute right-0 top-full mt-2 w-40 bg-white shadow-lg rounded-lg border border-gray-200 flex flex-col z-50">
+              {pages.map((page) => (
+                <Link
+                  key={page.href}
+                  href={page.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`px-4 py-3 hover:bg-gray-100 ${
+                    pathname === page.href ? "font-bold" : "font-normal"
+                  }`}
+                >
+                  {page.name}
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </header>
