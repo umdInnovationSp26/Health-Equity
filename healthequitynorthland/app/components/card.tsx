@@ -8,7 +8,7 @@ interface Props {
 
 export default function StatCard({ title, value, change }: Props) {
   return (
-    <div className="bg-white border-3 border-gray-200 p-3">
+    <div className="border-3 border-gray-200 p-5 rounded-xl">
       <h3 className="text-base">{title}</h3>
       <div className="text-base font-bold mt-2">{value}</div>
 

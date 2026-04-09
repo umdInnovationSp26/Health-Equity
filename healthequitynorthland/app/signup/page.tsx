@@ -72,7 +72,7 @@ export default function SignUpPage() {
 
   return (
     <main className="text-black bg-white relative min-h-[100dvh] w-full flex items-center justify-center text-center">
-      <Navbar />
+       
       <div className="bg-white border-3 border-gray-200 rounded-xl relative z-10 w-[90%] max-w-xl p-10">
         <h1 className="text-6xl md:text-8xl font-extrabold mb-6 md:mb-12 tracking-tight">
           Sign Up
