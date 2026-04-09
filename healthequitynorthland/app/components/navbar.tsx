@@ -1,117 +1,150 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import Image from "next/image";
+import { auth, db } from "@/app/lib/firebaseClient";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, onSnapshot } from "firebase/firestore";
 
-// --- Types
-type FinanceProfile = {
-  id: string;
+type Profile = {
   displayName: string;
   avatar?: string;
 };
 
 export default function Navbar() {
   const pathname = usePathname() || "";
-  const [profile] = useState<FinanceProfile>({
-    id: "",
+  const [profile, setProfile] = useState<Profile>({
     displayName: "",
+    avatar: "",
   });
-
-  // Bold on active tab
-  const linkClass = (path: string) =>
-    `tracking-tight ${pathname === path ? "font-bold" : "font-normal"}`;
-
-  // Hide navbar on scroll
   const [hidden, setHidden] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Hide navbar on scroll
   useEffect(() => {
     const handleScroll = () => {
       const currentScroll = window.scrollY;
-
-      // hide when scrolling down
-      if (currentScroll > lastScrollY && currentScroll > 60) {
-        setHidden(true);
-      } else {
-        setHidden(false);
-      }
-
+      setHidden(currentScroll > lastScrollY && currentScroll > 60);
       setLastScrollY(currentScroll);
     };
-
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  // Routes where SIGN IN should be hidden
-  const hideSignInOn = ["/dashboard"];
-  const hideSignIn = hideSignInOn.includes(pathname);
+  // Load profile from Firebase
+  useEffect(() => {
+    const unsubAuth = onAuthStateChanged(auth, (user) => {
+      if (!user) return;
 
-  const showProfileIn = ["/dashboard"];
-  const showProfile = showProfileIn.includes(pathname);
+      const userRef = doc(db, "users", user.uid);
+      const unsubDoc = onSnapshot(userRef, (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        setProfile({
+          displayName: data.displayName || data.firstName || "User",
+          avatar: data.avatar || "",
+        });
+      });
+
+      return () => unsubDoc();
+    });
+
+    return () => unsubAuth();
+  }, []);
+
+  const pages = [
+    { name: "Home", href: "/" },
+    { name: "Events", href: "/events" },
+    { name: "Produce", href: "/produce" },
+    { name: "Profile", href: "/profile" },
+  ];
 
   return (
     <header
-      className={`bg-white fixed top-0 left-0 w-full z-50 transition-transform duration-300 ${
+      className={`bg-white shadow-md fixed top-0 left-0 w-full z-50 transition-transform duration-300 ${
         hidden ? "-translate-y-full" : "translate-y-0"
       }`}
     >
-      <div className="flex items-center justify-between h-20 border-b-3 border-gray-100 px-6 md:px-16">
+      <div className="flex items-center justify-between h-20 px-6 md:px-16">
         {/* Logo */}
-        <Image src="/navbar.webp" alt="Navbar" width={116} height={116} />
+        <Link href="/">
+          <Image
+            src="/navbar.webp"
+            alt="Navbar"
+            width={116}
+            height={116}
+            className="cursor-pointer"
+          />
+        </Link>
 
-        <div className="flex items-center gap-8 text-base">
-          <Link href="/" className={linkClass("/")}>
-            Home
-          </Link>
-
-          <Link href="/events" className={linkClass("/events")}>
-            Events
-          </Link>
-
-          <Link href="/produce" className={linkClass("/calendar")}>
-            Produce
-          </Link>
-
-          <Link href="/contacts" className={linkClass("/resources")}>
-            Contacts
-          </Link>
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center gap-8 text-base text-black">
+          {pages.map((page) => (
+            <Link
+              key={page.href}
+              href={page.href}
+              className={pathname === page.href ? "font-bold" : "font-normal"}
+            >
+              {page.name}
+            </Link>
+          ))}
         </div>
 
-        <div className="flex items-center gap-4">
-          {/* Profile (Dashboard) */}
-          {showProfile && (
-            <Link
-              href="/signin"
-              className="hidden text-xs md:text-base flex items-center gap-2 text-[var(--lightGray)] border-[3px] border-[var(--lightGray)] font-semibold hover:scale-105 transition px-5 py-2 rounded-full"
-            >
-              <span>{profile.displayName || "Dashboard"}</span>
-            </Link>
-          )}
+        {/* Profile + Mobile Burger */}
+        <div className="flex items-center relative">
+          <Link
+            href="/profile"
+            className="hidden md:block w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200"
+          >
+            <Image
+              src={profile.avatar || "/HEN.webp"} // fallback if no avatar
+              alt="Profile"
+              width={40}
+              height={40}
+              className="object-cover w-full h-full"
+            />
+          </Link>
 
-          {/* Sign In / Sign Up */}
-          {!hideSignIn && (
-            <div className="flex gap-4">
-              <Link
-                href="/settings"
-                className="tracking-tight flex items-center transition hover:scale-110"
-              >
-                <Image
-                  src="/SettingsIcon.png"
-                  alt="Settings Icon"
-                  width={24}
-                  height={24}
-                />
-              </Link>
+          {/* Mobile burger menu */}
+          <button
+            className="md:hidden ml-2 flex flex-col justify-between w-6 h-6"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            <span
+              className={`block h-0.5 w-full bg-black transition-transform duration-300 ${
+                mobileMenuOpen ? "rotate-45 translate-y-2.5" : ""
+              }`}
+            />
+            <span
+              className={`block h-0.5 w-full bg-black transition-opacity duration-300 ${
+                mobileMenuOpen ? "opacity-0" : "opacity-100"
+              }`}
+            />
+            <span
+              className={`block h-0.5 w-full bg-black transition-transform duration-300 ${
+                mobileMenuOpen ? "-rotate-45 -translate-y-3" : ""
+              }`}
+            />
+          </button>
 
-              <Link
-                href="/profile"
-                className="hidden md:flex items-center justify-center px-4 py-4 rounded-full border-2 border-white/10 bg-black text-white transition hover:scale-105"
-              >
-                <span></span>
-              </Link>
+          {/* Mobile dropdown */}
+          {mobileMenuOpen && (
+            <div className="absolute right-0 top-full mt-2 w-40 bg-white shadow-lg rounded-lg border border-gray-200 flex flex-col z-50">
+              {pages.map((page) => (
+                <Link
+                  key={page.href}
+                  href={page.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`px-4 py-3 hover:bg-gray-100 ${
+                    pathname === page.href ? "font-bold" : "font-normal"
+                  }`}
+                >
+                  {page.name}
+                </Link>
+              ))}
             </div>
           )}
         </div>

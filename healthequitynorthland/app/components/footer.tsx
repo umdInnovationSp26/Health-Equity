@@ -16,7 +16,7 @@ export default function Footer() {
   if (hiddenRoutes.includes(pathname)) return null;
 
   return (
-    <footer className="bg-[var(--colorAccent)] text-black mt-20">
+    <footer className="bg-white text-black mt-20">
       <div className="max-w-7xl mx-auto px-10 py-12 grid md:grid-cols-2 gap-20">
         {/* LEFT SIDE */}
         <div className="space-y-6">

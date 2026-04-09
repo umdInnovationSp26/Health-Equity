@@ -8,7 +8,8 @@ import { FaArrowLeft } from "react-icons/fa";
 
 import calendar_svg from "@/public/calendar.svg";
 import pin_svg from "@/public/pin.svg";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
+import { convertTimestampToDate } from "@/app/lib/dateTimeUtil";
 import { getDateTimeString } from '@/app/lib/dateTimeUtil';
 import { Event, mapDocToEvent } from '@/app/lib/eventInterface'
 
@@ -20,10 +21,10 @@ export default function EventsPage() {
 
   const router = useRouter();
 
-  const [searchTerm, setSearchTerm] = useState(''); // variable to store the search term 
+  const [searchTerm, setSearchTerm] = useState(""); // variable to store the search term
   const [events, setEvents] = useState<Event[]>([]); // variable to store the events
 
-  const [sortBy, setSortBy] = useState('timestampStart'); // store sort specification
+  const [sortBy, setSortBy] = useState("timestampStart"); // store sort specification
 
   // Run this on page load and when searchbox is updated
   useEffect(() => {
@@ -38,8 +39,7 @@ export default function EventsPage() {
     });
 
     return () => unsubscribe();
-  }, []);
-
+  }, [sortBy]);
 
   // filter the events on the search term. Will run on load and when the searchbox is updated
   const filteredEvents = events.filter(event => {
@@ -62,47 +62,54 @@ export default function EventsPage() {
     }
   });
 
-
-
   return (
     <>
-      <Head>
-        <title>HealthEquityNorthland</title>
-        <meta name="description" content="HealthEquityNorthland" />
-        <link rel="canonical" href="https://HealthEquityNorthland.org/" />
-      </Head>
-
       <Navbar />
-      <main className="min-h-screen">
+      <main className="pt-20 min-h-screen">
         {/* Top bar with search */}
-        <div className="pt-25 grid grid-cols-3 gap-1 border-b-2 border-gray-200 pb-4 bg-white items-center">
-          <div className="content-start px-4">
-            <button onClick={() => router.push('/')} className="mx-4">
-              <FaArrowLeft />
+        <div className="bg-white shadow-sm flex flex-wrap items-center justify-between p-4 gap-2">
+          {/* Left controls */}
+          <div className="flex items-center space-x-2 flex-shrink-0">
+            <button className="p-2 hover:scale-105 transition">
+              {" "}
+              {/* Left arrow placeholder */}{" "}
             </button>
-            <button onClick={() => setSortBy("timestampStart")} className="outline mx-4">
+            <button
+              onClick={() => setSortBy("timestampStart")}
+              className="bg-gray-100 rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base"
+            >
               By Date
             </button>
-            <button onClick={() => setSortBy("title")} className="outline mx-4">
+            <button
+              onClick={() => setSortBy("title")}
+              className="bg-gray-100 rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base"
+            >
               Alphabetical
             </button>
           </div>
-            
-          <div className="relative">
+
+          {/* Search */}
+          <div className="relative flex-1 min-w-[200px] max-w-md mx-auto">
             <input
               type="text"
               placeholder="Search by name"
-              className="w-full p-4 pl-12 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+              className="w-full pl-10 p-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm text-sm sm:text-base"
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <span className="absolute left-4 top-4 text-gray-400">&#x1F50E;&#xFE0E;</span> {/* Magnifying glass icon */}
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">
+              &#x1F50E;&#xFE0E; {/* Magnifying glass icon */}
+            </span>
           </div>
 
-          <div className="content-end text-right ">
-            <button className="outline mx-4">
-              View Calendar {/* TODO: Need to connect google calendar */}
+          {/* Right controls */}
+          <div className="flex items-center space-x-2 flex-shrink-0">
+            <button className="bg-blue-100 rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base">
+              View Calendar
             </button>
-            <button onClick={() => router.push('/events/create')} className="outline mx-4">
+            <button
+              onClick={() => router.push("/events/create")}
+              className="bg-blue-500 text-white rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base"
+            >
               Add New Event
             </button>
           </div>
@@ -120,8 +127,12 @@ export default function EventsPage() {
                 <span className="w-fit px-3 py-1 text-xs font-medium bg-indigo-100 text-indigo-700 rounded-full">
                   {event.category}
                 </span>
-                <h3 className="text-xl font-bold text-slate-800">{event.title}</h3>
-                <p className="text-sm text-gray-500 line-clamp-2">{event.description}</p>
+                <h3 className="text-xl font-bold text-slate-800">
+                  {event.title}
+                </h3>
+                <p className="text-sm text-gray-500 line-clamp-2">
+                  {event.description}
+                </p>
               </div>
 
               <div className="flex flex-col gap-2 text-sm text-gray-600">
@@ -147,20 +158,23 @@ export default function EventsPage() {
 
               <div className="hidden md:flex items-center gap-8">
                 <div className="flex flex-col items-center justify-center bg-gray-50 rounded-xl p-4 min-w-[120px]">
-                  <span className="text-xs text-gray-500 font-medium">Attendees</span>
-                  <span className="text-3xl font-bold text-blue-600">{event.attendees}</span>
+                  <span className="text-xs text-gray-500 font-medium">
+                    Attendees
+                  </span>
+                  <span className="text-3xl font-bold text-blue-600">
+                    {event.attendees}
+                  </span>
                 </div>
                 <span className="text-gray-400 text-2xl">›</span>
               </div>
             </a>
           ))}
 
-          {/*If no events, show not found text */}
+          {/* If no events, show not found text */}
           {filteredEvents.length === 0 && (
             <p className="text-center text-gray-400 mt-10">No events found</p>
           )}
         </div>
-
       </main>
 
       <Footer />

@@ -40,7 +40,7 @@ export default function VerifyPage() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       if (!u) {
-        router.push("/signin");
+        router.push("/");
         return;
       }
 
@@ -48,7 +48,7 @@ export default function VerifyPage() {
 
       // 1) If Firebase Auth says verified, go to dashboard (authoritative).
       if (u.emailVerified) {
-        router.push("/profile");
+        router.push("/");
         return;
       }
 
@@ -73,7 +73,7 @@ export default function VerifyPage() {
           // Admin bypass: if this is an admin email and Firestore boolean is true, allow bypass
           const isAdmin = !!u.email && ADMIN_BYPASS_EMAILS.includes(u.email);
           if (isAdmin && data.emailVerified === true) {
-            router.push("/dashboard");
+            router.push("/");
             return;
           }
         } else {
@@ -95,7 +95,7 @@ export default function VerifyPage() {
       const isAdmin =
         !!current?.email && ADMIN_BYPASS_EMAILS.includes(current.email);
       if (current?.emailVerified || isAdmin) {
-        router.push("/dashboard");
+        router.push("/");
       }
     }
   }, [emailVerified, router]);
@@ -132,13 +132,13 @@ export default function VerifyPage() {
 
         // If auth says verified -> go. If admin AND Firestore bool true -> go.
         if (user.emailVerified) {
-          router.push("/dashboard");
+          router.push("/profile");
           return;
         }
         const isAdmin =
           !!user.email && ADMIN_BYPASS_EMAILS.includes(user.email);
         if (isAdmin && data.emailVerified === true) {
-          router.push("/dashboard");
+          router.push("/profile");
           return;
         }
 
@@ -166,7 +166,6 @@ export default function VerifyPage() {
   // -----------------------
   return (
     <main className="text-black bg-white relative min-h-[100dvh] w-full flex items-center justify-center text-center">
-      <Navbar />
       <div className="bg-white border-3 border-gray-200 rounded-xl relative z-10 w-[90%] max-w-xl p-10">
         <h1 className="mb-4 text-3xl font-extrabold tracking-tight">
           Email Verification
