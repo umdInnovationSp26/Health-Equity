@@ -73,7 +73,7 @@ export default function VerifyPage() {
           // Admin bypass: if this is an admin email and Firestore boolean is true, allow bypass
           const isAdmin = !!u.email && ADMIN_BYPASS_EMAILS.includes(u.email);
           if (isAdmin && data.emailVerified === true) {
-            router.push("/dashboard");
+            router.push("/");
             return;
           }
         } else {
@@ -95,7 +95,7 @@ export default function VerifyPage() {
       const isAdmin =
         !!current?.email && ADMIN_BYPASS_EMAILS.includes(current.email);
       if (current?.emailVerified || isAdmin) {
-        router.push("/dashboard");
+        router.push("/");
       }
     }
   }, [emailVerified, router]);
