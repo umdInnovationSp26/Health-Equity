@@ -67,7 +67,7 @@ export default function EventsPage() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [sortBy]);
 
 
   // filter the events on the search term. Will run on load and when the searchbox is updated
