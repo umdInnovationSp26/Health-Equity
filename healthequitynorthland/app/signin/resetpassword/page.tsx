@@ -12,10 +12,12 @@ export default function ResetPasswordPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const handleReset = async () => {
     if (!email) {
-      setMessage("Please enter your email");
+      setMessage("Please enter your email.");
+      setIsSuccess(false);
       return;
     }
 
@@ -23,60 +25,93 @@ export default function ResetPasswordPage() {
     setMessage("");
     try {
       await sendPasswordResetEmail(auth, email);
-      setMessage("Password reset email sent! Check your inbox");
+      setMessage("Password reset email sent! Check your inbox.");
+      setIsSuccess(true);
     } catch (err: any) {
       console.error(err);
-      setMessage(err.message || "Failed to send reset email");
+      setMessage(err.message || "Failed to send reset email.");
+      setIsSuccess(false);
     }
     setLoading(false);
   };
 
   return (
-    <main className="text-black bg-white relative min-h-[100dvh] w-full flex items-center justify-center text-center">
-       <div className="bg-white border-3 border-gray-200 rounded-xl relative z-10 w-[90%] max-w-xl p-10">
-        <h1 className="text-5xl font-extrabold tracking-tight mb-6">
-          Reset Password
-        </h1>
+    <>
+      {/* <Navbar /> */}
 
-        <div className="flex flex-col gap-5">
-          <p className="text-base">
-            Enter your email address to receive a password reset link
-          </p>
+      <main className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
+        {/* Outer card with blue border */}
+        <div className="bg-white rounded-2xl shadow-lg w-full max-w-3xl flex flex-col sm:flex-row overflow-hidden">
 
-          <input
-            type="email"
-            placeholder="Your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="bg-white border-3 border-gray-200 w-full rounded-xl px-6 py-3 text-black placeholder-gray-400 outline-none transition"
-          />
-
-          {message && (
-            <p className="text-xs md:text-base w-full rounded-full bg-white text-red-400 font-semibold py-3 transition">
-              {message}
+          {/* ── Left panel: form ── */}
+          <div className="flex-1 p-10 flex flex-col justify-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Reset Password</h2>
+            <p className="text-sm text-gray-500 mb-6">
+              Enter your email address and we&apos;ll send you a reset link.
             </p>
-          )}
 
-          <button
-            onClick={handleReset}
-            disabled={loading}
-            className="text-lg font-bold bg-black text-white hover:scale-105 cursor-pointer transition w-full py-3 rounded-xl"
-          >
-            {loading ? "Sending..." : "Send Reset Email"}
-          </button>
+            <div className="flex flex-col gap-4">
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </span>
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value.trim())}
+                    disabled={loading || isSuccess}
+                    className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-gray-100 border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-400 transition disabled:opacity-60"
+                  />
+                </div>
+              </div>
 
-          
+              {/* Feedback message */}
+              {message && (
+                <p className={`text-xs font-medium -mt-1 ${isSuccess ? "text-green-500" : "text-red-500"}`}>
+                  {message}
+                </p>
+              )}
+
+              {/* Send Reset Email button */}
+              <button
+                onClick={handleReset}
+                disabled={loading || isSuccess}
+                className="mt-1 w-full py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 active:scale-95 text-white font-semibold text-sm transition disabled:opacity-60 cursor-pointer"
+              >
+                {loading ? "Sending…" : isSuccess ? "Email Sent!" : "Send Reset Email"}
+              </button>
+
+              {/* Back to Sign In */}
+              <p className="text-center text-xs text-gray-500 mt-1">
+                <button
+                  onClick={() => router.push("/signin")}
+                  className="hover:underline text-gray-600 font-medium cursor-pointer"
+                >
+                  ← Back to Sign In
+                </button>
+              </p>
+            </div>
+          </div>
+
+          {/* ── Right panel: logo ── */}
+          <div className="hidden sm:flex flex-1 items-center justify-center bg-white border-l border-gray-100 p-10">
+            {/* Update src to your actual logo path, e.g. "/images/logo.png" */}
+            <img
+              src="/HENsignin.png"
+              alt="Health Equity Northland"
+              className="max-w-[500px] w-full object-contain"
+            />
+          </div>
         </div>
-
-  <div className="mt-6 text-center">
-        <button
-            onClick={() => router.push("/signin")}
-            className="text-black hover:underline text-md cursor-pointer"
-          >
-            Back to Sign In
-          </button></div>
-
-      </div>
-    </main>
+      </main>
+    </>
   );
 }

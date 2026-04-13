@@ -623,13 +623,13 @@ export default function HomePage() {
 
       <Navbar />
 
-      <main className="min-h-screen bg-slate-50 px-4 pb-16 pt-28">
+      <main className="min-h-screen px-4 pb-16 pt-28">
         <div className="mx-auto max-w-2xl space-y-6">
           {/* Header */}
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-medium text-slate-400 mb-1">{today}</p>
-              <h1 className="text-2xl font-bold text-slate-900 leading-tight">
+              <h1 className="text-2xl font-bold leading-tight">
                 {firstName ? `Hi, ${firstName}` : "Welcome back"}
               </h1>
             </div>

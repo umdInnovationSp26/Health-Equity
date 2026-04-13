@@ -5,6 +5,8 @@ import { db } from "@/app/lib/firebaseClient";
 import { collection, getDocs, addDoc, Timestamp } from "firebase/firestore";
 import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
+import { FaArrowLeft } from "react-icons/fa";
+import router from "next/router";
 
 type Contact = {
   id: string;
@@ -88,20 +90,26 @@ export default function ContactsPage() {
     <>
       <Navbar />
 
-      <main className="pt-30 min-h-screen px-4 py-10">
-        <div className="mx-auto max-w-2xl space-y-5">
-          {/* Page header */}
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Contacts</h1>
+      <main className="pt-20 min-h-screen">
+        {/* Top bar with search */}
+        <div className="bg-white shadow-sm flex items-center justify-between p-4 gap-2 relative">
+          <div className="content-start px-4"></div>
 
+          <h3 className="text-black absolute left-1/2 -translate-x-1/2 font-bold">
+            Contacts
+          </h3>
+
+          <div className="content-end text-right pr-4">
             <button
               onClick={() => setShowAdd(true)}
-              className="rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
+              className="bg-blue-600 rounded-xl px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base text-white"
             >
               + Add
             </button>
           </div>
+        </div>
 
+        <div className="mx-auto max-w-2xl space-y-5 p-6">
           {/* Search + sort */}
           <div className="flex flex-col sm:flex-row gap-2">
             <input
@@ -175,7 +183,7 @@ export default function ContactsPage() {
             <div className="flex justify-end gap-2 pt-2">
               <button
                 onClick={() => setShowAdd(false)}
-                className="px-3 py-2 text-xs rounded-lg border"
+                className="px-3 py-2 hover:cursor-pointer hover:scale-105 text-xs rounded-lg border"
               >
                 Cancel
               </button>
@@ -183,7 +191,7 @@ export default function ContactsPage() {
               <button
                 onClick={handleAddContact}
                 disabled={saving}
-                className="px-3 py-2 text-xs rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                className="px-3 py-2 hover:cursor-pointer hover:scale-105 text-xs rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
               >
                 {saving ? "Saving..." : "Save"}
               </button>

@@ -24,8 +24,9 @@ export default function VerifyPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [emailVerified, setEmailVerified] = useState(false);
-  const [cooldown, setCooldown] = useState(0); // seconds left to resend
-  const [message, setMessage] = useState(""); // inline message
+  const [cooldown, setCooldown] = useState(0);
+  const [message, setMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -34,6 +35,7 @@ export default function VerifyPage() {
     } catch (err) {
       console.error("Error signing out:", err);
       setMessage("Failed to log out. Please try again.");
+      setIsSuccess(false);
     }
   };
 
@@ -46,38 +48,30 @@ export default function VerifyPage() {
 
       setUser(u);
 
-      // 1) If Firebase Auth says verified, go to dashboard (authoritative).
       if (u.emailVerified) {
         router.push("/");
         return;
       }
 
-      // 2) Otherwise read Firestore boolean.
       try {
         const userRef = doc(db, "users", u.uid);
         const snap = await getDoc(userRef);
         if (snap.exists()) {
           const data = snap.data() as any;
-
-          // keep local bool in sync
           setEmailVerified(!!data.emailVerified);
 
-          // keep Firestore's emailVerified in sync with auth (best-effort)
           try {
             await updateDoc(userRef, { emailVerified: u.emailVerified });
           } catch (err) {
-            // ignore update errors
             console.error("Failed to update Firestore emailVerified:", err);
           }
 
-          // Admin bypass: if this is an admin email and Firestore boolean is true, allow bypass
           const isAdmin = !!u.email && ADMIN_BYPASS_EMAILS.includes(u.email);
           if (isAdmin && data.emailVerified === true) {
             router.push("/");
             return;
           }
         } else {
-          // no user doc yet — ensure local state is consistent
           setEmailVerified(false);
         }
       } catch (err) {
@@ -90,7 +84,6 @@ export default function VerifyPage() {
 
   useEffect(() => {
     if (emailVerified) {
-      // For safety: only redirect here if auth user is verified OR they are admin
       const current = auth.currentUser;
       const isAdmin =
         !!current?.email && ADMIN_BYPASS_EMAILS.includes(current.email);
@@ -112,25 +105,24 @@ export default function VerifyPage() {
     if (!user || cooldown > 0) return;
     try {
       await sendEmailVerification(user);
-      setCooldown(120); // 2 minutes
+      setCooldown(120);
       setMessage("Verification email sent! Check your inbox.");
+      setIsSuccess(true);
     } catch (err) {
       console.error("Error sending email:", err);
       setMessage("Failed to send verification email. Please try again later.");
+      setIsSuccess(false);
     }
   };
 
   const handleRefresh = async () => {
     if (!user) return;
-
-    // Refresh logic: read Firestore boolean and decide
     try {
       const snap = await getDoc(doc(db, "users", user.uid));
       if (snap.exists()) {
         const data = snap.data() as any;
         setEmailVerified(!!data.emailVerified);
 
-        // If auth says verified -> go. If admin AND Firestore bool true -> go.
         if (user.emailVerified) {
           router.push("/profile");
           return;
@@ -143,84 +135,98 @@ export default function VerifyPage() {
         }
 
         setMessage("Email not verified yet. Click 'Resend Email' if needed.");
+        setIsSuccess(false);
       }
     } catch (err) {
       console.error("Error refreshing verification state:", err);
       setMessage("Failed to refresh. Try again.");
+      setIsSuccess(false);
     }
   };
 
-  // -----------------------
-  // Loading state: show full-page spinner
-  // -----------------------
+  // Loading state
   if (!user) {
     return (
-      <main className="bg-[var(--lightGray)] relative min-h-[100dvh] w-full flex items-center justify-center">
-        <Loader className="animate-spin w-12 h-12 text-black" />
+      <main className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <Loader className="animate-spin w-10 h-10 text-blue-400" />
       </main>
     );
   }
 
-  // -----------------------
-  // Main card once user is loaded
-  // -----------------------
   return (
-    <main className="text-black bg-white relative min-h-[100dvh] w-full flex items-center justify-center text-center">
-      <div className="bg-white border-3 border-gray-200 rounded-xl relative z-10 w-[90%] max-w-xl p-10">
-        <h1 className="mb-4 text-3xl font-extrabold tracking-tight">
-          Email Verification
-        </h1>
+    <>
+      {/* <Navbar /> */}
 
-        <div className="flex flex-col gap-5">
-          <p className="text-xl">Signed in as {user.email}</p>
+      <main className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
+        {/* Outer card with blue border */}
+        <div className="bg-white rounded-2xl shadow-lg w-full max-w-3xl flex flex-col sm:flex-row overflow-hidden">
 
-          {/* RESEND BUTTON */}
-          <button
-            onClick={handleResend}
-            disabled={cooldown > 0}
-            className={`hover:scale-105 scursor-pointertransition transition text-xl px-6 py-2 rounded-xl text-white
-            ${
-              cooldown > 0
-                ? "bg-gray-400 cursor-not-allowed"
-                : "cursor-pointer bg-black hover:scale-110"
-            }`}
-          >
-            {cooldown > 0
-              ? `Resend in ${Math.floor(cooldown / 60)}:${String(
-                  cooldown % 60
-                ).padStart(2, "0")}`
-              : "Resend Email"}
-          </button>
-
-          {/* REFRESH BUTTON */}
-          <button
-            onClick={handleRefresh}
-            className="hover:scale-105 cursor-pointer transition text-xl px-6 py-2 rounded-xl bg-black text-white"
-          >
-            Refresh
-          </button>
-          
-
-          {/* MESSAGE */}
-          {message && (
-            <p className="text-xs md:text-base w-full rounded-full bg-white text-red-400 font-semibold py-3 transition">
-              {" "}
-              {message}
+          {/* ── Left panel: content ── */}
+          <div className="flex-1 p-10 flex flex-col justify-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Verify Your Email
+            </h2>
+            <p className="text-sm text-gray-500 mb-6">
+              Signed in as{" "}
+              <span className="font-medium text-gray-700">{user.email}</span>
             </p>
-          )}
+
+            <div className="flex flex-col gap-4">
+              {/* Info box */}
+              <div className="rounded-lg bg-blue-50 border border-blue-100 px-4 py-3 text-sm text-blue-700">
+                We sent a verification link to your email. Please check your
+                inbox and click the link to verify your account.
+              </div>
+
+              {/* Feedback message */}
+              {message && (
+                <p className={`text-xs font-medium ${isSuccess ? "text-green-500" : "text-red-500"}`}>
+                  {message}
+                </p>
+              )}
+
+              {/* Refresh button — primary */}
+              <button
+                onClick={handleRefresh}
+                className="mt-1 w-full py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 active:scale-95 text-white font-semibold text-sm transition cursor-pointer"
+              >
+                I&apos;ve Verified — Continue
+              </button>
+
+              {/* Resend button — secondary */}
+              <button
+                onClick={handleResend}
+                disabled={cooldown > 0}
+                className="w-full py-2.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 active:scale-95 text-gray-700 font-semibold text-sm transition disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {cooldown > 0
+                  ? `Resend in ${Math.floor(cooldown / 60)}:${String(cooldown % 60).padStart(2, "0")}`
+                  : "Resend Verification Email"}
+              </button>
+
+              {/* Back to Sign In */}
+              <p className="text-center text-xs text-gray-500 mt-1">
+                <button
+                  onClick={handleLogout}
+                  className="hover:underline text-gray-600 font-medium cursor-pointer"
+                >
+                  ← Back to Sign In
+                </button>
+              </p>
+            </div>
+          </div>
+
+          {/* ── Right panel: logo ── */}
+          <div className="hidden sm:flex flex-1 items-center justify-center bg-white border-l border-gray-100 p-10">
+            {/* Update src to your actual logo path, e.g. "/images/logo.png" */}
+            <img
+              src="/HENsignin.png"
+              alt="Health Equity Northland"
+              className="max-w-[500px] w-full object-contain"
+            />
+          </div>
         </div>
-
-
-        
-          {/* LOGOUT BUTTON */}
-          <button
-            onClick={handleLogout}
-            className="mt-6 text-black hover:underline text-md cursor-pointer"
-          >
-            Back to Sign In
-          </button>
-
-      </div>
-    </main>
+      </main>
+    </>
   );
 }
