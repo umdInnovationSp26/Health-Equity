@@ -85,14 +85,15 @@ export default function EventsPage() {
   return (
     <>
       <Navbar />
+      
       <main className="pt-20 min-h-screen">
         {/* Top bar with search */}
-        <div className="bg-white shadow-sm flex flex-wrap items-center justify-between p-4 gap-2">
+        <div className="bg-white shadow-sm flex items-center justify-between p-4 gap-2 relative">
           {/* Left controls */}
           <div className="flex items-center space-x-2 flex-shrink-0">
-            <button className="p-2 hover:scale-105 transition hover:cursor-pointer  ">
+            {/* <button className="p-2 hover:scale-105 transition hover:cursor-pointer  ">
               <FaArrowLeft/>
-            </button>
+            </button> */}
             <button
               onClick={() => setSortBy("timestampStart")}
               className={`rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base ${sortBy === 'timestampStart' ? 'bg-gray-300 ' : 'bg-gray-100 '}`}

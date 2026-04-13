@@ -78,174 +78,187 @@ export default function CreateEvent() {
       </Head>
 
       <Navbar />
-      
-      {/* Top bar with search */}
-      <div className="pt-25 grid grid-cols-3 gap-1 border-b-2 border-gray-200 pb-4 bg-white items-center">
+
+      <main className="pt-20 min-h-screen">
+        {/* Top bar with search */}
+        <div className="bg-white shadow-sm flex items-center justify-between p-4 gap-2 relative">
           <div className="content-start px-4">
-              <button onClick={() => router.push('/events')} className="p-2 hover:scale-105 transition hover:cursor-pointer">
-                  <FaArrowLeft />
-              </button>
+            <button
+              onClick={() => router.push("/events")}
+              className="p-2 hover:scale-105 transition hover:cursor-pointer"
+            >
+              <FaArrowLeft />
+            </button>
           </div>
-          
-          <h3 className="relative text-center font-bold">
+
+          <h3 className="absolute left-1/2 -translate-x-1/2 font-bold">
             Create Event
           </h3>
 
-      </div>
+          <div className="content-end text-right pr-4">
+            <button className="bg-blue-100 rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base">
+              ...
+            </button>
+          </div>
+        </div>
 
-      <div className="min-h-screen bg-gray-50 flex justify-center p-4">
-        <form onSubmit={handleSubmit} className="w-full max-w-3xl bg-white rounded-2xl shadow-sm border border-gray-100 p-12 space-y-6">
+        <div className="min-h-screen bg-gray-50 flex justify-center p-4">
+          <form
+            onSubmit={handleSubmit}
+            className="w-full max-w-3xl bg-white rounded-2xl shadow-sm border border-gray-100 p-12 space-y-6"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">
+                  Event Name
+                </label>
+                <input
+                  name="eventName"
+                  required
+                  type="text"
+                  className="w-full p-3 bg-gray-100 rounded-lg outline-none"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">
+                  Date
+                </label>
+                <input
+                  name="date"
+                  required
+                  type="date"
+                  className="w-full p-3 bg-gray-100 rounded-lg outline-none"
+                />
+              </div>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">
-                Event Name
+                Location
               </label>
               <input
-                name="eventName"
-                required
+                name="location"
                 type="text"
                 className="w-full p-3 bg-gray-100 rounded-lg outline-none"
               />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">
-                Date
-              </label>
-              <input
-                name="date"
-                required
-                type="date"
-                className="w-full p-3 bg-gray-100 rounded-lg outline-none"
-              />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">
+                  Start Time
+                </label>
+                <input
+                  name="startTime"
+                  required
+                  type="time"
+                  className="w-full p-3 bg-gray-100 rounded-lg outline-none"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">
+                  End Time
+                </label>
+                <input
+                  name="endTime"
+                  required
+                  type="time"
+                  className="w-full p-3 bg-gray-100 rounded-lg outline-none"
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-700">
-              Location
-            </label>
-            <input
-              name="location"
-              type="text"
-              className="w-full p-3 bg-gray-100 rounded-lg outline-none"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">
-                Start Time
-              </label>
-              <input
-                name="startTime"
-                required
-                type="time"
-                className="w-full p-3 bg-gray-100 rounded-lg outline-none"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">
-                End Time
-              </label>
-              <input
-                name="endTime"
-                required
-                type="time"
-                className="w-full p-3 bg-gray-100 rounded-lg outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-700">
-              Description
-            </label>
-            <textarea
-              name="description"
-              rows={2}
-              className="w-full p-3 bg-gray-100 rounded-lg outline-none"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-700">
-              Event Type
-            </label>
-            <select
-              name="eventType"
-              required
-              className="w-full p-3 bg-gray-100 rounded-lg outline-none"
-              onChange={(e) => {
-                const val = e.target.value;
-                setSelectedType(val === "" ? null : Number(val));
-              }}
-            >
-              <option value="">Select Type</option>
-              {Array.from(eventTypeList).map(([key, label]) => (
-                <option key={key} value={key}>
-                  {" "}
-                  {label}{" "}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Outreach and tabling options */}
-          {(selectedType == eventTypeUtil.getOutreachId() ||
-            selectedType == eventTypeUtil.getTablingId()) && (
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">
-                Supplies Information
+                Description
               </label>
               <textarea
-                name="suppliesInformation"
-                placeholder="Add any supplies information"
+                name="description"
                 rows={2}
                 className="w-full p-3 bg-gray-100 rounded-lg outline-none"
               />
             </div>
-          )}
 
-          {/* Outreach only option */}
-          {selectedType == eventTypeUtil.getOutreachId() && (
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">
-                Event Feedback
+                Event Type
+              </label>
+              <select
+                name="eventType"
+                required
+                className="w-full p-3 bg-gray-100 rounded-lg outline-none"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSelectedType(val === "" ? null : Number(val));
+                }}
+              >
+                <option value="">Select Type</option>
+                {Array.from(eventTypeList).map(([key, label]) => (
+                  <option key={key} value={key}>
+                    {" "}
+                    {label}{" "}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Outreach and tabling options */}
+            {(selectedType == eventTypeUtil.getOutreachId() ||
+              selectedType == eventTypeUtil.getTablingId()) && (
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">
+                  Supplies Information
+                </label>
+                <textarea
+                  name="suppliesInformation"
+                  placeholder="Add any supplies information"
+                  rows={2}
+                  className="w-full p-3 bg-gray-100 rounded-lg outline-none"
+                />
+              </div>
+            )}
+
+            {/* Outreach only option */}
+            {selectedType == eventTypeUtil.getOutreachId() && (
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">
+                  Event Feedback
+                </label>
+                <textarea
+                  name="eventFeedback"
+                  rows={2}
+                  placeholder="Add quotes, surveys, or general feedback from the event"
+                  className="w-full p-3 bg-gray-100 rounded-lg outline-none"
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700">
+                Notes
               </label>
               <textarea
-                name="eventFeedback"
+                name="notes"
                 rows={2}
-                placeholder="Add quotes, surveys, or general feedback from the event"
+                placeholder="Add any additional notes"
                 className="w-full p-3 bg-gray-100 rounded-lg outline-none"
               />
             </div>
-          )}
 
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-700">
-              Notes
-            </label>
-            <textarea
-              name="notes"
-              rows={2}
-              placeholder="Add any additional notes"
-              className="w-full p-3 bg-gray-100 rounded-lg outline-none"
-            />
-          </div>
+            {/* Submit button */}
+            <div className="pt-6 flex justify-center">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full md:w-64 bg-blue-500 text-white rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base"
+              >
+                {loading ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </main>
 
-          {/* Submit button */}
-          <div className="pt-6 flex justify-center">
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full md:w-64 bg-blue-500 text-white rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base"
-            >
-              {loading ? "Saving..." : "Save"}
-            </button>
-          </div>
-        </form>
-      </div>
       <Footer />
     </>
   );

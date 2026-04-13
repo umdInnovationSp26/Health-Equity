@@ -56,31 +56,44 @@ export default function ContactsPage() {
     <>
       <Navbar />
 
-      <main className="pt-30 min-h-screen px-4 py-10">
-        <div className="mx-auto max-w-2xl space-y-5">
-          {/* Page header */}
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Produce</h1>
-          </div>
+      <main className="pt-20 min-h-screen">
+        {/* Top bar with search */}
+        <div className="bg-white shadow-sm flex items-center justify-between p-4 gap-2 relative">
+          <div className="content-start px-4"></div>
 
-          {/* Search + sort */}
-          <div className="flex flex-col sm:flex-row gap-2">
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search..."
-              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
-            />
+          <h3 className="absolute left-1/2 -translate-x-1/2 font-bold">
+            Produce
+          </h3>
 
-            <select
-              value={sortKey}
-              onChange={(e) => setSortKey(e.target.value as SortKey)}
-              className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+          <div className="content-end text-right pr-4">
+            <button
+              onClick={() => setShowAdd(true)}
+              className="bg-blue-600 rounded-xl px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base text-white"
             >
-              <option value="name">Sort by lbs</option>
-            </select>
+              ...
+            </button>
           </div>
         </div>
+
+        {/* Search + sort */}
+         <div className="mx-auto max-w-2xl space-y-5 p-6">
+          {/* Search + sort */}
+          <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search..."
+            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+          />
+
+          <select
+            value={sortKey}
+            onChange={(e) => setSortKey(e.target.value as SortKey)}
+            className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+          >
+            <option value="name">Sort by lbs</option>
+          </select>
+        </div></div>
       </main>
 
       <Footer />
