@@ -28,11 +28,10 @@ interface Event {
 
 export default function EventsPage() {
   const router = useRouter();
-
   const [searchTerm, setSearchTerm] = useState(""); // variable to store the search term
   const [events, setEvents] = useState<Event[]>([]); // variable to store the events
-
   const [sortBy, setSortBy] = useState("timestampStart"); // store sort specification
+  const [loading, setLoading] = useState(true);
 
   // Run this on page load and when searchbox is updated
   useEffect(() => {
@@ -64,6 +63,8 @@ export default function EventsPage() {
         } as Event;
       });
 
+      setLoading(false);
+
       setEvents(data); // update the event list
     });
 
@@ -91,6 +92,27 @@ export default function EventsPage() {
       }
     });
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="flex items-center gap-2 text-sm text-slate-400">
+          <svg
+            className="animate-spin"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+          </svg>
+          Loading…
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <>
       <Navbar />
