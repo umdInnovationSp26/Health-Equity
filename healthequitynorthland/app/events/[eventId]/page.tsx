@@ -27,6 +27,7 @@ export default function EventDetailsPage({ params }: { params: Promise<{ eventId
     // Unwrap the params to get the ID
     const { eventId } = use(params);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [event, setEventData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 

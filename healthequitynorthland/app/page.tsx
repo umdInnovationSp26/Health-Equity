@@ -131,7 +131,9 @@ function EventCard({ event, index }: { event: FirestoreEvent; index: number }) {
           </p>
         )}
         <div className="mt-auto space-y-1.5 pt-1 border-t border-slate-50">
-          <MetaRow icon="calendar">{event.dateStart}</MetaRow>
+          <MetaRow icon="calendar">
+  {new Date(event.dateStart).toLocaleDateString()}
+</MetaRow>
           <MetaRow icon="location">{event.location || "Location TBD"}</MetaRow>
           {event.attendees > 0 && (
             <MetaRow icon="people">{event.attendees} attendees</MetaRow>
