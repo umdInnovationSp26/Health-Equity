@@ -91,7 +91,7 @@ export default function CreateEvent() {
             </button>
           </div>
 
-          <h3 className="absolute left-1/2 -translate-x-1/2 font-bold">
+          <h3 className="text-black absolute left-1/2 -translate-x-1/2 font-bold">
             Create Event
           </h3>
 

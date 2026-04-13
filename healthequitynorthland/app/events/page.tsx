@@ -96,13 +96,13 @@ export default function EventsPage() {
             </button> */}
             <button
               onClick={() => setSortBy("timestampStart")}
-              className={`rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base ${sortBy === 'timestampStart' ? 'bg-gray-300 ' : 'bg-gray-100 '}`}
+              className={`text-black rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base ${sortBy === 'timestampStart' ? 'bg-gray-300' : 'bg-gray-100 '}`}
             >
               By Date
             </button>
             <button
               onClick={() => setSortBy("title")}
-              className={`rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base ${sortBy === 'title' ? 'bg-gray-300 ' : 'bg-gray-100 '}`}
+              className={`text-black rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base ${sortBy === 'title' ? 'bg-gray-300 ' : 'bg-gray-100 '}`}
             >
               Alphabetical
             </button>
@@ -113,7 +113,7 @@ export default function EventsPage() {
             <input
               type="text"
               placeholder="Search by name"
-              className="w-full pl-10 p-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm text-sm sm:text-base"
+              className="text-black w-full pl-10 p-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm text-sm sm:text-base"
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">
@@ -123,7 +123,7 @@ export default function EventsPage() {
 
           {/* Right controls */}
           <div className="flex items-center space-x-2 flex-shrink-0">
-            <button className="bg-blue-100 rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base">
+            <button className="text-black bg-blue-100 rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base">
               View Calendar
             </button>
             <button
@@ -136,7 +136,7 @@ export default function EventsPage() {
         </div>
 
         {/*Event cards */}
-        <div className="flex flex-col gap-4 m-4">
+        <div className="flex flex-col gap-4 m-4 max-w-4xl mx-auto">
           {filteredEvents.map((event) => (
             <a
               key={event.id}

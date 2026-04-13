@@ -95,7 +95,7 @@ export default function ContactsPage() {
         <div className="bg-white shadow-sm flex items-center justify-between p-4 gap-2 relative">
           <div className="content-start px-4"></div>
 
-          <h3 className="absolute left-1/2 -translate-x-1/2 font-bold">
+          <h3 className="text-black absolute left-1/2 -translate-x-1/2 font-bold">
             Contacts
           </h3>
 
