@@ -5,7 +5,7 @@ import Navbar from "@/app/components/navbar";
 import { useEffect, useState } from "react";
 import { auth, db } from "@/app/lib/firebaseClient";
 import { doc, onSnapshot } from "firebase/firestore";
-import Settings from "@/app/components/profile";
+import Profile from "@/app/components/profile";
 import Footer from "../components/footer";
 
 export default function DashboardPage() {
@@ -39,7 +39,7 @@ export default function DashboardPage() {
     <div className="min-h-screen flex transition-colors duration-300">
       <div className="flex-1">
         <Navbar />
-        <Settings />
+        <Profile />
         <Footer/>
       </div>
     </div>
