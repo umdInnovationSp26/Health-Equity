@@ -2,7 +2,11 @@
 import Head from "next/head";
 import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
+
+import { FaArrowLeft } from "react-icons/fa";
+
 import { useState } from "react";
+
 import { auth, db } from "@/app/lib/firebaseClient";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
@@ -46,7 +50,7 @@ export default function CreateEvent() {
         title: name,
         location: location,
         description: description,
-        eventType: Number(type) || -1, // save the int that correlates with the event type
+        eventType: Number(type), // save the int that correlates with the event type
         attendees: 0,
         timestampStart: convertDateToTimestamp(combinedStartDateTime), // Change dates to firebase's timestamp
         timestampEnd: convertDateToTimestamp(combinedEndDateTime), // Change dates to firebase's timestamp
@@ -74,14 +78,23 @@ export default function CreateEvent() {
       </Head>
 
       <Navbar />
-      <div className="min-h-screen pt-25 bg-gray-50 flex justify-center p-4">
-        <form
-          onSubmit={handleSubmit}
-          className="w-full max-w-3xl bg-white rounded-2xl shadow-sm border border-gray-100 p-12 space-y-6"
-        >
-          <h1 className="text-2xl font-bold text-slate-800 text-center mb-10">
-            Edit Event
-          </h1>
+      
+      {/* Top bar with search */}
+      <div className="pt-25 grid grid-cols-3 gap-1 border-b-2 border-gray-200 pb-4 bg-white items-center">
+          <div className="content-start px-4">
+              <button onClick={() => router.push('/events')} className="p-2 hover:scale-105 transition hover:cursor-pointer">
+                  <FaArrowLeft />
+              </button>
+          </div>
+          
+          <h3 className="relative text-center font-bold">
+            Create Event
+          </h3>
+
+      </div>
+
+      <div className="min-h-screen bg-gray-50 flex justify-center p-4">
+        <form onSubmit={handleSubmit} className="w-full max-w-3xl bg-white rounded-2xl shadow-sm border border-gray-100 p-12 space-y-6">
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
@@ -226,7 +239,7 @@ export default function CreateEvent() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full md:w-64 py-3 font-bold rounded-xl disabled:opacity-50 transition-colors"
+              className="w-full md:w-64 bg-blue-500 text-white rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base"
             >
               {loading ? "Saving..." : "Save"}
             </button>

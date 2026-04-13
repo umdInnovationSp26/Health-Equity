@@ -1,32 +1,22 @@
 "use client";
-import Head from "next/head";
 import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
-import Image from "next/image";
+
+import Image from 'next/image'
+import { FaArrowLeft } from "react-icons/fa";
+
 import calendar_svg from "@/public/calendar.svg";
 import pin_svg from "@/public/pin.svg";
-import { getEventType } from "@/app/lib/eventTypeUtil";
 import { useRouter } from "next/navigation";
-import { convertTimestampToDate } from "@/app/lib/dateTimeUtil";
+import { getDateTimeString } from '@/app/lib/dateTimeUtil';
+import { Event, mapDocToEvent } from '@/app/lib/eventInterface'
 
 import { useEffect, useState } from "react";
 import { auth, db } from "@/app/lib/firebaseClient";
 import { collection, query, onSnapshot, orderBy } from "firebase/firestore";
 
-// Define an event. These should match the fields on firebase.
-interface Event {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  location: string;
-  dateStart: string;
-  dateEnd: string;
-  attendees: number;
-  rawTimeStart: number; // used for sorting on this page only
-}
-
 export default function EventsPage() {
+
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState(""); // variable to store the search term
   const [events, setEvents] = useState<Event[]>([]); // variable to store the events
@@ -40,28 +30,7 @@ export default function EventsPage() {
 
     // Grab data from the db
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => {
-        const docData = doc.data();
-
-        // Convert Firebase Timestamp to a readable string
-        const formattedStartDate = convertTimestampToDate(
-          docData.timestampStart,
-        );
-        const formattedEndDate = convertTimestampToDate(docData.timestampEnd);
-
-        // map grabbed db variables to an event
-        return {
-          id: doc.id,
-          title: docData.title || "Unknown",
-          description: docData.description || "",
-          category: getEventType(docData.category),
-          location: docData.location || "TBD",
-          attendees: docData.attendees || 0,
-          dateStart: formattedStartDate,
-          dateEnd: formattedEndDate,
-          rawTimeStart: docData.timestampStart?.seconds || Number.MAX_VALUE, // used for sorting after grabbing the data
-        } as Event;
-      });
+      const data = snapshot.docs.map(doc => mapDocToEvent(doc.id, doc.data()))
 
       setLoading(false);
 
@@ -72,25 +41,25 @@ export default function EventsPage() {
   }, [sortBy]);
 
   // filter the events on the search term. Will run on load and when the searchbox is updated
-  const filteredEvents = events
-    .filter((event) => {
-      // If search is empty or just whitespace, show everything
-      if (!searchTerm.trim()) {
-        return true;
-      }
+  const filteredEvents = events.filter(event => {
+    // If search is empty or just whitespace, show everything
+    if (!searchTerm.trim()) {
+      return true;
+    }
 
-      // Otherwise, check if title includes search term and return the searched list
-      return event.title.toLowerCase().includes(searchTerm.toLowerCase());
-    })
-    .sort((a, b) => {
-      if (sortBy === "title") {
-        return a.title.localeCompare(b.title);
-      } else if (sortBy === "timestampStart") {
-        return b.rawTimeStart - a.rawTimeStart;
-      } else {
-        return 0; // don't sort if the sortBy variable is not working
-      }
-    });
+    // Otherwise, check if title includes search term and return the searched list
+    return event.title.toLowerCase().includes(searchTerm.toLowerCase());
+  }).sort((a, b) => {
+    if (sortBy === "title") {
+      return a.title.localeCompare(b.title);
+    }
+    else if (sortBy === "timestampStart") {
+      return b.rawTimeStart - a.rawTimeStart;
+    }
+    else {
+      return 0; // don't sort if the sortBy variable is not working
+    }
+  });
 
   if (loading) {
     return (
@@ -121,19 +90,18 @@ export default function EventsPage() {
         <div className="bg-white shadow-sm flex flex-wrap items-center justify-between p-4 gap-2">
           {/* Left controls */}
           <div className="flex items-center space-x-2 flex-shrink-0">
-            <button className="p-2 hover:scale-105 transition">
-              {" "}
-              {/* Left arrow placeholder */}{" "}
+            <button className="p-2 hover:scale-105 transition hover:cursor-pointer  ">
+              <FaArrowLeft/>
             </button>
             <button
               onClick={() => setSortBy("timestampStart")}
-              className="bg-gray-100 rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base"
+              className={`rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base ${sortBy === 'timestampStart' ? 'bg-gray-300 ' : 'bg-gray-100 '}`}
             >
               By Date
             </button>
             <button
               onClick={() => setSortBy("title")}
-              className="bg-gray-100 rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base"
+              className={`rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base ${sortBy === 'title' ? 'bg-gray-300 ' : 'bg-gray-100 '}`}
             >
               Alphabetical
             </button>
@@ -166,13 +134,13 @@ export default function EventsPage() {
           </div>
         </div>
 
-        {/* Event cards */}
-        <div className="flex flex-col items-center gap-4 m-4">
+        {/*Event cards */}
+        <div className="flex flex-col gap-4 m-4">
           {filteredEvents.map((event) => (
             <a
               key={event.id}
               href={`/events/${event.id}`}
-              className="flex items-center justify-between w-full max-w-4xl p-6 bg-white border border-gray-200 rounded-xl transition-transform duration-200 hover:scale-[1.01] shadow-sm"
+              className="flex items-center justify-between w-full p-6 bg-white border border-gray-200 rounded-xl transition-transform duration-200 hover:scale-[1.01] shadow-sm"
             >
               <div className="w-full flex flex-col gap-2 max-w-sm">
                 <span className="w-fit px-3 py-1 text-xs font-medium bg-indigo-100 text-indigo-700 rounded-full">
@@ -192,7 +160,7 @@ export default function EventsPage() {
                     src={pin_svg}
                     width={15}
                     height={15}
-                    alt="Location icon"
+                    alt="icon for location"
                   />
                   {event.location}
                 </div>
@@ -201,9 +169,9 @@ export default function EventsPage() {
                     src={calendar_svg}
                     width={15}
                     height={15}
-                    alt="Calendar icon"
+                    alt="icon for date"
                   />
-                  {event.dateStart}
+                  {getDateTimeString(event.dateStart)}
                 </div>
               </div>
 
