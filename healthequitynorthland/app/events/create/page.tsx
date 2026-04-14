@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 import { convertDateToTimestamp } from "@/app/lib/dateTimeUtil";
 
 import * as eventTypeUtil from "@/app/lib/eventTypeUtil";
-import { Produce, convertKilogramsToOunces, convertKilogramsToPounds, convertOuncesToKilograms, convertOuncesToPounds, convertPoundsToKilograms, convertPoundsToOunces, mapDocToProduce } from "@/app/lib/produceUtil";
+import { Produce, convertKilogramsToOunces, convertKilogramsToPounds, convertOuncesToKilograms, convertOuncesToPounds, convertPoundsToKilograms, convertPoundsToOunces, mapDocToProduceOption } from "@/app/lib/produceUtil";
 
 
 const KG = "kg"
@@ -41,7 +41,7 @@ export default function CreateEvent() {
 
     // Grab data from the db
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => mapDocToProduce(doc.data()))
+      const data = snapshot.docs.map(doc => mapDocToProduceOption(doc.data()))
 
       setProduceOptions(data); // update the options list
     });

@@ -14,6 +14,8 @@ export interface Event {
     feedbackText: string;
     suppliesInformation: string;
     rawTimeStart: number; // used for faster sorting by date
+    eventTypeId: number;
+    notes: string;
 }
 
 
@@ -35,7 +37,9 @@ export function mapDocToEvent(id: string, docData: any): Event {
         dateEnd: formattedEndDate,
         feedbackText: docData.feedbackText ?? "",
         suppliesInformation: docData.eventInformation ?? "",
-        rawTimeStart: docData.timestampStart?.seconds || Number.MAX_VALUE // used for sorting after grabbing the data
+        rawTimeStart: docData.timestampStart?.seconds || Number.MAX_VALUE, // used for sorting after grabbing the data
+        eventTypeId: docData.eventType,
+        notes: docData.notes
     
     }
 }

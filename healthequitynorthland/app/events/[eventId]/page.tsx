@@ -3,7 +3,7 @@
 import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
 
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft, FaPencilAlt } from "react-icons/fa";
 
 import {
   Menu,
@@ -37,7 +37,6 @@ export default function EventDetailsPage({
   // Unwrap the params to get the ID
   const { eventId } = use(params);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [event, setEventData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -104,8 +103,8 @@ export default function EventDetailsPage({
               <h1 className="text-4xl font-bold text-slate-800">
                 {event.title}
               </h1>
-              <button className="text-slate-400 hover:text-slate-600 text-2xl">
-                ✎
+              <button className="text-black hover:cursor-pointer hover:scale-105  hover:text-slate-600 text-2xl" onClick={() => router.push("/events/" + eventId + "/edit")}>
+                <FaPencilAlt/>
               </button>
             </div>
 

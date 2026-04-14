@@ -4,14 +4,22 @@ export interface Produce{
     units: string
 }
 
-export function mapDocToProduce(docData: any): Produce {
-
+/** Maps a main Produce collection doc to a global produce option */
+export function mapDocToProduceOption(docData: any): Produce {
     return {
         name: docData.name || "Unknown",
         amount: 0,
         units: "lb" // default to pounds
-    }
+    };
 
+}
+
+export function mapDocToEventProduce(produceName: string, docData: any) : Produce {
+    return {
+        name: produceName || "Unknown",
+        amount: docData.lb || 0,
+        units: "lb" // default to pounds
+    };
 }
 
 export function convertPoundsToKilograms(pounds: number): number {
