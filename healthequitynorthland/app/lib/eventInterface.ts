@@ -1,7 +1,7 @@
 import { convertTimestampToDate } from "./dateTimeUtil";
 import { getEventType } from "./eventTypeUtil";
 
-
+/** A HEN event */
 export interface Event {
     id: string;         
     title: string;     
