@@ -14,6 +14,8 @@ import { Event, mapDocToEvent } from '@/app/lib/eventInterface'
 import { useEffect, useState } from "react";
 import { auth, db } from "@/app/lib/firebaseClient";
 import { collection, query, onSnapshot, orderBy } from "firebase/firestore";
+import { generateIcsString, triggerIcsDownload } from "../lib/calendarUtil";
+import DownloadEventsModal from "@/app/components/calendarModal";
 
 export default function EventsPage() {
 
@@ -22,6 +24,8 @@ export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]); // variable to store the events
   const [sortBy, setSortBy] = useState("timestampStart"); // store sort specification
   const [loading, setLoading] = useState(true);
+
+  const [isOpen, setIsOpen] = useState(false); // stores state of the modal
 
   // Run this on page load and when searchbox is updated
   useEffect(() => {
@@ -123,8 +127,8 @@ export default function EventsPage() {
 
           {/* Right controls */}
           <div className="flex items-center space-x-2 flex-shrink-0">
-            <button className="text-black bg-blue-100 rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base">
-              View Calendar
+            <button className="text-black bg-blue-100 rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base" onClick={() => setIsOpen(true)}>
+              Export Events
             </button>
             <button
               onClick={() => router.push("/events/create")}
@@ -195,6 +199,11 @@ export default function EventsPage() {
             <p className="text-center text-gray-400 mt-10">No events found</p>
           )}
         </div>
+        <DownloadEventsModal 
+          isOpen={isOpen} 
+          onClose={() => setIsOpen(false)} 
+          allEvents={events} 
+        />
       </main>
 
       <Footer />

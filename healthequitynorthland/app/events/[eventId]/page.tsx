@@ -26,6 +26,7 @@ import { mapDocToEvent } from "@/app/lib/eventInterface";
 import { getDateOnlyString, getTimeOnlyString } from "@/app/lib/dateTimeUtil";
 
 import { useRouter } from "next/navigation";
+import { generateIcsString, triggerIcsDownload } from "@/app/lib/calendarUtil";
 
 export default function EventDetailsPage({
   params,
@@ -65,6 +66,11 @@ export default function EventDetailsPage({
   if (loading) return <div className="p-25 text-center">Loading event...</div>;
   if (!event) return <div className="p-25 text-center">Event not found.</div>;
 
+  const downloadCalendarFile = () => {
+    const ics = generateIcsString([event]);
+    triggerIcsDownload(ics, `${event.title || 'event'}`);
+  };
+
   return (
     <div className="min-h-screen bg-white pb-20">
       <Navbar />
@@ -86,8 +92,8 @@ export default function EventDetailsPage({
           </h3>
 
           <div className="content-end text-right pr-4">
-            <button className="bg-blue-100 rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base">
-              Open in Calendar
+            <button className="bg-blue-100 rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base" onClick={downloadCalendarFile}>
+              Download Calendar File (.ics)
             </button>
           </div>
         </div>
