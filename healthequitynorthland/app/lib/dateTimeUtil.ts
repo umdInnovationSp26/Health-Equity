@@ -36,3 +36,24 @@ export function getTimeOnlyString(date: Date){
         minute: '2-digit'
     });
 }
+
+/** HTML time is formatted in hr:mn for tsx time inputs */
+export function getTimeInHTML (date: Date | undefined) {
+  if (!date) return "";
+  
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  
+  return `${hours}:${minutes}`;
+};
+
+/** HTML date is formatted in yyyy-mm-dd for tsx date inputs */
+export function getDateInHTML (date: Date | undefined) {
+    if (!date) return "";
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+    const day = String(date.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+}
