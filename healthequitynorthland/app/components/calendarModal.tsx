@@ -1,7 +1,7 @@
 "use client";
 
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
-import { FaDownload, FaTimes, FaCalendarAlt, FaCheck, FaCopy } from "react-icons/fa";
+import { FaEye, FaEyeSlash,FaDownload, FaTimes, FaCalendarAlt, FaCheck, FaCopy } from "react-icons/fa";
 import { generateIcsString, triggerIcsDownload } from "@/app/lib/calendarUtil";
 import { Event } from "@/app/lib/eventInterface"; 
 import { useEffect, useState } from "react";
@@ -15,14 +15,18 @@ interface DownloadModalProps {
 
 export default function DownloadEventsModal({ isOpen, onClose, allEvents }: DownloadModalProps) {
   const [copied, setCopied] = useState(false);
-  const [baseUrl, setBaseUrl] = useState("");
+  const [subscribeUrl, setSubscribeUrl] = useState("");
+  const [showUrl, setShowUrl] = useState(false);
 
   // Ensure window.location is only accessed on the client
   useEffect(() => {
-    setBaseUrl(window.location.origin);
+    if (typeof window !== "undefined") {
+      // Construct URL with the public token
+      const token = process.env.NEXT_PUBLIC_CALENDAR_TOKEN;
+      const url = `${window.location.origin}/api/calendar/feed?token=${token}`;
+      setSubscribeUrl(url);
+    }
   }, []);
-
-  const calendarDetails = `${baseUrl}/api/calendar/feed`;
 
 
   const handleDownload = () => {
@@ -31,7 +35,7 @@ export default function DownloadEventsModal({ isOpen, onClose, allEvents }: Down
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(calendarDetails);
+    navigator.clipboard.writeText(subscribeUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000); // Reset icon after 2 seconds
   };
@@ -64,10 +68,10 @@ export default function DownloadEventsModal({ isOpen, onClose, allEvents }: Down
               </button>
             </div>
 
-            <p className="text-sm text-slate-500 mb-6">
+            <p className="text-slate-500 mb-6 pt-5">
               Download a .ics file and upload all events to a calendar at once.
             </p>
-            <p className="text-sm text-slate-500 mb-6">
+            <p className="text-slate-500 mb-6 pb-5">
               Or, subscribe to these events through Google Calendar to get automatic updates when an event changes (takes up to 24 hours).
             </p>
 
@@ -75,41 +79,56 @@ export default function DownloadEventsModal({ isOpen, onClose, allEvents }: Down
               <div>
                 <button
                   onClick={handleDownload}
-                  className="flex w-full items-center justify-center gap-3 bg-blue-500 text-white rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base "
+                  className="flex w-full items-center justify-center gap-3 bg-blue-500 text-white rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition sm:text-base "
                 >
                   <FaDownload />
                   Download .ics File
                 </button>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">
+              <div className="space-y-2 pt-3">
+                <label className="text-sm font-bold text-slate-400 tracking-widest px-1">
                     Subscription Link
                 </label>
+
                 <div className="group flex items-center bg-slate-100 border border-slate-200 rounded-xl overflow-hidden focus-within:border-indigo-300 transition-all">
-                    {/* Read-only input looks "inactive" but is still selectable */}
-                    <input 
+                  {/* The input type toggles between 'password' and 'text' */}
+                  <input 
+                    type={showUrl ? "text" : "password"}
                     readOnly
-                    value={calendarDetails}
-                    className="flex-grow bg-transparent px-4 py-3 text-sm text-slate-500 font-medium outline-none cursor-default"
+                    value={subscribeUrl}
+                    className="flex-grow bg-transparent px-4 py-3 text-slate-500 font-medium outline-none cursor-default"
                     onClick={(e) => (e.target as HTMLInputElement).select()}
-                    />
-                    
+                  />
+                  
+                  <div className="flex items-center gap-1 pr-1">
+                    {/* Visibility Toggle Button */}
+                    <button
+                      type="button"
+                      onClick={() => setShowUrl(!showUrl)}
+                      className="p-2.5 text-slate-400 hover:text-slate-600 transition-colors hover:cursor-pointer"
+                      title={showUrl ? "Hide URL" : "Show URL"}
+                    >
+                      {showUrl ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                    </button>
+
                     {/* Copy Button */}
                     <button 
-                    onClick={handleCopyLink}
-                    className={`m-1 p-2.5 rounded-lg transition-all duration-200 hover:cursor-pointer ${
+                      onClick={handleCopyLink}
+                      className={`p-2.5 rounded-lg transition-all duration-200 hover:cursor-pointer ${
                         copied 
-                        ? 'bg-emerald-500 text-white' 
-                        : 'bg-white text-blue-600 hover:bg-slate-200 hover:border-slate-300 border border-slate-200 shadow-sm'
-                    }`}
-                    title="Copy Link"
+                          ? 'bg-emerald-500 text-white' 
+                          : 'bg-white text-blue-600 hover:bg-slate-200 hover:border-slate-300 border border-slate-200 shadow-sm'
+                      }`}
+                      title="Copy Link"
                     >
-                    {copied ? <FaCheck size={14} /> : <FaCopy size={14} />}
+                      {copied ? <FaCheck size={14} /> : <FaCopy size={14} />}
                     </button>
+                  </div>
                 </div>
 
-                <p className="text-[11px] text-slate-400 px-1 italic pb-5">
+            
+                <p className="text-sm text-slate-400 px-1 italic pb-5">
                     Paste this URL into&nbsp;
                     <Link href="https://calendar.google.com/calendar/u/0/r/settings/addbyurl" className="text-blue-600 hover:text-blue-800 font-medium underline transition-colors"> 
                         Google Calendar

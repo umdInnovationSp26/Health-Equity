@@ -2,14 +2,16 @@ import { db } from "@/app/lib/firebaseClient";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { generateIcsString } from "@/app/lib/calendarUtil";
 import { mapDocToEvent } from "@/app/lib/eventInterface";
-import { adminDb } from "@/lib/firebase-admin";
+import { adminDb } from "@/app/lib/firebaseAdmin";
 
 export async function GET(request: Request) {
-  // 1. Extract the token from the URL
+  // NEVER DO A DELETE OR WRITE IN THIS FUNCTION!
+
+  // get the token from url
   const { searchParams } = new URL(request.url);
   const providedToken = searchParams.get("token");
 
-  // 2. Compare with our secret environment variable
+  // compare with correct token
   const secretToken = process.env.CALENDAR_SECRET_TOKEN;
 
   if (!providedToken || providedToken !== secretToken) {
@@ -19,7 +21,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    // 3. Fetch data using Admin SDK (bypasses security rules)
+    // fetch the data use firebase admin sdk
     const snapshot = await adminDb.collection("event").orderBy("rawTimeStart", "asc").get();
 
     if (snapshot.empty) {
