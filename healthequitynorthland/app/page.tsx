@@ -79,19 +79,21 @@ const PRODUCE_COLORS = [
 ];
 
 /* ─── Event styles ────────────────────────────────────── */
-const EVENT_STYLES: Record<
-  string,
-  { bg: string; text: string; dot: string }
-> = {
-  Outreach: { bg: "bg-rose-50", text: "text-rose-700", dot: "bg-rose-400" },
-  "Produce Supply": {
-    bg: "bg-emerald-50",
-    text: "text-emerald-700",
-    dot: "bg-emerald-400",
-  },
-  Volunteer: { bg: "bg-sky-50", text: "text-sky-700", dot: "bg-sky-400" },
-  Community: { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-400" },
-};
+const EVENT_STYLES: Record<string, { bg: string; text: string; dot: string }> =
+  {
+    Outreach: { bg: "bg-rose-50", text: "text-rose-700", dot: "bg-rose-400" },
+    "Produce Supply": {
+      bg: "bg-emerald-50",
+      text: "text-emerald-700",
+      dot: "bg-emerald-400",
+    },
+    Volunteer: { bg: "bg-sky-50", text: "text-sky-700", dot: "bg-sky-400" },
+    Community: {
+      bg: "bg-amber-50",
+      text: "text-amber-700",
+      dot: "bg-amber-400",
+    },
+  };
 
 function getEventStyle(cat: string) {
   return (
@@ -132,8 +134,8 @@ function EventCard({ event, index }: { event: FirestoreEvent; index: number }) {
         )}
         <div className="mt-auto space-y-1.5 pt-1 border-t border-slate-50">
           <MetaRow icon="calendar">
-  {new Date(event.dateStart).toLocaleDateString()}
-</MetaRow>
+            {new Date(event.dateStart).toLocaleDateString()}
+          </MetaRow>
           <MetaRow icon="location">{event.location || "Location TBD"}</MetaRow>
           {event.attendees > 0 && (
             <MetaRow icon="people">{event.attendees} attendees</MetaRow>
@@ -635,7 +637,7 @@ export default function HomePage() {
             </div>
             <Link
               href="/events/create"
-              className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
+              className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 hover:scale-102 transition-colors"
             >
               <svg
                 width="12"
@@ -749,7 +751,6 @@ export default function HomePage() {
               <ProduceChart data={produce} />
             </div>
           </div>
- 
         </div>
       </main>
 

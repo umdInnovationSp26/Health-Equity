@@ -139,7 +139,7 @@ export default function ContactsPage() {
               filtered.map((c) => (
                 <div
                   key={c.id}
-                  className="rounded-xl border border-slate-100 bg-white p-4"
+                  className="rounded-xl border border-gray-100 shadow-sm bg-white p-4"
                 >
                   <p className="font-semibold text-slate-900">{c.name}</p>
                   <p className="text-sm text-slate-500">{c.email}</p>
