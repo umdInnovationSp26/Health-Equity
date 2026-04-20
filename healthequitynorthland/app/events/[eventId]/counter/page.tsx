@@ -101,9 +101,42 @@ export default function CountersPage() {
           ))}
         </div>
       )}
+      {/* Add counter modal */}
+{isAddModalOpen && (
+  <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="bg-white rounded-3xl p-10 w-full max-w-md shadow-2xl relative">
+      <h2 className="text-2xl font-semibold text-slate-800 mb-6">Start new counter</h2>
+      
+      <input 
+        autoFocus
+        type="text" 
+        placeholder="What are you counting?"
+        className="w-full bg-slate-100 border-none rounded-xl p-4 mb-8 text-lg focus:ring-2 focus:ring-blue-500 outline-none"
+        value={tempName}
+        onChange={(e) => setTempName(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && addCounter()}
+      />
 
-      {/* Modals would go here (Add Counter & Edit Counter) */}
-      {/* ... Logic for modals follows standard Tailwind modal patterns ... */}
+      <div className="flex gap-4">
+        <button 
+          onClick={() => {
+            setIsAddModalOpen(false);
+            setTempName("");
+          }}
+          className="flex-1 py-3 px-6 bg-slate-200 text-slate-700 font-semibold rounded-xl hover:bg-slate-300 transition-colors"
+        >
+          Cancel
+        </button>
+        <button 
+          onClick={addCounter}
+          className="flex-1 py-3 px-6 bg-blue-100 text-blue-600 font-semibold rounded-xl hover:bg-blue-200 transition-colors"
+        >
+          Add New Counter
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
     <Footer />
     </>
