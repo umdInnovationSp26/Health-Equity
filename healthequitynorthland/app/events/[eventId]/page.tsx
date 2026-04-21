@@ -19,15 +19,127 @@ import calendar_svg from "@/public/calendar.svg";
 import pin_svg from "@/public/pin.svg";
 import clock_svg from "@/public/clock.svg";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useRef } from "react";
 import { db } from "@/app/lib/firebaseClient";
-import { deleteDoc, doc, getDoc } from "firebase/firestore";
+import { deleteDoc, doc, getDoc, getDocs, collection } from "firebase/firestore";
 import { mapDocToEvent } from "@/app/lib/eventInterface";
 import { getDateOnlyString, getTimeOnlyString } from "@/app/lib/dateTimeUtil";
 
 import { useRouter } from "next/navigation";
 import { generateIcsString, triggerIcsDownload } from "@/app/lib/calendarUtil";
 import DeleteConfirmationModal from "@/app/components/deleteModal";
+import {
+  Chart,
+  ArcElement,
+  Tooltip,
+  Legend,
+  DoughnutController,
+} from "chart.js";
+
+Chart.register(ArcElement, Tooltip, Legend, DoughnutController);
+
+type ProduceStat = {
+  name: string;
+  lbs: number;
+};
+
+/* ─── Chart colors ───────────────────────────────────────── */
+const PRODUCE_COLORS = [
+  "#378ADD",
+  "#85B7EB",
+  "#B5D4F4",
+  "#185FA5",
+  "#0C447C",
+  "#63A3D9",
+];
+
+/* ─── Produce Chart ──────────────────────────────────────── */
+function ProduceChart({ data }: { data: ProduceStat[] }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const chartRef = useRef<Chart | null>(null);
+
+  useEffect(() => {
+    if (!canvasRef.current || data.length === 0) return;
+    chartRef.current?.destroy();
+
+    chartRef.current = new Chart(canvasRef.current, {
+      type: "doughnut",
+      data: {
+        labels: data.map((d) => d.name),
+        datasets: [
+          {
+            data: data.map((d) => d.lbs),
+            backgroundColor: PRODUCE_COLORS.slice(0, data.length),
+            borderWidth: 2,
+            borderColor: "#fff",
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "50%",
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: { label: (ctx) => `${ctx.label}: ${ctx.parsed} lbs` },
+          },
+        },
+      },
+    });
+
+    return () => chartRef.current?.destroy();
+  }, [data]);
+
+  if (data.length === 0) {
+    return (
+      <div className="flex h-[130px] flex-col items-center justify-center gap-1 text-center text-xs text-slate-400">
+        <span>No produce data yet.</span>
+        <span>
+          Add produce to{" "}
+          <code className="rounded bg-slate-100 px-1">[eventId]</code>.
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-4">
+      <div className="relative h-[130px] w-[130px] flex-shrink-0">
+        <canvas
+          ref={canvasRef}
+          role="img"
+          aria-label="Produce sold this month by item"
+        />
+      </div>
+      <div className="space-y-2">
+        {data.map((item, i) => (
+          <div
+            key={`${item.name}-${i}`}
+            className="flex items-center gap-2 text-xs text-slate-500"
+          >
+            <div
+              className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
+              style={{ background: PRODUCE_COLORS[i] }}
+            />
+            <span>
+              {item.name}{" "}
+              <span className="font-semibold text-slate-900">
+                {item.lbs} lbs
+              </span>
+            </span>
+          </div>
+        ))}
+        <Link
+          href="/produce"
+          className="mt-1 block text-xs font-medium text-blue-500 hover:text-blue-700"
+        >
+          See all →
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 export default function EventDetailsPage({
   params,
@@ -39,10 +151,14 @@ export default function EventDetailsPage({
   // Unwrap the params to get the ID
   const { eventId } = use(params);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [event, setEventData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const [produce, setProduce] = useState<ProduceStat[]>([]);
 
+  // Fetch the event
   useEffect(() => {
     async function fetchEvent() {
       try {
@@ -65,7 +181,44 @@ export default function EventDetailsPage({
     fetchEvent();
   }, [eventId]);
 
-  if (loading) return <div className="p-25 text-center">Loading event...</div>;
+  // Fetch produce subcollection
+useEffect(() => {
+  if (!eventId) return;
+
+  getDocs(collection(db, "event", eventId, "produce")).then((snap) => {
+    if (snap.empty) {
+      setProduce([]);
+      return;
+    }
+
+    const loaded: ProduceStat[] = snap.docs.map((d) => ({
+      name: d.id,           // doc ID is the produce name
+      lbs: d.data().lb,     // field is "lb", not "lbs"
+    }));
+
+    setProduce(loaded);
+  });
+}, [eventId]);
+
+  if (loading)
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="flex items-center gap-2 text-sm text-slate-400">
+          <svg
+            className="animate-spin"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+          </svg>
+          Loading…
+        </div>
+      </div>
+    );
   if (!event) return <div className="p-25 text-center">Event not found.</div>;
 
   const handleDelete = async () => {
@@ -81,7 +234,7 @@ export default function EventDetailsPage({
 
   const downloadCalendarFile = () => {
     const ics = generateIcsString([event]);
-    triggerIcsDownload(ics, `${event.title || 'event'}`);
+    triggerIcsDownload(ics, `${event.title || "event"}`);
   };
 
   return (
@@ -105,7 +258,10 @@ export default function EventDetailsPage({
           </h3>
 
           <div className="content-end text-right pr-4 flex items-center space-x-2 flex-shrink-0">
-            <button className="bg-blue-100 rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base" onClick={downloadCalendarFile}>
+            <button
+              className="bg-blue-100 rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base flex items-center gap-2"
+              onClick={downloadCalendarFile}
+            >
               Download (.ics)
             </button>
             
@@ -241,9 +397,57 @@ export default function EventDetailsPage({
             </div>
 
             {/* Placeholder for Pie Chart & List */}
-            <div className="md:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-8">
-              Placeholder for pie chart
+            <div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-5">
+              <h2 className="mb-4 text-sm font-semibold text-slate-500">
+                Produce
+              </h2>
+              <ProduceChart data={produce} />
             </div>
+
+            {/* List of Produce Items */}
+            {/* List of Produce Items */}
+<div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-5">
+  <h2 className="mb-4 text-sm font-semibold text-slate-500">Produce Items</h2>
+  {produce.length === 0 ? (
+    <p className="text-xs text-slate-400 text-center py-8">No items yet.</p>
+  ) : (
+    <div className="space-y-2">
+      {produce.map((item, i) => {
+        const total = produce.reduce((sum, p) => sum + p.lbs, 0);
+        const pct = total > 0 ? Math.round((item.lbs / total) * 100) : 0;
+        return (
+          <div key={`${item.name}-${i}`}>
+            <div className="flex justify-between text-xs text-slate-600 mb-1">
+              <div className="flex items-center gap-2">
+                <div
+                  className="h-2 w-2 rounded-full flex-shrink-0"
+                  style={{ background: PRODUCE_COLORS[i % PRODUCE_COLORS.length] }}
+                />
+                <span>{item.name}</span>
+              </div>
+              <span className="font-semibold text-slate-800">
+                {item.lbs} lbs
+                <span className="text-slate-400 font-normal ml-1">({pct}%)</span>
+              </span>
+            </div>
+            <div className="w-full bg-slate-100 rounded-full h-1.5">
+              <div
+                className="h-1.5 rounded-full transition-all duration-500"
+                style={{
+                  width: `${pct}%`,
+                  background: PRODUCE_COLORS[i % PRODUCE_COLORS.length],
+                }}
+              />
+            </div>
+          </div>
+        );
+      })}
+      <p className="text-xs text-slate-400 pt-2 text-right">
+        Total: <span className="font-semibold text-slate-600">{produce.reduce((s, p) => s + p.lbs, 0)} lbs</span>
+      </p>
+    </div>
+  )}
+</div>
           </div>
 
           {/* Text Sections */}
