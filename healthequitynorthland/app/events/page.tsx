@@ -2,14 +2,14 @@
 import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
 
-import Image from 'next/image'
+import Image from "next/image";
 import { FaArrowLeft } from "react-icons/fa";
 
 import calendar_svg from "@/public/calendar.svg";
 import pin_svg from "@/public/pin.svg";
 import { useRouter } from "next/navigation";
-import { getDateTimeString } from '@/app/lib/dateTimeUtil';
-import { Event, mapDocToEvent } from '@/app/lib/eventInterface'
+import { getDateTimeString } from "@/app/lib/dateTimeUtil";
+import { Event, mapDocToEvent } from "@/app/lib/eventInterface";
 
 import { useEffect, useState } from "react";
 import { auth, db } from "@/app/lib/firebaseClient";
@@ -18,7 +18,6 @@ import { generateIcsString, triggerIcsDownload } from "../lib/calendarUtil";
 import DownloadEventsModal from "@/app/components/calendarModal";
 
 export default function EventsPage() {
-
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState(""); // variable to store the search term
   const [events, setEvents] = useState<Event[]>([]); // variable to store the events
@@ -34,7 +33,9 @@ export default function EventsPage() {
 
     // Grab data from the db
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => mapDocToEvent(doc.id, doc.data()))
+      const data = snapshot.docs.map((doc) =>
+        mapDocToEvent(doc.id, doc.data()),
+      );
 
       setLoading(false);
 
@@ -45,25 +46,25 @@ export default function EventsPage() {
   }, [sortBy]);
 
   // filter the events on the search term. Will run on load and when the searchbox is updated
-  const filteredEvents = events.filter(event => {
-    // If search is empty or just whitespace, show everything
-    if (!searchTerm.trim()) {
-      return true;
-    }
+  const filteredEvents = events
+    .filter((event) => {
+      // If search is empty or just whitespace, show everything
+      if (!searchTerm.trim()) {
+        return true;
+      }
 
-    // Otherwise, check if title includes search term and return the searched list
-    return event.title.toLowerCase().includes(searchTerm.toLowerCase());
-  }).sort((a, b) => {
-    if (sortBy === "title") {
-      return a.title.localeCompare(b.title);
-    }
-    else if (sortBy === "timestampStart") {
-      return b.rawTimeStart - a.rawTimeStart;
-    }
-    else {
-      return 0; // don't sort if the sortBy variable is not working
-    }
-  });
+      // Otherwise, check if title includes search term and return the searched list
+      return event.title.toLowerCase().includes(searchTerm.toLowerCase());
+    })
+    .sort((a, b) => {
+      if (sortBy === "title") {
+        return a.title.localeCompare(b.title);
+      } else if (sortBy === "timestampStart") {
+        return b.rawTimeStart - a.rawTimeStart;
+      } else {
+        return 0; // don't sort if the sortBy variable is not working
+      }
+    });
 
   if (loading) {
     return (
@@ -85,14 +86,14 @@ export default function EventsPage() {
       </div>
     );
   }
-  
+
   return (
     <>
       <Navbar />
-      
+
       <main className="pt-20 min-h-screen">
         {/* Top bar with search */}
-        <div className="bg-white shadow-sm flex items-center justify-between p-4 gap-2 relative">
+        <div className="bg-white shadow-sm p-3 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2">
           {/* Left controls */}
           <div className="flex items-center space-x-2 flex-shrink-0">
             {/* <button className="p-2 hover:scale-105 transition hover:cursor-pointer  ">
@@ -100,13 +101,13 @@ export default function EventsPage() {
             </button> */}
             <button
               onClick={() => setSortBy("timestampStart")}
-              className={`text-black rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base ${sortBy === 'timestampStart' ? 'bg-gray-300' : 'bg-gray-100 '}`}
+              className={`text-black rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base ${sortBy === "timestampStart" ? "bg-gray-300" : "bg-gray-100 "}`}
             >
               By Date
             </button>
             <button
               onClick={() => setSortBy("title")}
-              className={`text-black rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base ${sortBy === 'title' ? 'bg-gray-300 ' : 'bg-gray-100 '}`}
+              className={`text-black rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base ${sortBy === "title" ? "bg-gray-300 " : "bg-gray-100 "}`}
             >
               Alphabetical
             </button>
@@ -127,7 +128,10 @@ export default function EventsPage() {
 
           {/* Right controls */}
           <div className="flex items-center space-x-2 flex-shrink-0">
-            <button className="text-black bg-blue-100 rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base" onClick={() => setIsOpen(true)}>
+            <button
+              className="text-black bg-blue-100 rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base"
+              onClick={() => setIsOpen(true)}
+            >
               Export Events
             </button>
             <button
@@ -140,7 +144,7 @@ export default function EventsPage() {
         </div>
 
         {/*Event cards */}
-        <div className="flex flex-col gap-4 m-4 max-w-4xl mx-auto">
+        <div className="flex flex-col gap-4 m-4 max-w-4xl mx-auto p-4">
           {filteredEvents.map((event) => (
             <a
               key={event.id}
@@ -199,10 +203,10 @@ export default function EventsPage() {
             <p className="text-center text-gray-400 mt-10">No events found</p>
           )}
         </div>
-        <DownloadEventsModal 
-          isOpen={isOpen} 
-          onClose={() => setIsOpen(false)} 
-          allEvents={events} 
+        <DownloadEventsModal
+          isOpen={isOpen}
+          onClose={() => setIsOpen(false)}
+          allEvents={events}
         />
       </main>
 
