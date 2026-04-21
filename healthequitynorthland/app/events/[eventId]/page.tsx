@@ -182,23 +182,23 @@ export default function EventDetailsPage({
   }, [eventId]);
 
   // Fetch produce subcollection
-useEffect(() => {
-  if (!eventId) return;
+  useEffect(() => {
+    if (!eventId) return;
 
-  getDocs(collection(db, "event", eventId, "produce")).then((snap) => {
-    if (snap.empty) {
-      setProduce([]);
-      return;
-    }
+    getDocs(collection(db, "event", eventId, "produce")).then((snap) => {
+      if (snap.empty) {
+        setProduce([]);
+        return;
+      }
 
-    const loaded: ProduceStat[] = snap.docs.map((d) => ({
-      name: d.id,           // doc ID is the produce name
-      lbs: d.data().lb,     // field is "lb", not "lbs"
-    }));
+      const loaded: ProduceStat[] = snap.docs.map((d) => ({
+        name: d.id,           // doc ID is the produce name
+        lbs: d.data().lb,     // field is "lb", not "lbs"
+      }));
 
-    setProduce(loaded);
-  });
-}, [eventId]);
+      setProduce(loaded);
+    });
+  }, [eventId]);
 
   if (loading)
     return (
@@ -242,33 +242,38 @@ useEffect(() => {
       <Navbar />
 
       <main className="pt-20 min-h-screen">
-        {/* Top bar with search */}
-        <div className="bg-white shadow-sm flex items-center justify-between p-4 gap-2 relative">
-          <div className="content-start px-4">
-            <button
-              onClick={() => router.push("/events")}
-              className="p-2 hover:scale-105 transition hover:cursor-pointer"
-            >
-              <FaArrowLeft />
-            </button>
+        <div className="relative flex flex-col items-center justify-between bg-white p-4 shadow-sm sm:h-16 sm:flex-row sm:gap-2">
+
+          {/* Back arrow and event details title */}
+          <div className="relative flex min-h-[40px] w-full items-center sm:static sm:w-auto">
+            <div className="z-20">
+              <button
+                onClick={() => router.push("/events")}
+                className="hover:cursor-pointer p-2 transition hover:scale-105"
+              >
+                <FaArrowLeft />
+              </button>
+            </div>
+
+            <h3 className="absolute left-1/2 z-10 -translate-x-1/2 whitespace-nowrap font-bold text-slate-800">
+              Event Details
+            </h3>
           </div>
 
-          <h3 className="absolute left-1/2 -translate-x-1/2 font-bold">
-            Event Details
-          </h3>
+          {/* right buttons */}
+          <div className="z-20 flex w-full flex-shrink-0 items-center justify-center space-x-2 sm:w-auto sm:justify-end sm:pr-4">
 
-          <div className="content-end text-right pr-4 flex items-center space-x-2 flex-shrink-0">
             <button
-              className="bg-blue-100 rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base flex items-center gap-2"
               onClick={downloadCalendarFile}
+              className="flex items-center gap-2 whitespace-nowrap rounded-sm bg-blue-100 px-4 py-2 font-medium text-sm md:text-md text-blue-700 transition hover:cursor-pointer hover:scale-105 lg:py-2 lg:text-base"
             >
               Download (.ics)
             </button>
-            
-            {/* DROPDOWN MOVED HERE */}
-            <div className="relative w-35 z-50">
+
+            {/* Dropdown */}
+            <div className="relative w-35">
               <Menu>
-                <MenuButton className="inline-flex w-full justify-between items-center bg-blue-500 px-3 sm:px-4 py-2 text-sm sm:text-base font-medium hover:cursor-pointer text-white rounded-sm transition-all hover:scale-105 active:scale-95">
+                <MenuButton className="inline-flex w-full items-center justify-between rounded-sm bg-blue-500 px-4 py-2 text-sm md:text-md font-medium text-white transition-all hover:cursor-pointer hover:scale-105 active:scale-95 lg:py-2 lg:text-base">
                   Track Data
                   <span className="ml-2 text-[10px] transition-transform data-[open]:rotate-180">
                     ▼
@@ -285,13 +290,13 @@ useEffect(() => {
                 >
                   <MenuItems
                     static
-                    className="absolute right-0 w-full bg-white border border-gray-200 border-t-0 rounded-b-lg shadow-xl focus:outline-none"
+                    className="absolute right-0 z-50 w-full rounded-b-lg border border-t-0 border-gray-200 bg-white shadow-xl focus:outline-none"
                   >
                     <div className="flex flex-col">
                       <MenuItem>
                         <Link
                           href={`/events/${eventId}/counter`}
-                          className="flex w-full items-center justify-between px-4 py-3 text-sm text-slate-700 data-[focus]:bg-gray-50 transition-colors border-b border-gray-100"
+                          className="flex w-full items-center justify-between border-b border-gray-100 px-4 py-3 text-sm text-slate-700 transition-colors hover:bg-gray-50"
                         >
                           Counter
                           <span className="text-gray-400">›</span>
@@ -301,7 +306,7 @@ useEffect(() => {
                       <MenuItem>
                         <Link
                           href={`/events/${eventId}/check-in`}
-                          className="flex w-full items-center justify-between px-4 py-3 text-sm text-slate-700 data-[focus]:bg-gray-50 transition-colors"
+                          className="flex w-full items-center justify-between px-4 py-3 text-sm text-slate-700 transition-colors hover:bg-gray-50"
                         >
                           Check-In Form
                           <span className="text-gray-400">›</span>
@@ -312,14 +317,12 @@ useEffect(() => {
                 </Transition>
               </Menu>
             </div>
-
-            
           </div>
         </div>
 
         <div className="min-h-screen max-w-6xl mx-auto pt-10 px-6">
           {/* Top Header Section */}
-          <div className="flex flex-col items-center mb-8 relative">
+          <div className="flex flex-col items-center mb-5 relative">
             <span className="px-6 py-1 bg-indigo-100 text-indigo-600 rounded-full text-sm font-medium mb-4">
               {event.category}
             </span>
@@ -328,29 +331,29 @@ useEffect(() => {
               <h1 className="text-4xl font-bold text-slate-800">
                 {event.title}
               </h1>
-              
+
             </div>
 
             <div className="sm:absolute top-0 right-0 pt-5 sm:pt-0 flex">
-              <button 
-                className="mr-3 flex items-center justify-center px-4 py-2 font-bold hover:bg-gray-200 text-xl hover:cursor-pointer rounded-xl transition tracking-wider" 
+              <button
+                className="mr-3 flex items-center justify-center px-4 py-2 font-bold hover:bg-gray-200 text-xl hover:cursor-pointer rounded-xl transition tracking-wider"
                 onClick={() => router.push("/events/" + eventId + "/edit")}
                 title="Edit"
               >
-                <FaPencilAlt/>
+                <FaPencilAlt />
               </button>
               <button
                 onClick={() => setIsDeleteModalOpen(true)}
                 className="flex items-center justify-center px-4 py-2 font-bold text-red-600 text-xl hover:bg-red-50 hover:cursor-pointer rounded-xl transition tracking-wider"
                 title="Delete"
               >
-                <FaTrashAlt/>
+                <FaTrashAlt />
               </button>
             </div>
           </div>
 
           {/* Info Bar */}
-          <div className="flex justify-center gap-10 text-slate-500 font-medium mb-12">
+          <div className="flex flex-col sm:flex-row justify-center items-center sm:items-start gap-4 sm:gap-10 text-slate-500 font-medium mb-8">
             <div className="flex items-center gap-2">
               <Image
                 src={pin_svg}
@@ -385,7 +388,7 @@ useEffect(() => {
           {/* Dashboard Section */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 items-start">
             {/* Gray Stats Box */}
-            <div className="bg-slate-50 rounded-3xl p-8 gap-y-8 gap-x-4 shadow-sm border border-gray-100">
+            <div className="bg-slate-50 h-full rounded-3xl p-8 gap-y-8 gap-x-4 shadow-sm border border-gray-100">
               <div className="flex flex-col items-center">
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-tighter">
                   Attendees
@@ -405,49 +408,48 @@ useEffect(() => {
             </div>
 
             {/* List of Produce Items */}
-            {/* List of Produce Items */}
-<div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-5">
-  <h2 className="mb-4 text-sm font-semibold text-slate-500">Produce Items</h2>
-  {produce.length === 0 ? (
-    <p className="text-xs text-slate-400 text-center py-8">No items yet.</p>
-  ) : (
-    <div className="space-y-2">
-      {produce.map((item, i) => {
-        const total = produce.reduce((sum, p) => sum + p.lbs, 0);
-        const pct = total > 0 ? Math.round((item.lbs / total) * 100) : 0;
-        return (
-          <div key={`${item.name}-${i}`}>
-            <div className="flex justify-between text-xs text-slate-600 mb-1">
-              <div className="flex items-center gap-2">
-                <div
-                  className="h-2 w-2 rounded-full flex-shrink-0"
-                  style={{ background: PRODUCE_COLORS[i % PRODUCE_COLORS.length] }}
-                />
-                <span>{item.name}</span>
-              </div>
-              <span className="font-semibold text-slate-800">
-                {item.lbs} lbs
-                <span className="text-slate-400 font-normal ml-1">({pct}%)</span>
-              </span>
+            <div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-5">
+              <h2 className="mb-4 text-sm font-semibold text-slate-500">Produce Items</h2>
+              {produce.length === 0 ? (
+                <p className="text-xs text-slate-400 text-center py-8">No items yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  {produce.map((item, i) => {
+                    const total = produce.reduce((sum, p) => sum + p.lbs, 0);
+                    const pct = total > 0 ? Math.round((item.lbs / total) * 100) : 0;
+                    return (
+                      <div key={`${item.name}-${i}`}>
+                        <div className="flex justify-between text-xs text-slate-600 mb-1">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="h-2 w-2 rounded-full flex-shrink-0"
+                              style={{ background: PRODUCE_COLORS[i % PRODUCE_COLORS.length] }}
+                            />
+                            <span>{item.name}</span>
+                          </div>
+                          <span className="font-semibold text-slate-800">
+                            {item.lbs} lbs
+                            <span className="text-slate-400 font-normal ml-1">({pct}%)</span>
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-1.5">
+                          <div
+                            className="h-1.5 rounded-full transition-all duration-500"
+                            style={{
+                              width: `${pct}%`,
+                              background: PRODUCE_COLORS[i % PRODUCE_COLORS.length],
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <p className="text-xs text-slate-400 pt-2 text-right">
+                    Total: <span className="font-semibold text-slate-600">{produce.reduce((s, p) => s + p.lbs, 0)} lbs</span>
+                  </p>
+                </div>
+              )}
             </div>
-            <div className="w-full bg-slate-100 rounded-full h-1.5">
-              <div
-                className="h-1.5 rounded-full transition-all duration-500"
-                style={{
-                  width: `${pct}%`,
-                  background: PRODUCE_COLORS[i % PRODUCE_COLORS.length],
-                }}
-              />
-            </div>
-          </div>
-        );
-      })}
-      <p className="text-xs text-slate-400 pt-2 text-right">
-        Total: <span className="font-semibold text-slate-600">{produce.reduce((s, p) => s + p.lbs, 0)} lbs</span>
-      </p>
-    </div>
-  )}
-</div>
           </div>
 
           {/* Text Sections */}
