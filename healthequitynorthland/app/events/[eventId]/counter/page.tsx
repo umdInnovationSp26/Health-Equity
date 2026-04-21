@@ -101,7 +101,7 @@ export default function CountersPage() {
           ))}
         </div>
       )}
-      {/* Add counter modal */}
+      {/* Add Counter Modal */}
 {isAddModalOpen && (
   <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
     <div className="bg-white rounded-3xl p-10 w-full max-w-md shadow-2xl relative">
@@ -134,6 +134,75 @@ export default function CountersPage() {
           Add New Counter
         </button>
       </div>
+    </div>
+  </div>
+)}
+{/* Edit Counter Modal */}
+{editingCounter && (
+  <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-3xl p-8 w-full max-w-lg shadow-2xl relative">
+      {/* Close Button */}
+      <button 
+        onClick={() => setEditingCounter(null)}
+        className="absolute top-6 right-6 text-slate-400 hover:text-slate-600"
+      >
+        <X size={24} />
+      </button>
+
+      <h2 className="text-2xl font-semibold text-slate-800 mb-8">Edit Counter</h2>
+      
+      <div className="space-y-6">
+        {/* Counter Name */}
+        <div>
+          <label className="block text-sm font-medium text-slate-600 mb-2 ml-1">Counter Name</label>
+          <input 
+            type="text" 
+            className="w-full bg-slate-100 border-none rounded-xl p-4 text-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            value={editingCounter.name}
+            onChange={(e) => setEditingCounter({...editingCounter, name: e.target.value})}
+          />
+        </div>
+
+        {/* Current Value */}
+        <div>
+          <label className="block text-sm font-medium text-slate-600 mb-2 ml-1">Current Value</label>
+          <input 
+            type="number" 
+            className="w-full bg-slate-100 border-none rounded-xl p-4 text-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            value={editingCounter.value}
+            onChange={(e) => setEditingCounter({...editingCounter, value: parseInt(e.target.value) || 0})}
+          />
+        </div>
+
+        {/* Initial Value */}
+        <div>
+          <label className="block text-sm font-medium text-slate-600 mb-2 ml-1">Initial Value</label>
+          <input 
+            type="number" 
+            className="w-full bg-slate-100 border-none rounded-xl p-4 text-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            value={editingCounter.initialValue}
+            onChange={(e) => setEditingCounter({...editingCounter, initialValue: parseInt(e.target.value) || 0})}
+          />
+        </div>
+
+        {/* Increment/Decrement Value */}
+        <div>
+          <label className="block text-sm font-medium text-slate-600 mb-2 ml-1">Increment/Decrement Value</label>
+          <input 
+            type="number" 
+            className="w-full bg-slate-100 border-none rounded-xl p-4 text-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            value={editingCounter.increment}
+            onChange={(e) => setEditingCounter({...editingCounter, increment: parseInt(e.target.value) || 0})}
+          />
+        </div>
+      </div>
+
+      <button 
+        onClick={() => updateCounter(editingCounter)}
+        className="w-full mt-10 py-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-shadow shadow-lg shadow-blue-200"
+      >
+        Save
+      </button>
     </div>
   </div>
 )}
