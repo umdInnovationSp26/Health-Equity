@@ -3,7 +3,7 @@
 import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
 
-import { FaArrowLeft, FaPencilAlt } from "react-icons/fa";
+import { FaArrowLeft, FaPencilAlt, FaTrashAlt } from "react-icons/fa";
 
 import {
   Menu,
@@ -21,12 +21,13 @@ import clock_svg from "@/public/clock.svg";
 
 import { useEffect, useState, use } from "react";
 import { db } from "@/app/lib/firebaseClient";
-import { doc, getDoc } from "firebase/firestore";
+import { deleteDoc, doc, getDoc } from "firebase/firestore";
 import { mapDocToEvent } from "@/app/lib/eventInterface";
 import { getDateOnlyString, getTimeOnlyString } from "@/app/lib/dateTimeUtil";
 
 import { useRouter } from "next/navigation";
 import { generateIcsString, triggerIcsDownload } from "@/app/lib/calendarUtil";
+import DeleteConfirmationModal from "@/app/components/deleteModal";
 
 export default function EventDetailsPage({
   params,
@@ -40,6 +41,7 @@ export default function EventDetailsPage({
 
   const [event, setEventData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useEffect(() => {
     async function fetchEvent() {
@@ -66,6 +68,17 @@ export default function EventDetailsPage({
   if (loading) return <div className="p-25 text-center">Loading event...</div>;
   if (!event) return <div className="p-25 text-center">Event not found.</div>;
 
+  const handleDelete = async () => {
+    try {
+      await deleteDoc(doc(db, "event", event.id));
+      setIsDeleteModalOpen(false);
+      router.push("/events"); // redirect to event list page
+    } catch (error) {
+      console.error("Error deleting event:", error);
+      alert("Failed to delete event. Check your permissions.");
+    }
+  };
+
   const downloadCalendarFile = () => {
     const ics = generateIcsString([event]);
     triggerIcsDownload(ics, `${event.title || 'event'}`);
@@ -91,33 +104,15 @@ export default function EventDetailsPage({
             Event Details
           </h3>
 
-          <div className="content-end text-right pr-4">
+          <div className="content-end text-right pr-4 flex items-center space-x-2 flex-shrink-0">
             <button className="bg-blue-100 rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base" onClick={downloadCalendarFile}>
-              Download Calendar File (.ics)
+              Download (.ics)
             </button>
-          </div>
-        </div>
-
-        <div className="min-h-screen max-w-6xl mx-auto pt-10 px-6">
-          {/* Top Header Section */}
-          <div className="flex flex-col items-center mb-8 relative">
-            <span className="px-6 py-1 bg-indigo-100 text-indigo-600 rounded-full text-sm font-medium mb-4">
-              {event.category}
-            </span>
-
-            <div className="flex items-center gap-4">
-              <h1 className="text-4xl font-bold text-slate-800">
-                {event.title}
-              </h1>
-              <button className="text-black hover:cursor-pointer hover:scale-105  hover:text-slate-600 text-2xl" onClick={() => router.push("/events/" + eventId + "/edit")}>
-                <FaPencilAlt/>
-              </button>
-            </div>
-
-            {/* HEADLESS UI DROPDOWN */}
-            <div className="sm:absolute top-0 right-0 w-48 z-50 pt-5 sm:pt-0">
+            
+            {/* DROPDOWN MOVED HERE */}
+            <div className="relative w-35 z-50">
               <Menu>
-                <MenuButton className="inline-flex w-full justify-between items-center bg-indigo-500 px-4 py-2.5 text-sm font-medium text-white rounded-t-lg data-[open]:rounded-b-none rounded-b-lg transition-all focus:outline-none">
+                <MenuButton className="inline-flex w-full justify-between items-center bg-blue-500 px-3 sm:px-4 py-2 text-sm sm:text-base font-medium hover:cursor-pointer text-white rounded-sm transition-all hover:scale-105 active:scale-95">
                   Track Data
                   <span className="ml-2 text-[10px] transition-transform data-[open]:rotate-180">
                     ▼
@@ -160,6 +155,41 @@ export default function EventDetailsPage({
                   </MenuItems>
                 </Transition>
               </Menu>
+            </div>
+
+            
+          </div>
+        </div>
+
+        <div className="min-h-screen max-w-6xl mx-auto pt-10 px-6">
+          {/* Top Header Section */}
+          <div className="flex flex-col items-center mb-8 relative">
+            <span className="px-6 py-1 bg-indigo-100 text-indigo-600 rounded-full text-sm font-medium mb-4">
+              {event.category}
+            </span>
+
+            <div className="flex items-center gap-4">
+              <h1 className="text-4xl font-bold text-slate-800">
+                {event.title}
+              </h1>
+              
+            </div>
+
+            <div className="sm:absolute top-0 right-0 pt-5 sm:pt-0 flex">
+              <button 
+                className="mr-3 flex items-center justify-center px-4 py-2 font-bold hover:bg-gray-200 text-xl hover:cursor-pointer rounded-xl transition tracking-wider" 
+                onClick={() => router.push("/events/" + eventId + "/edit")}
+                title="Edit"
+              >
+                <FaPencilAlt/>
+              </button>
+              <button
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="flex items-center justify-center px-4 py-2 font-bold text-red-600 text-xl hover:bg-red-50 hover:cursor-pointer rounded-xl transition tracking-wider"
+                title="Delete"
+              >
+                <FaTrashAlt/>
+              </button>
             </div>
           </div>
 
@@ -252,6 +282,13 @@ export default function EventDetailsPage({
           </div>
         </div>
       </main>
+
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDelete}
+        eventTitle={event.title}
+      />
 
       <Footer />
     </div>

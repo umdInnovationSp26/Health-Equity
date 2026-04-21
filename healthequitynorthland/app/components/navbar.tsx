@@ -82,15 +82,22 @@ export default function Navbar() {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-8 text-base text-black">
-          {pages.map((page) => (
-            <Link
-              key={page.href}
-              href={page.href}
-              className={pathname === page.href ? "font-bold" : "font-normal"}
-            >
-              {page.name}
-            </Link>
-          ))}
+          {pages.map((page) => {
+          
+            const isActive = page.href === "/" 
+                ? pathname === "/" 
+                : pathname.startsWith(page.href);
+
+            return (
+              <Link
+                key={page.href}
+                href={page.href}
+                className={isActive ? "font-bold" : "font-normal"}
+              >
+                {page.name}
+              </Link>
+            );
+          })}
         </div>
 
         {/* Profile + Mobile Burger */}
