@@ -168,6 +168,7 @@ export default function CreateEvent({
 
 
             // convert units on save
+            // eslint-disable-next-line no-var
             var kgCount, lbCount, ozCount = 0;
 
             if(row.units == KG){
@@ -238,7 +239,7 @@ export default function CreateEvent({
           </h3>
 
           <div className="content-end text-right pr-4">
-            <button className="bg-blue-100 rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base">
+            <button className="text-white rounded-sm px-3 sm:px-4 py-2 hover:scale-105 transition text-sm sm:text-base">
               ...
             </button>
           </div>
