@@ -52,9 +52,9 @@ export default function CountersPage() {
 
       <Navbar />
 
-      <main className="pt-20 min-h-screen">
-      <div className="bg-white shadow-sm flex items-center justify-between p-4 gap-2 relative">
-        {/* UNIFIED HEADER */}
+      <main className="pt-28 min-h-screen bg-white">
+      <div className="bg-white shadow-sm flex items-center justify-between p-2 gap-2 relative mb-8">
+        {/* Header */}
         <div className="content-start px-4">
           <button
             onClick={() => router.push("/events")}
@@ -64,13 +64,13 @@ export default function CountersPage() {
           </button>
           </div>
 
-          {/* Centered Title */}
+          {/* Title */}
           <h1 className="text-xl font-bold text-slate-800 absolute left-1/2 -translate-x-1/2">
             Count Data
           </h1>
           
 
-          {/* Add Counter Button (Top Right) */}
+          {/* Add Counter Button */}
           <div className="min-w-[140px] flex justify-end">
             {counters.length > 0 && (
               <button
