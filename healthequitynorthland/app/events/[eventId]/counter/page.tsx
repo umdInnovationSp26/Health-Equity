@@ -1,4 +1,3 @@
-// app/counters/page.tsx
 "use client";
 import React, { useState } from 'react';
 import { Plus, X } from 'lucide-react';
@@ -56,20 +55,17 @@ export default function CountersPage() {
     
           <Navbar />
     
-
-    <div className="min-h-screen bg-white pb-20">
-      
+    <div className="min-h-screen bg-white pb-20 pt-24">
       
       {/* Header */}
       <div className="flex justify-between items-center mb-12 max-w-6xl mx-auto">
         <div className="w-10 h-10" /> {/* Spacer for centering */}
-        <h1 className="text-xl font-medium text-slate-800">Count Data</h1>
         {counters.length > 0 && (
           <button 
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-          >
-            Add New Counter <Plus size={18} />
+            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-md active:scale-95"
+            >
+            Add New Counter <Plus size={16} />
           </button>
         )}
       </div>
