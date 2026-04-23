@@ -14,6 +14,8 @@ import { Event, mapDocToEvent } from '@/app/lib/eventInterface'
 import { useEffect, useState } from "react";
 import { auth, db } from "@/app/lib/firebaseClient";
 import { collection, query, onSnapshot, orderBy } from "firebase/firestore";
+import { generateIcsString, triggerIcsDownload } from "../lib/calendarUtil";
+import DownloadEventsModal from "@/app/components/calendarModal";
 
 export default function EventsPage() {
 
@@ -22,6 +24,8 @@ export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]); // variable to store the events
   const [sortBy, setSortBy] = useState("timestampStart"); // store sort specification
   const [loading, setLoading] = useState(true);
+
+  const [isOpen, setIsOpen] = useState(false); // stores state of the modal
 
   // Run this on page load and when searchbox is updated
   useEffect(() => {
@@ -88,28 +92,26 @@ export default function EventsPage() {
       
       <main className="pt-20 min-h-screen">
         {/* Top bar with search */}
-        <div className="bg-white shadow-sm flex items-center justify-between p-4 gap-2 relative">
-          {/* Left controls */}
-          <div className="flex items-center space-x-2 flex-shrink-0">
-            {/* <button className="p-2 hover:scale-105 transition hover:cursor-pointer  ">
-              <FaArrowLeft/>
-            </button> */}
+        <div className="bg-white shadow-sm flex flex-col sm:flex-row items-center justify-between p-4 gap-4 sm:gap-2">
+        
+          {/* Left controls - Top row on mobile */}
+          <div className="flex items-center justify-center sm:justify-start space-x-2 flex-shrink-0 w-full sm:w-auto order-1">
             <button
               onClick={() => setSortBy("timestampStart")}
-              className={`text-black rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base ${sortBy === 'timestampStart' ? 'bg-gray-300' : 'bg-gray-100 '}`}
+              className={`text-black rounded-sm px-3 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base ${sortBy === 'timestampStart' ? 'bg-gray-300' : 'bg-gray-100 '}`}
             >
               By Date
             </button>
             <button
               onClick={() => setSortBy("title")}
-              className={`text-black rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base ${sortBy === 'title' ? 'bg-gray-300 ' : 'bg-gray-100 '}`}
+              className={`text-black rounded-sm px-3 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base ${sortBy === 'title' ? 'bg-gray-300 ' : 'bg-gray-100 '}`}
             >
               Alphabetical
             </button>
           </div>
 
-          {/* Search */}
-          <div className="relative flex-1 min-w-[200px] max-w-md mx-auto">
+          {/* Search - Middle row on mobile */}
+          <div className="relative w-full max-w-md mx-auto order-2 sm:order-2">
             <input
               type="text"
               placeholder="Search by name"
@@ -117,18 +119,21 @@ export default function EventsPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">
-              &#x1F50E;&#xFE0E; {/* Magnifying glass icon */}
+              &#x1F50E;&#xFE0E;
             </span>
           </div>
 
-          {/* Right controls */}
-          <div className="flex items-center space-x-2 flex-shrink-0">
-            <button className="text-black bg-blue-100 rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base">
-              View Calendar
+          {/* Right controls - Bottom row on mobile */}
+          <div className="flex items-center justify-center sm:justify-end space-x-2 flex-shrink-0 w-full sm:w-auto order-3">
+            <button 
+              className="text-black bg-blue-100 rounded-sm px-3 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base whitespace-nowrap" 
+              onClick={() => setIsOpen(true)}
+            >
+              Export Events
             </button>
             <button
               onClick={() => router.push("/events/create")}
-              className="bg-blue-500 text-white rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base"
+              className="bg-blue-500 text-white rounded-sm px-3 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base whitespace-nowrap"
             >
               Add New Event
             </button>
@@ -195,6 +200,11 @@ export default function EventsPage() {
             <p className="text-center text-gray-400 mt-10">No events found</p>
           )}
         </div>
+        <DownloadEventsModal 
+          isOpen={isOpen} 
+          onClose={() => setIsOpen(false)} 
+          allEvents={events} 
+        />
       </main>
 
       <Footer />

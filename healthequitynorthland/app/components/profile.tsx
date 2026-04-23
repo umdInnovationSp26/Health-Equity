@@ -64,7 +64,11 @@ function initials(first: string, last: string) {
 function formatBirthday(iso: string) {
   if (!iso) return "—";
   const d = new Date(iso + "T12:00:00");
-  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  return d.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 /* ─── Sub-components ─────────────────────────────────────── */
@@ -101,7 +105,9 @@ function Field({
           className="mt-1 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-900 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition"
         />
       ) : (
-        <span className="text-sm font-medium text-gray-900">{displayValue}</span>
+        <span className="text-sm font-medium text-gray-900">
+          {displayValue}
+        </span>
       )}
     </div>
   );
@@ -144,9 +150,12 @@ function DeleteModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
       <div className="w-full max-w-sm rounded-xl border border-gray-100 bg-white p-6 shadow-xl">
-        <h2 className="mb-1 text-base font-semibold text-gray-900">Delete account?</h2>
+        <h2 className="mb-1 text-base font-semibold text-gray-900">
+          Delete account?
+        </h2>
         <p className="mb-5 text-sm text-gray-500">
-          All your account data will be permanently deleted. This action cannot be undone.
+          All your account data will be permanently deleted. This action cannot
+          be undone.
         </p>
         <div className="flex justify-end gap-3">
           <button
@@ -172,7 +181,9 @@ function Toast({ visible }: { visible: boolean }) {
   return (
     <div
       className={`fixed bottom-6 right-6 z-50 rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-lg transition-all duration-300 ${
-        visible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0 pointer-events-none"
+        visible
+          ? "translate-y-0 opacity-100"
+          : "translate-y-4 opacity-0 pointer-events-none"
       }`}
     >
       Changes saved
@@ -184,7 +195,8 @@ function Toast({ visible }: { visible: boolean }) {
 export default function Profile() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE);
-  const [originalProfile, setOriginalProfile] = useState<Profile>(DEFAULT_PROFILE);
+  const [originalProfile, setOriginalProfile] =
+    useState<Profile>(DEFAULT_PROFILE);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -250,7 +262,10 @@ export default function Profile() {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const updates: Record<string, any> = {};
           (Object.keys(updated) as (keyof Profile)[]).forEach((key) => {
-            if (JSON.stringify(updated[key]) !== JSON.stringify(originalProfile[key])) {
+            if (
+              JSON.stringify(updated[key]) !==
+              JSON.stringify(originalProfile[key])
+            ) {
               updates[key] = updated[key];
             }
           });
@@ -266,7 +281,7 @@ export default function Profile() {
         }
       }, 600);
     },
-    [user, originalProfile]
+    [user, originalProfile],
   );
 
   const handleChange = useCallback(
@@ -277,7 +292,7 @@ export default function Profile() {
         return updated;
       });
     },
-    [autoSave]
+    [autoSave],
   );
 
   /* Toggle edit mode */
@@ -297,7 +312,7 @@ export default function Profile() {
     setEditing(false);
   };
 
-  /* Avatar upload - Base64 string directly in Firestore */ 
+  /* Avatar upload - Base64 string directly in Firestore */
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -334,13 +349,15 @@ export default function Profile() {
     }
   }, [user, router]);
 
-  const fullName = `${profile.firstName} ${profile.lastName}`.trim() || "Your Name";
-  const location = [profile.cityState, profile.country].filter(Boolean).join(", ");
+  const fullName =
+    `${profile.firstName} ${profile.lastName}`.trim() || "Your Name";
+  const location = [profile.cityState, profile.country]
+    .filter(Boolean)
+    .join(", ");
 
   return (
     <main className="pt-25 min-h-screen px-4 py-10">
       <div className="mx-auto max-w-2xl space-y-4">
-
         {/* ── Profile Header Card ── */}
         <div className="relative flex items-center gap-4 rounded-xl bg-white p-5 shadow-sm">
           {/* Avatar */}
@@ -376,7 +393,9 @@ export default function Profile() {
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <p className="text-base font-semibold text-gray-900 truncate">{fullName}</p>
+            <p className="text-base font-semibold text-gray-900 truncate">
+              {fullName}
+            </p>
             {profile.title && (
               <p className="text-sm text-gray-500 truncate">{profile.title}</p>
             )}
@@ -413,22 +432,73 @@ export default function Profile() {
         {/* ── Personal Information ── */}
         <Section title="Personal information">
           <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-            <Field label="First name" value={profile.firstName} editing={editing} onChange={(v) => handleChange("firstName", v)} />
-            <Field label="Last name" value={profile.lastName} editing={editing} onChange={(v) => handleChange("lastName", v)} />
-            <Field label="Email address" value={profile.email} editing={editing} onChange={(v) => handleChange("email", v)} />
-            <Field label="Phone" value={profile.phone} editing={editing} onChange={(v) => handleChange("phone", v)} />
-            <Field label="Birthday" value={profile.birthday} inputType="date" editing={editing} onChange={(v) => handleChange("birthday", v)} />
-            <Field label="Title" value={profile.title} editing={editing} onChange={(v) => handleChange("title", v)} />
+            <Field
+              label="First name"
+              value={profile.firstName}
+              editing={editing}
+              onChange={(v) => handleChange("firstName", v)}
+            />
+            <Field
+              label="Last name"
+              value={profile.lastName}
+              editing={editing}
+              onChange={(v) => handleChange("lastName", v)}
+            />
+            <Field
+              label="Email address"
+              value={profile.email}
+              editing={editing}
+              onChange={(v) => handleChange("email", v)}
+            />
+            <Field
+              label="Phone"
+              value={profile.phone}
+              editing={editing}
+              onChange={(v) => handleChange("phone", v)}
+            />
+            <Field
+              label="Birthday"
+              value={profile.birthday}
+              inputType="date"
+              editing={editing}
+              onChange={(v) => handleChange("birthday", v)}
+            />
+            <Field
+              label="Title"
+              value={profile.title}
+              editing={editing}
+              onChange={(v) => handleChange("title", v)}
+            />
           </div>
         </Section>
 
         {/* ── Address ── */}
         <Section title="Address">
           <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-            <Field label="Country" value={profile.country} editing={editing} onChange={(v) => handleChange("country", v)} />
-            <Field label="City / State" value={profile.cityState} editing={editing} onChange={(v) => handleChange("cityState", v)} />
-            <Field label="Street" value={profile.street} editing={editing} onChange={(v) => handleChange("street", v)} />
-            <Field label="ZIP code" value={profile.zip} editing={editing} onChange={(v) => handleChange("zip", v)} />
+            <Field
+              label="Country"
+              value={profile.country}
+              editing={editing}
+              onChange={(v) => handleChange("country", v)}
+            />
+            <Field
+              label="City / State"
+              value={profile.cityState}
+              editing={editing}
+              onChange={(v) => handleChange("cityState", v)}
+            />
+            <Field
+              label="Street"
+              value={profile.street}
+              editing={editing}
+              onChange={(v) => handleChange("street", v)}
+            />
+            <Field
+              label="ZIP code"
+              value={profile.zip}
+              editing={editing}
+              onChange={(v) => handleChange("zip", v)}
+            />
           </div>
         </Section>
 
@@ -456,39 +526,51 @@ export default function Profile() {
         <Section title="Account">
           <div className="grid grid-cols-2 gap-x-6 gap-y-4">
             <div>
-              <p className="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Email verified</p>
-              <span className={`mt-1 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                profile.emailVerified ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-              }`}>
+              <p className="text-[11px] uppercase tracking-wider text-gray-400 font-medium">
+                Email verified
+              </p>
+              <span
+                className={`mt-1 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                  profile.emailVerified
+                    ? "bg-green-100 text-green-700"
+                    : "bg-gray-100 text-gray-500"
+                }`}
+              >
                 {profile.emailVerified ? "Verified" : "Not verified"}
               </span>
             </div>
             {profile.createdAt && (
               <div>
-                <p className="text-[11px] uppercase tracking-wider text-gray-400 font-medium">Member since</p>
+                <p className="text-[11px] uppercase tracking-wider text-gray-400 font-medium">
+                  Member since
+                </p>
                 <p className="mt-1 text-sm font-medium text-gray-900">
-                  {profile.createdAt.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                  {profile.createdAt.toLocaleDateString("en-US", {
+                    month: "long",
+                    year: "numeric",
+                  })}
                 </p>
               </div>
             )}
+
+            {/* ── Actions ── */}
+            <div className="flex flex-wrap gap-3 pt-1">
+              <button
+                onClick={handleSignOut}
+                className="hover:scale-102 hover:cursor-pointer rounded-lg border border-gray-100 shadow-sm bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 active:scale-95"
+              >
+                Sign out
+              </button>
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="hover:scale-102 hover:cursor-pointer rounded-lg border border-gray-100 shadow-sm bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 active:scale-95"
+              >
+                Delete account
+              </button>
+            </div>
+            
           </div>
         </Section>
-
-        {/* ── Actions ── */}
-        <div className="flex flex-wrap gap-3 pt-1">
-          <button
-            onClick={handleSignOut}
-            className="hover:cursor-pointer rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 active:scale-95"
-          >
-            Sign out
-          </button>
-          <button
-            onClick={() => setShowDeleteModal(true)}
-            className="hover:cursor-pointer rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 active:scale-95"
-          >
-            Delete account
-          </button>
-        </div>
       </div>
 
       {/* Modals / overlays */}
@@ -505,7 +587,13 @@ export default function Profile() {
 
 /* ─── Layout helpers ─────────────────────────────────────── */
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
       <h2 className="mb-4 border-b border-gray-100 pb-3 text-sm font-semibold text-gray-900">
@@ -538,7 +626,13 @@ function PrefRow({
   );
 }
 
-function PencilIcon({ size = 14, color = "currentColor" }: { size?: number; color?: string }) {
+function PencilIcon({
+  size = 14,
+  color = "currentColor",
+}: {
+  size?: number;
+  color?: string;
+}) {
   return (
     <svg
       width={size}
