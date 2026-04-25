@@ -31,6 +31,7 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
       birthday: formData.get("birthday"),
       zipCode: formData.get("zipCode"),
       familySize: Number(formData.get("familySize")),
+      race: formData.get("race"),
       submittedAt: serverTimestamp(),
     };
 
