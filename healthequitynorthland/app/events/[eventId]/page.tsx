@@ -305,7 +305,7 @@ export default function EventDetailsPage({
 
                       <MenuItem>
                         <Link
-                          href={`/events/${eventId}/check-in`}
+                          href={`/events/${eventId}/checkin`}
                           className="flex w-full items-center justify-between px-4 py-3 text-sm text-slate-700 transition-colors hover:bg-gray-50"
                         >
                           Check-In Form
