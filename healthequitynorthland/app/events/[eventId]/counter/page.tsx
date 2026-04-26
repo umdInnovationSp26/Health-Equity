@@ -4,7 +4,7 @@ import CounterCard from '@/app/components/countercard';
 import Head from "next/head";
 import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
-import { Plus, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { FaArrowLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 
@@ -121,18 +121,18 @@ export default function CountersPage({ params }: { params: Promise<{ eventId: st
       <main className="pt-28 min-h-screen bg-white">
         {/* Header Bar */}
         <div className="max-w-6xl mx-auto px-4 mb-10">
-            <div className="bg-white shadow-sm border border-slate-100 rounded-2xl flex items-center justify-between p-4 relative">
-                <div className="flex-1 flex justify-start">
+            <div className="bg-white shadow-sm border border-slate-100 rounded-2xl flex items-center justify-between p-3 md:p-4">
+                <div className="flex-1">
                     <button
                         onClick={() => router.back()}
                         className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-600"
                     >
-                        <FaArrowLeft size={20} />
+                        <FaArrowLeft size={18} className="md:size-[20px]" />
                     </button>
                 </div>
 
-                <div className="absolute left-1/2 -translate-x-1/2">
-                    <h1 className="text-xl font-bold text-slate-800 whitespace-nowrap">
+                <div className="flex-[2] text-center px-2">
+                    <h1 className="text-base md:text-xl font-bold text-slate-800 truncate leading-tight">
                         {event.title} Data
                     </h1>
                 </div>
@@ -141,9 +141,10 @@ export default function CountersPage({ params }: { params: Promise<{ eventId: st
                     {counters.length > 0 && (
                         <button
                             onClick={() => setIsAddModalOpen(true)}
-                            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-md active:scale-95"
+                            className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white p-2 md:px-4 md:py-2 rounded-lg text-sm font-semibold transition-all shadow-md active:scale-95 min-w-[40px]"
                         >
-                            Add Counter <Plus size={16} />
+                            <span className="hidden md:inline">Add Counter</span>
+                            <Plus size={18} />
                         </button>
                     )}
                 </div>
@@ -155,7 +156,7 @@ export default function CountersPage({ params }: { params: Promise<{ eventId: st
           <div className="flex justify-center mt-20">
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="bg-blue-50 w-full max-w-xl aspect-video rounded-3xl flex flex-col items-center justify-center gap-6 hover:bg-blue-100 transition-colors border-2 border-dashed border-blue-200"
+              className="bg-blue-50 w-full max-w-xl aspect-square md:aspect-video rounded-3xl flex flex-col items-center justify-center gap-6 hover:bg-blue-100 transition-colors border-2 border-dashed border-blue-200"
             >
               <p className="text-3xl text-slate-600 font-medium">Tap to add counter</p>
               <div className="bg-slate-700 text-white p-6 rounded-2xl shadow-xl">

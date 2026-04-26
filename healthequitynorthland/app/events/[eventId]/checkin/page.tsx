@@ -65,150 +65,99 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
   }
 }
 
-  return (
-    <>
-      <Head>
-        <title>Check-In Form | HealthEquityNorthland</title>
-      </Head>
+return (
+  <>
+    <Head>
+      <title>Check-In Form | HealthEquityNorthland</title>
+    </Head>
 
-      <Navbar />
+    <Navbar />
 
-      <main className="pt-20 min-h-screen bg-gray-50">
-        {/* Header Bar */}
-        <div className="bg-white shadow-sm flex items-center justify-between p-4 relative">
-          <button
-            onClick={() => router.back()}
-            className="p-2 hover:scale-105 transition hover:cursor-pointer z-10"
-          >
-            <FaArrowLeft />
-          </button>
+    <main className="pt-16 md:pt-20 min-h-screen bg-gray-50">
+      {/* Header Bar */}
+      <div className="bg-white shadow-sm flex items-center justify-between p-3 md:p-4 sticky top-0 z-20">
+        <button
+          onClick={() => router.back()}
+          className="p-2 hover:scale-105 transition hover:cursor-pointer z-10"
+        >
+          <FaArrowLeft />
+        </button>
 
-          <h3 className="text-black absolute left-1/2 -translate-x-1/2 font-bold">
-            Check-In Form
-          </h3>
-          <div className="w-10"></div> {/* Spacer for symmetry */}
-        </div>
+        <h3 className="text-black absolute left-1/2 -translate-x-1/2 font-bold text-sm md:text-base truncate">
+          Check-In Form
+        </h3>
+        <div className="w-10"></div> 
+      </div>
 
-        <div className="flex justify-center p-4 sm:p-8">
-          <form
-            onSubmit={handleSubmit}
-            className="w-full max-w-3xl bg-white rounded-2xl shadow-sm border border-gray-100 p-8 sm:p-12 space-y-8"
-          >
-            <h2 className="text-2xl font-bold text-center text-slate-800">Craft Night</h2>
-
+      <div className="flex justify-center p-4 md:p-8 lg:p-12">
+        <form
+          onSubmit={handleSubmit}
+          className="w-full max-w-4xl bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-12 space-y-6 md:space-y-8"
+        >
+          <h2 className="text-xl md:text-2xl font-bold text-center text-slate-800">Craft Night</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            
             {/* Name */}
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">Name</label>
-              <input
-                name="name"
-                required
-                placeholder="Enter your name"
-                type="text"
-                className="w-full p-3 bg-gray-100 rounded-lg outline-none focus:ring-2 focus:ring-blue-400 transition"
-              />
+              <input name="name" required type="text" className="w-full p-3 bg-gray-100 rounded-lg outline-none focus:ring-2 focus:ring-blue-400" />
             </div>
 
             {/* Email */}
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">Email</label>
-              <input
-                name="email"
-                required
-                placeholder="Enter your email"
-                type="email"
-                className="w-full p-3 bg-gray-100 rounded-lg outline-none focus:ring-2 focus:ring-blue-400 transition"
-              />
+              <input name="email" required type="email" className="w-full p-3 bg-gray-100 rounded-lg outline-none focus:ring-2 focus:ring-blue-400" />
             </div>
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             {/* Phone Number */}
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">Phone Number</label>
-              <input
-                name="phoneNumber"
-                required
-                type="phonenumber"
-                className="w-full p-3 bg-gray-100 rounded-lg outline-none focus:ring-2 focus:ring-blue-400 transition text-gray-500"
-              />
+              <input name="phoneNumber" required type="tel" className="w-full p-3 bg-gray-100 rounded-lg outline-none" />
             </div>
 
             {/* Birthday */}
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">Birthday</label>
-              <input
-                name="birthday"
-                required
-                type="date"
-                className="w-full p-3 bg-gray-100 rounded-lg outline-none focus:ring-2 focus:ring-blue-400 transition text-gray-500"
-              />
+              <input name="birthday" required type="date" className="w-full p-3 bg-gray-100 rounded-lg outline-none" />
             </div>
 
             {/* Zip Code */}
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">Zip Code</label>
-              <input
-                name="zipCode"
-                required
-                type="zipcode"
-                className="w-full p-3 bg-gray-100 rounded-lg outline-none focus:ring-2 focus:ring-blue-400 transition text-gray-500"
-              />
+              <input name="zipCode" required type="text" className="w-full p-3 bg-gray-100 rounded-lg outline-none" />
             </div>
+          </div>
 
-            {/* Race Checkboxes */}
-            <div className="space-y-4">
-              <label className="text-sm font-semibold text-slate-700">Race</label>
-              <div className="space-y-2">
-                {["American Indian or Alaska Native", "Asian", "Black or African American", "Hispanic or Latino", "Native Hawaiian or Other Pacific Islander", "White", "Prefer not to answer"].map((item) => (
-                  <label key={item} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition">
-                    <input
-                      type="checkbox"
-                      name="race"
-                      value={item}
-                      className="w-5 h-5 rounded border-gray-300 text-blue-500 focus:ring-blue-400"
-                    />
-                    <span className="text-slate-600">{item}</span>
-                  </label>
-                ))}
-                
-                {/* Other Option */}
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <input type="checkbox" name="race" value="Other" className="w-5 h-5 rounded border-gray-300 text-blue-500" />
-                  <span className="text-slate-600">Other:</span>
-                  <input 
-                    type="text" 
-                    placeholder="__________" 
-                    className="bg-transparent border-none outline-none flex-grow text-slate-600"
-                  />
-                </div>
-              </div>
+          {/* Race */}
+          <div className="space-y-4">
+            <label className="text-sm font-semibold text-slate-700">Race</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {["Asian", "Black", "Hispanic", "White", "Other"].map((item) => (
+                <label key={item} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition">
+                  <input type="checkbox" name="race" value={item} className="w-5 h-5 rounded text-blue-500" />
+                  <span className="text-sm text-slate-600">{item}</span>
+                </label>
+              ))}
             </div>
+          </div>
 
-            {/* Family Size */}
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">What is your family size?</label>
-              <input
-                name="familySize"
-                type="number"
-                min="1"
-                defaultValue="0"
-                className="w-full p-3 bg-gray-100 rounded-lg outline-none focus:ring-2 focus:ring-blue-400 transition"
-              />
-            </div>
+          {/* Submit button */}
+          <div className="pt-4 flex justify-center">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full md:w-72 bg-blue-600 text-white font-semibold rounded-lg px-6 py-4 md:py-3 hover:bg-blue-700 transition-all shadow-md"
+            >
+              {loading ? "Saving..." : "Save Check-In"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
 
-            {/* Submit button */}
-            <div className="pt-6 flex justify-center">
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full md:w-64 bg-blue-600 text-white font-semibold rounded-lg px-6 py-3 hover:bg-blue-700 hover:scale-105 transition-all shadow-md disabled:bg-gray-400"
-              >
-                {loading ? "Saving..." : "Save"}
-              </button>
-            </div>
-          </form>
-        </div>
-      </main>
-
-      <Footer />
-    </>
-  );
+    <Footer />
+  </>
+);
 }
