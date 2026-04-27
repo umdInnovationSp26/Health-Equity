@@ -22,16 +22,24 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
     const formData = new FormData(event.currentTarget);
     const email = formData.get("email") as string;
     const name = formData.get("name") as string;
+    let ethnicities = formData.getAll("ethnicityOrHeritage") as string[];
+    const otherValue = formData.get("otherEthnicity") as string;
+
+    // if 'other' box is checked, replaces other with actual text
+    if (ethnicities.includes("Other") && otherValue) {
+    ethnicities = ethnicities.filter(item => item !== "Other");
+    ethnicities.push(otherValue);
+  }
 
 
     const checkInData = {
       name: name,
       email: email,
       phoneNumber: formData.get("phoneNumber"),
-      birthday: formData.get("birthday"),
+      age: formData.get("age"),
       zipCode: formData.get("zipCode"),
       familySize: Number(formData.get("familySize")),
-      race: formData.get("race"),
+      ethnicityOrHeritage: ethnicities.join(", "),
       submittedAt: serverTimestamp(),
     };
 
@@ -120,10 +128,16 @@ return (
               <input name="phoneNumber" required type="tel" className="w-full p-3 bg-gray-100 rounded-lg outline-none" />
             </div>
 
-            {/* Birthday */}
+            {/* Age */}
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Birthday</label>
-              <input name="birthday" required type="date" className="w-full p-3 bg-gray-100 rounded-lg outline-none" />
+              <label className="text-sm font-semibold text-slate-700">Age</label>
+              <input name="age" required type="number" className="w-full p-3 bg-gray-100 rounded-lg outline-none" />
+            </div>
+
+            {/* Family Size */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700">Family Size</label>
+              <input name="familySize" required type="number" className="w-full p-3 bg-gray-100 rounded-lg outline-none" />
             </div>
 
             {/* Zip Code */}
@@ -133,18 +147,33 @@ return (
             </div>
           </div>
 
-          {/* Race */}
+          {/* Ethnicity/Heritage */}
           <div className="space-y-4">
-            <label className="text-sm font-semibold text-slate-700">Race</label>
+            <label className="text-sm font-semibold text-slate-700">Ethincity/Heritage</label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {["Asian", "Black", "Hispanic", "White", "Other"].map((item) => (
+              {["American Indian/Alaskan Native", "Asian/Pacific Islander", "African American", "Hispanic/LatinX", "Euroamerican", "Prefer Not to Say"].map((item) => (
                 <label key={item} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition">
-                  <input type="checkbox" name="race" value={item} className="w-5 h-5 rounded text-blue-500" />
+                  <input type="checkbox" name="ethnicityOrHeritage" value={item} className="w-5 h-5 rounded text-blue-500" />
                   <span className="text-sm text-slate-600">{item}</span>
                 </label>
               ))}
             </div>
           </div>
+
+          {/* Other Option */}
+                <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition">
+                  <input type="checkbox" name="ethnicityOrHeritage" value="Other" className="w-5 h-5 rounded text-blue-500" />
+                  <div className="flex items-center gap-2 flex-grow">
+                    <span className="text-sm text-slate-600 whitespace-nowrap">Other:</span>
+                  <input 
+                    name="otherEthnicity"
+                    type="text" 
+                    placeholder="Please specify" 
+                    className="bg-transparent border-b border-slate-300 outline-none text-sm text-slate-600 w-full focus:border-blue-400"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  </div>
+                </label>
 
           {/* Submit button */}
           <div className="pt-4 flex justify-center">
