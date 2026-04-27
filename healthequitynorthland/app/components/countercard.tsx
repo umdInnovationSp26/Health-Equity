@@ -5,6 +5,7 @@ interface CounterProps {
   id: string;
   name: string;
   value: number;
+  initialValue: number;
   increment: number;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
@@ -13,7 +14,15 @@ interface CounterProps {
 }
 
 export default function CounterCard({ 
-  id, name, value, increment, onEdit, onDelete, onReset, onUpdateValue 
+  id, 
+  name, 
+  value, 
+  initialValue,
+  increment, 
+  onEdit, 
+  onDelete, 
+  onReset, 
+  onUpdateValue 
 }: CounterProps) {
   const [showMenu, setShowMenu] = useState(false);
 
@@ -33,9 +42,12 @@ export default function CounterCard({
             <button onClick={() => { onReset(id); setShowMenu(false); }} className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
               <RotateCcw size={14} className="mr-2" /> Reset
             </button>
-            <button onClick={() => { onDelete(id); setShowMenu(false); }} className="w-full flex items-center px-4 py-2 text-sm text-red-500 hover:bg-gray-50">
-              <Trash2 size={14} className="mr-2" /> Delete
-            </button>
+            {/* Hides delete if it's the main attendance counter */}
+            {id !== "main-attendance" && (
+              <button onClick={() => { onDelete(id); setShowMenu(false); }} className="w-full flex items-center px-4 py-2 text-sm text-red-500 hover:bg-gray-50">
+                <Trash2 size={14} className="mr-2" /> Delete
+              </button>
+            )}
           </div>
         )}
       </div>

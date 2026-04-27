@@ -6,8 +6,8 @@ import Footer from "@/app/components/footer";
 import { FaArrowLeft } from "react-icons/fa";
 import { useState } from "react";
 import { db } from "@/app/lib/firebaseClient";
-import { collection, doc, serverTimestamp, writeBatch } from "firebase/firestore";
 import { useRouter } from "next/navigation";
+import { collection, doc, increment, serverTimestamp, writeBatch } from "firebase/firestore";
 
 export default function CheckInForm({ params }: { params: Promise<{ eventId: string }> }) {
   const router = useRouter();
@@ -45,13 +45,16 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
     try {
     const batch = writeBatch(db);
 
-    // Reference for Checkin subcollection
     const checkInRef = doc(collection(db, "event", eventId as string, "checkin"));
     batch.set(checkInRef, checkInData);
 
-    // Reference for Contacts collection
     const contactRef = doc(db, "contacts", email.toLowerCase());
     batch.set(contactRef, contactData, { merge: true });
+
+    const eventRef = doc(db, "event", eventId as string);
+    batch.update(eventRef, {
+      attendees: increment(1) // Could also increase by family size?
+    });
 
     // Saves to Checkin and Contacts collection
     await batch.commit();

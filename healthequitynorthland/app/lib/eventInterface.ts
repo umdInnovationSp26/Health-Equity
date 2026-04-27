@@ -11,6 +11,8 @@ export interface Event {
     dateStart: Date;
     dateEnd: Date;            
     attendees: number; 
+    initialValue: number; // attendance counter
+    increment: number; // attendance counter
     feedbackText: string;
     suppliesInformation: string;
     rawTimeStart: number; // used for faster sorting by date
@@ -33,6 +35,8 @@ export function mapDocToEvent(id: string, docData: any): Event {
         category: getEventType(docData.eventType),
         location: docData.location || "TBD",
         attendees: docData.attendees ?? 0,
+        initialValue: docData.initialValue ?? 0,
+        increment: docData.increment ?? 1,
         dateStart: formattedStartDate,
         dateEnd: formattedEndDate,
         feedbackText: docData.feedbackText ?? "",

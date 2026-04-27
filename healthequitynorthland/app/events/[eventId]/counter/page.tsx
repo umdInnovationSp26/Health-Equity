@@ -10,13 +10,13 @@ import { useRouter } from "next/navigation";
 
 import { db } from "@/app/lib/firebaseClient";
 import { 
-  doc, 
-  getDoc, 
+  doc,  
   collection, 
   setDoc, 
   deleteDoc, 
   onSnapshot, 
-  query 
+  query,
+  updateDoc,
 } from "firebase/firestore";
 import { mapDocToEvent } from "@/app/lib/eventInterface";
 
@@ -32,30 +32,28 @@ export default function CountersPage({ params }: { params: Promise<{ eventId: st
   const router = useRouter();
   const { eventId } = use(params);
 
-  const [event, setEventData] = useState<any>(null);
+  const [eventData, setEventData] = useState<any>(null);
   const [counters, setCounters] = useState<CounterData[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingCounter, setEditingCounter] = useState<CounterData | null>(null);
   const [tempName, setTempName] = useState("");
 
-  // Fetch event details
+  // Listener for attendance counter
   useEffect(() => {
-    async function fetchEvent() {
-      const docRef = doc(db, "event", eventId);
-      const docSnap = await getDoc(docRef);
+    const eventRef = doc(db, "event", eventId);
+    const unsubEvent = onSnapshot(eventRef, (docSnap) => {
       if (docSnap.exists()) {
+        console.log("DATABASE DATA:", docSnap.data());
         setEventData(mapDocToEvent(eventId, docSnap.data()));
       }
-    }
-
-    fetchEvent();
+    });
 
     // Listener for counters collection
     const countersRef = collection(db, "event", eventId, "counters");
     const q = query(countersRef);
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubCounters = onSnapshot(q, (snapshot) => {
       const fetchedCounters = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -64,8 +62,26 @@ export default function CountersPage({ params }: { params: Promise<{ eventId: st
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubEvent();
+      unsubCounters();
+    };
   }, [eventId]);
+
+  // Handles global attendance updates
+const updateGlobalAttendance = async (id: string, newVal: number) => {
+  try {
+    const eventRef = doc(db, "event", eventId);
+
+    await updateDoc(eventRef, {
+      attendees: newVal 
+    });
+
+    console.log(`Global attendance set to: ${newVal}`);
+  } catch (e) {
+    console.error("Error updating global attendance: ", e);
+  }
+};
 
   // Adds counter to Firebase
   const addCounter = async () => {
@@ -88,13 +104,37 @@ export default function CountersPage({ params }: { params: Promise<{ eventId: st
     }
   };
 
-  // Updates counter in Firebase
-  const updateFirebaseCounter = async (updated: CounterData) => {
+  // Updates custom counter in Firebase
+  const updateFirebaseCounter = async (id: string, val: number) => {
     try {
-      await setDoc(doc(db, "event", eventId, "counters", updated.id), updated);
-      setEditingCounter(null);
+      const counterToUpdate = counters.find(c => c.id === id);
+      if (counterToUpdate) {
+        await setDoc(doc(db, "event", eventId, "counters", id), {
+          ...counterToUpdate,
+          value: val
+        });
+      }
     } catch (e) {
       console.error("Error updating counter: ", e);
+    }
+  };
+
+  // Saves name changes
+  const saveEditedCounter = async (updated: CounterData) => {
+    try {
+      if (updated.id === 'main-attendance') {
+        const eventRef = doc(db, "event", eventId);
+        await updateDoc(eventRef, {
+          attendees: updated.value,
+          initialValue: updated.initialValue,
+          increment: updated.increment
+        });
+      } else {
+      await setDoc(doc(db, "event", eventId, "counters", updated.id), updated);
+      }
+      setEditingCounter(null);
+    } catch (e) {
+      console.error("Error saving counter: ", e);
     }
   };
 
@@ -108,12 +148,12 @@ export default function CountersPage({ params }: { params: Promise<{ eventId: st
   };
 
   if (loading) return <div className="p-25 text-center">Loading...</div>;
-  if (!event) return <div className="p-25 text-center">Event not found.</div>;
+  if (!eventData) return <div className="p-25 text-center">Event not found.</div>;
 
   return (
     <>
       <Head>
-        <title>Counters | {event.title}</title>
+        <title>Counters | {eventData.title}</title>
       </Head>
 
       <Navbar />
@@ -133,51 +173,57 @@ export default function CountersPage({ params }: { params: Promise<{ eventId: st
 
                 <div className="flex-[2] text-center px-2">
                     <h1 className="text-base md:text-xl font-bold text-slate-800 truncate leading-tight">
-                        {event.title} Data
+                        {eventData.title} Data
                     </h1>
                 </div>
 
                 <div className="flex-1 flex justify-end">
-                    {counters.length > 0 && (
-                        <button
-                            onClick={() => setIsAddModalOpen(true)}
-                            className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white p-2 md:px-4 md:py-2 rounded-lg text-sm font-semibold transition-all shadow-md active:scale-95 min-w-[40px]"
-                        >
-                            <span className="hidden md:inline">Add Counter</span>
-                            <Plus size={18} />
-                        </button>
-                    )}
+                    <button
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white p-2 md:px-4 md:py-2 rounded-lg text-sm font-semibold transition-all shadow-md active:scale-95 min-w-[40px]"
+                    >
+                        <span className="hidden md:inline">Add Counter</span>
+                        <Plus size={18} />
+                    </button>
                 </div>
             </div>
         </div>
 
         {/* Counters Logic */}
-        {counters.length === 0 ? (
-          <div className="flex justify-center mt-20">
-            <button
-              onClick={() => setIsAddModalOpen(true)}
-              className="bg-blue-50 w-full max-w-xl aspect-square md:aspect-video rounded-3xl flex flex-col items-center justify-center gap-6 hover:bg-blue-100 transition-colors border-2 border-dashed border-blue-200"
-            >
-              <p className="text-3xl text-slate-600 font-medium">Tap to add counter</p>
-              <div className="bg-slate-700 text-white p-6 rounded-2xl shadow-xl">
-                <Plus size={64} />
-              </div>
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto px-4 pb-20">
-            {counters.map(counter => (
-              <CounterCard
-                key={counter.id}
-                {...counter}
-                onEdit={() => setEditingCounter(counter)}
-                onDelete={(id) => deleteCounter(id)}
-                onReset={(id) => updateFirebaseCounter({ ...counter, value: counter.initialValue })}
-                onUpdateValue={(id, val) => updateFirebaseCounter({ ...counter, value: val })}
-              />
-            ))}
-          </div>
-        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto px-4 pb-20">
+          {/* Attendance Counter */}
+          <CounterCard
+            id="main-attendance"
+            name="Total Attendance"
+            value={eventData.attendees || 0}
+            initialValue={eventData.initialValue || 0}
+            increment={eventData.increment || 1}
+            onEdit={() => setEditingCounter({
+              id: 'main-attendance',
+              name: 'Total Attendance',
+              value: eventData.attendees || 0,
+              initialValue: eventData.initialValue || 0,
+              increment: eventData.increment || 1
+            })} 
+            onDelete={() => {}} 
+            onReset={(id) => updateGlobalAttendance(id, eventData.initialValue || 0)}
+            onUpdateValue={(id, val) => updateGlobalAttendance(id, val)}
+          />
+
+          {/* Custom Counters */}
+          {counters.map(counter => (
+            <CounterCard
+              key={counter.id}
+              {...counter}
+              onEdit={() => setEditingCounter(counter)}
+              onDelete={(id) => deleteCounter(id)}
+              onReset={(id) => updateFirebaseCounter(id, counter.initialValue)}
+              onUpdateValue={(id, val) => updateFirebaseCounter(id, val)}
+            />
+          ))}
+        </div>
+
+        {/* Add Modal */}
         {isAddModalOpen && (
              <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
              <div className="bg-white rounded-3xl p-10 w-full max-w-md shadow-2xl relative">
@@ -198,24 +244,70 @@ export default function CountersPage({ params }: { params: Promise<{ eventId: st
              </div>
            </div>
         )}
+
+        {/* Edit Modal */}
         {editingCounter && (
-            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-3xl p-8 w-full max-w-lg shadow-2xl relative">
-              <h2 className="text-2xl font-semibold text-slate-800 mb-8 text-black">Edit Counter</h2>
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-slate-600 mb-2">Counter Name</label>
-                  <input
-                    type="text"
-                    className="text-black w-full bg-slate-100 rounded-xl p-4 outline-none"
-                    value={editingCounter.name}
-                    onChange={(e) => setEditingCounter({ ...editingCounter, name: e.target.value })}
-                  />
-                </div>
-              </div>
-              <button
-                onClick={() => updateFirebaseCounter(editingCounter)}
-                className="w-full mt-10 py-4 bg-blue-600 text-white font-semibold rounded-xl"
+    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-3xl p-8 w-full max-w-lg shadow-2xl relative">
+        <button 
+          onClick={() => setEditingCounter(null)}
+          className="absolute top-6 right-6 text-slate-400 hover:text-slate-600"
+        >
+          <Plus className="rotate-45" size={24} />
+        </button>
+
+        <h2 className="text-2xl font-semibold text-slate-800 mb-8">Edit Counter</h2>
+        
+        <div className="space-y-4">
+          {/* Counter Name (Disabled for attendance counter) */}
+          <div>
+            <label className="block text-sm font-medium text-slate-600 mb-1">Counter Name</label>
+            <input
+              type="text"
+              className="text-black w-full bg-slate-100 rounded-xl p-3 outline-none disabled:opacity-50"
+              value={editingCounter.name}
+              disabled={editingCounter.id === 'main-attendance'}
+              onChange={(e) => setEditingCounter({ ...editingCounter, name: e.target.value })}
+            />
+          </div>
+
+          {/* Current Value */}
+          <div>
+            <label className="block text-sm font-medium text-slate-600 mb-1">Current Value</label>
+            <input
+              type="number"
+              className="text-black w-full bg-slate-100 rounded-xl p-3 outline-none"
+              value={editingCounter.value}
+              onChange={(e) => setEditingCounter({ ...editingCounter, value: Number(e.target.value) })}
+            />
+          </div>
+
+          {/* Initial Value */}
+          <div>
+            <label className="block text-sm font-medium text-slate-600 mb-1">Initial Value</label>
+            <input
+              type="number"
+              className="text-black w-full bg-slate-100 rounded-xl p-3 outline-none"
+              value={editingCounter.initialValue}
+              onChange={(e) => setEditingCounter({ ...editingCounter, initialValue: Number(e.target.value) })}
+            />
+          </div>
+
+          {/* Increment Value */}
+          <div>
+            <label className="block text-sm font-medium text-slate-600 mb-1">Increment/Decrement Value</label>
+            <input
+              type="number"
+              className="text-black w-full bg-slate-100 rounded-xl p-3 outline-none"
+              value={editingCounter.increment}
+              onChange={(e) => setEditingCounter({ ...editingCounter, increment: Number(e.target.value) })}
+            />
+          </div>
+        </div>
+
+        <button
+          onClick={() => saveEditedCounter(editingCounter)}
+          className="w-full mt-8 py-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors"
               >
                 Save
               </button>
