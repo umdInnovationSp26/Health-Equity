@@ -532,70 +532,74 @@ export default function HomePage() {
     return () => unsub();
   }, [user]);
 
-  /* Load stats for first upcoming event */
- /* Load stats — produce from first upcoming event, attendance from ALL events */
-useEffect(() => {
-  if (!user) return;
+  /* Load stats */
+  useEffect(() => {
+    if (!user) return;
 
-  // 🔹 PRODUCE — subcollection on the first upcoming event
-  if (upcomingEvents.length > 0) {
+    const MONTH_LABELS = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+
+    // 🔹 ATTENDANCE — check both `attendance` and `attendees` fields
+    getDocs(collection(db, "event")).then((snap) => {
+      const monthTotals: Record<number, { sum: number; count: number }> = {};
+
+      snap.docs.forEach((d) => {
+        const raw = d.data();
+        const ts = raw.timestampStart as Timestamp | null | undefined;
+        // try `attendance` first, fall back to `attendees`
+        const val =
+          typeof raw.attendance === "number"
+            ? raw.attendance
+            : typeof raw.attendees === "number"
+              ? raw.attendees
+              : 0;
+
+        if (!ts || val === 0) return;
+
+        const m = ts.toDate().getMonth();
+        if (!monthTotals[m]) monthTotals[m] = { sum: 0, count: 0 };
+        monthTotals[m].sum += val;
+        monthTotals[m].count += 1;
+      });
+
+      const loaded: AttendanceStat[] = Object.entries(monthTotals)
+        .sort(([a], [b]) => Number(a) - Number(b))
+        .map(([idx, { sum, count }]) => ({
+          month: MONTH_LABELS[Number(idx)],
+          avg: Math.round(sum / count),
+        }));
+
+      setAttendance(loaded);
+    });
+
+    // 🔹 PRODUCE — doc ID is the name, `lb` is the field (matching produce.tsx)
+    if (upcomingEvents.length === 0) return;
+
     const eventId = upcomingEvents[0].id;
     getDocs(collection(db, "event", eventId, "produce")).then((snap) => {
-      if (snap.empty) {
-        setProduce([]);
-        return;
-      }
-      const loaded: ProduceStat[] = snap.docs.map((d) => ({
-        name: d.data().name as string,
-        lbs: d.data().lbs as number,
-      }));
+      const loaded: ProduceStat[] = snap.docs
+        .map((d) => ({
+          name: d.id,
+          lbs: (d.data().lb ?? 0) as number,
+        }))
+        .filter((p) => p.lbs > 0)
+        .sort((a, b) => b.lbs - a.lbs);
+
       setProduce(loaded);
     });
-  }
-
-  // 🔹 ATTENDANCE — aggregate across ALL events using the `attendance`
-  //    field (int64) on each event doc, grouped by month of timestampStart
-  const MONTH_LABELS = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-  ];
-
-  getDocs(collection(db, "event")).then((snap) => {
-    if (snap.empty) {
-      setAttendance([]);
-      return;
-    }
-
-    const monthTotals: Record<number, { sum: number; count: number }> = {};
-
-    snap.docs.forEach((d) => {
-      const data = d.data();
-      const ts: Timestamp | null = data.timestampStart ?? null;
-      const attendanceVal: number =
-        typeof data.attendance === "number" ? data.attendance : 0;
-
-      if (!ts || attendanceVal === 0) return;
-
-      const monthIndex = ts.toDate().getMonth(); // 0 = Jan
-      if (!monthTotals[monthIndex]) {
-        monthTotals[monthIndex] = { sum: 0, count: 0 };
-      }
-      monthTotals[monthIndex].sum += attendanceVal;
-      monthTotals[monthIndex].count += 1;
-    });
-
-    const loaded: AttendanceStat[] = Object.entries(monthTotals)
-      .map(([idx, { sum, count }]) => ({
-        month: MONTH_LABELS[Number(idx)],
-        avg: Math.round(sum / count),
-        _idx: Number(idx),
-      }))
-      .sort((a, b) => a._idx - b._idx)
-      .map(({ month, avg }) => ({ month, avg }));
-
-    setAttendance(loaded);
-  });
-}, [user, upcomingEvents]);
+  }, [user, upcomingEvents]);
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
