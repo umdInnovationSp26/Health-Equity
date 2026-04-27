@@ -45,44 +45,44 @@ export default function ProducePage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-  const loadProduce = async () => {
-    setLoading(true);
-    try {
-      // 1. Get all events
-      const eventsSnap = await getDocs(collection(db, "event"));
+    const loadProduce = async () => {
+      setLoading(true);
+      try {
+        // 1. Get all events
+        const eventsSnap = await getDocs(collection(db, "event"));
 
-      // 2. For each event, fetch its produce subcollection
-      const allProduceSnaps = await Promise.all(
-        eventsSnap.docs.map((eventDoc) =>
-          getDocs(collection(db, "event", eventDoc.id, "produce"))
-        )
-      );
+        // 2. For each event, fetch its produce subcollection
+        const allProduceSnaps = await Promise.all(
+          eventsSnap.docs.map((eventDoc) =>
+            getDocs(collection(db, "event", eventDoc.id, "produce")),
+          ),
+        );
 
-      // 3. Aggregate lbs by produce name across all events
-      const totals: Record<string, number> = {};
-      allProduceSnaps.forEach((snap) => {
-        snap.docs.forEach((d) => {
-          const name = d.id;           // doc ID is the produce name
-          const lb = d.data().lb ?? 0;
-          totals[name] = (totals[name] ?? 0) + lb;
+        // 3. Aggregate lbs by produce name across all events
+        const totals: Record<string, number> = {};
+        allProduceSnaps.forEach((snap) => {
+          snap.docs.forEach((d) => {
+            const name = d.id; // doc ID is the produce name
+            const lb = d.data().lb ?? 0;
+            totals[name] = (totals[name] ?? 0) + lb;
+          });
         });
-      });
 
-      // 4. Convert to array and sort descending by lbs
-      const loaded: ProduceStat[] = Object.entries(totals)
-        .map(([name, lbs]) => ({ name, lbs: Math.round(lbs * 100) / 100 }))
-        .sort((a, b) => b.lbs - a.lbs);
+        // 4. Convert to array and sort descending by lbs
+        const loaded: ProduceStat[] = Object.entries(totals)
+          .map(([name, lbs]) => ({ name, lbs: Math.round(lbs * 100) / 100 }))
+          .sort((a, b) => b.lbs - a.lbs);
 
-      setProduce(loaded);
-    } catch (err) {
-      console.error("Error loading produce:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+        setProduce(loaded);
+      } catch (err) {
+        console.error("Error loading produce:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  loadProduce();
-}, []);
+    loadProduce();
+  }, []);
 
   /* Load contacts */
   useEffect(() => {
@@ -137,7 +137,7 @@ export default function ProducePage() {
           <div className="grid grid-cols-1 gap-4">
             <div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-5">
               <h2 className="mb-4 text-sm font-semibold text-slate-500">
-                Produce sold this month
+                Total Produce
               </h2>
               <ProduceChart data={produce} />
             </div>
