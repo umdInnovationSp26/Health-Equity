@@ -532,29 +532,11 @@ export default function HomePage() {
     return () => unsub();
   }, [user]);
 
-  /* Load stats for first upcoming event */
+  /* Load stats */
   useEffect(() => {
-    if (!user || upcomingEvents.length === 0) return;
+    if (!user) return;
 
-    const eventId = upcomingEvents[0].id;
-
-    // 🔹 PRODUCE
-    getDocs(collection(db, "event", eventId, "produce")).then((snap) => {
-      if (snap.empty) {
-        setProduce([]);
-        return;
-      }
-
-      const loaded: ProduceStat[] = snap.docs.map((d) => ({
-        name: d.data().name as string,
-        lbs: d.data().lbs as number,
-      }));
-
-      setProduce(loaded);
-    });
-
-    // 🔹 ATTENDANCE
-    const MONTH_ORDER = [
+    const MONTH_LABELS = [
       "Jan",
       "Feb",
       "Mar",
@@ -569,22 +551,53 @@ export default function HomePage() {
       "Dec",
     ];
 
-    getDocs(collection(db, "event", eventId, "attendance")).then((snap) => {
-      if (snap.empty) {
-        setAttendance([]);
-        return;
-      }
+    // 🔹 ATTENDANCE — check both `attendance` and `attendees` fields
+    getDocs(collection(db, "event")).then((snap) => {
+      const monthTotals: Record<number, { sum: number; count: number }> = {};
 
-      const loaded: AttendanceStat[] = snap.docs
-        .map((d) => ({
-          month: d.data().month as string,
-          avg: d.data().avg as number,
-        }))
-        .sort(
-          (a, b) => MONTH_ORDER.indexOf(a.month) - MONTH_ORDER.indexOf(b.month),
-        );
+      snap.docs.forEach((d) => {
+        const raw = d.data();
+        const ts = raw.timestampStart as Timestamp | null | undefined;
+        // try `attendance` first, fall back to `attendees`
+        const val =
+          typeof raw.attendance === "number"
+            ? raw.attendance
+            : typeof raw.attendees === "number"
+              ? raw.attendees
+              : 0;
+
+        if (!ts || val === 0) return;
+
+        const m = ts.toDate().getMonth();
+        if (!monthTotals[m]) monthTotals[m] = { sum: 0, count: 0 };
+        monthTotals[m].sum += val;
+        monthTotals[m].count += 1;
+      });
+
+      const loaded: AttendanceStat[] = Object.entries(monthTotals)
+        .sort(([a], [b]) => Number(a) - Number(b))
+        .map(([idx, { sum, count }]) => ({
+          month: MONTH_LABELS[Number(idx)],
+          avg: Math.round(sum / count),
+        }));
 
       setAttendance(loaded);
+    });
+
+    // 🔹 PRODUCE — doc ID is the name, `lb` is the field (matching produce.tsx)
+    if (upcomingEvents.length === 0) return;
+
+    const eventId = upcomingEvents[0].id;
+    getDocs(collection(db, "event", eventId, "produce")).then((snap) => {
+      const loaded: ProduceStat[] = snap.docs
+        .map((d) => ({
+          name: d.id,
+          lbs: (d.data().lb ?? 0) as number,
+        }))
+        .filter((p) => p.lbs > 0)
+        .sort((a, b) => b.lbs - a.lbs);
+
+      setProduce(loaded);
     });
   }, [user, upcomingEvents]);
 

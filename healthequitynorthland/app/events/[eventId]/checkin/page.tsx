@@ -13,6 +13,7 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
   const router = useRouter();
   const { eventId } = use(params);
   const [loading, setLoading] = useState(false);
+  const [formKey, setFormKey] = useState(0);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -66,8 +67,9 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
 
     // Saves to Checkin and Contacts collection
     await batch.commit();
+
+    setFormKey(prev => prev + 1 )
     
-    router.push(`/events/${eventId}`);
   } catch (error) {
     console.error("Batch write failed:", error);
     alert("Error saving information.");
@@ -102,6 +104,7 @@ return (
 
       <div className="flex justify-center p-4 md:p-8 lg:p-12">
         <form
+          key={formKey}
           onSubmit={handleSubmit}
           className="w-full max-w-4xl bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-12 space-y-6 md:space-y-8"
         >
