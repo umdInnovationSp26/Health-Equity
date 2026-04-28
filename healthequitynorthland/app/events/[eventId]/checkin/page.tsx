@@ -1,19 +1,32 @@
 "use client";
-import React, { use } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import Head from "next/head";
 import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
 import { FaArrowLeft } from "react-icons/fa";
-import { useState } from "react";
 import { db } from "@/app/lib/firebaseClient";
 import { useRouter } from "next/navigation";
-import { collection, doc, increment, serverTimestamp, writeBatch } from "firebase/firestore";
+import { collection, doc, getDoc, increment, serverTimestamp, writeBatch } from "firebase/firestore";
 
 export default function CheckInForm({ params }: { params: Promise<{ eventId: string }> }) {
   const router = useRouter();
   const { eventId } = use(params);
+  
+  const [eventData, setEventData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [formKey, setFormKey] = useState(0);
+
+  useEffect(() => {
+    async function fetchEvent() {
+      if (!eventId) return;
+      const docRef = doc(db, "event", eventId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setEventData(docSnap.data());
+      }
+    }
+    fetchEvent();
+  }, [eventId]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -24,12 +37,12 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
     const email = formData.get("email") as string;
     const name = formData.get("name") as string;
     let ethnicities = formData.getAll("ethnicityOrHeritage") as string[];
-    const otherValue = formData.get("otherEthnicity") as string;
+    const additionalValue = formData.get("additionalEthnicity") as string;
 
-    // if 'other' box is checked, replaces other with actual text
-    if (ethnicities.includes("Other") && otherValue) {
-    ethnicities = ethnicities.filter(item => item !== "Other");
-    ethnicities.push(otherValue);
+    // if 'addition' box is checked, replaces other with actual text
+    if (ethnicities.includes("addition") && additionalValue) {
+    ethnicities = ethnicities.filter(item => item !== "addition");
+    ethnicities.push(additionalValue);
   }
 
 
@@ -67,9 +80,7 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
 
     // Saves to Checkin and Contacts collection
     await batch.commit();
-
     setFormKey(prev => prev + 1 )
-    
   } catch (error) {
     console.error("Batch write failed:", error);
     alert("Error saving information.");
@@ -108,7 +119,7 @@ return (
           onSubmit={handleSubmit}
           className="w-full max-w-4xl bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-12 space-y-6 md:space-y-8"
         >
-          <h2 className="text-xl md:text-2xl font-bold text-center text-slate-800">Craft Night</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-center text-slate-800">{eventData?.title || "Loading Event..."}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             
             {/* Name */}
@@ -152,9 +163,9 @@ return (
 
           {/* Ethnicity/Heritage */}
           <div className="space-y-4">
-            <label className="text-sm font-semibold text-slate-700">Ethincity/Heritage</label>
+            <label className="text-sm font-semibold text-slate-700">Ethincity/Ancestry/Heritage/National Origin</label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {["American Indian/Alaskan Native", "Asian/Pacific Islander", "African American", "Hispanic/LatinX", "Euroamerican", "Prefer Not to Say"].map((item) => (
+              {["African American", "African Heritage", "Asian American/Asian", "EuroAmerican/EuroDescent", "Hispanic American/Latinx", "Native American/Indigenous"].map((item) => (
                 <label key={item} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition">
                   <input type="checkbox" name="ethnicityOrHeritage" value={item} className="w-5 h-5 rounded text-blue-500" />
                   <span className="text-sm text-slate-600">{item}</span>
@@ -163,13 +174,13 @@ return (
             </div>
           </div>
 
-          {/* Other Option */}
+          {/* Addition Option */}
                 <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition">
-                  <input type="checkbox" name="ethnicityOrHeritage" value="Other" className="w-5 h-5 rounded text-blue-500" />
+                  <input type="checkbox" name="ethnicityOrHeritage" value="addition" className="w-5 h-5 rounded text-blue-500" />
                   <div className="flex items-center gap-2 flex-grow">
-                    <span className="text-sm text-slate-600 whitespace-nowrap">Other:</span>
+                    <span className="text-sm text-slate-600 whitespace-nowrap">Addition:</span>
                   <input 
-                    name="otherEthnicity"
+                    name="additionalEthnicity"
                     type="text" 
                     placeholder="Please specify" 
                     className="bg-transparent border-b border-slate-300 outline-none text-sm text-slate-600 w-full focus:border-blue-400"
