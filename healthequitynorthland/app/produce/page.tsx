@@ -5,7 +5,10 @@ import { db } from "@/app/lib/firebaseClient";
 import { collection, getDocs, addDoc, Timestamp } from "firebase/firestore";
 import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
-import { Chart } from "chart.js";
+import { Chart, DoughnutController, ArcElement, Tooltip, Legend } from "chart.js";
+
+
+Chart.register(ArcElement, Tooltip, Legend, DoughnutController);
 
 type ProduceStat = {
   name: string;
