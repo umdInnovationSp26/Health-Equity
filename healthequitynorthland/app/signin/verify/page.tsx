@@ -18,48 +18,6 @@ export default function VerifyPage() {
   const [cooldown, setCooldown] = useState(0);
   const [message, setMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
-  const [adminLoaded, setAdminLoaded] = useState(false);
-  const [notAllowed, setNotAllowed] = useState(false);
-
-  // Store admin emails
-  const adminEmailsRef = useRef<string[]>([]);
-
-  // ✅ SAFE admin check (handles whitespace + casing)
-  const isAdmin = (email: string | null | undefined): boolean => {
-    if (!email) return false;
-
-    const normalized = email.trim().toLowerCase();
-
-    return adminEmailsRef.current.some(
-      (e) => e?.trim().toLowerCase() === normalized
-    );
-  };
-
-  // ── Fetch admin emails ──
-  useEffect(() => {
-    const fetchAdminEmails = async () => {
-      try {
-        const snap = await getDoc(doc(db, "settings", "ADMIN"));
-        if (snap.exists()) {
-          const data = snap.data();
-          const emails: string[] = Array.isArray(data.email)
-            ? data.email
-            : [];
-
-          // Normalize once when loading
-          adminEmailsRef.current = emails.map((e) =>
-            e?.trim().toLowerCase()
-          );
-        }
-      } catch (err) {
-        console.error("Failed to fetch admin emails:", err);
-      } finally {
-        setAdminLoaded(true);
-      }
-    };
-
-    fetchAdminEmails();
-  }, []);
 
   const handleLogout = async () => {
     try {
@@ -74,8 +32,6 @@ export default function VerifyPage() {
 
   // ── AUTH + GATES ──
   useEffect(() => {
-    if (!adminLoaded) return;
-
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       if (!u) {
         router.push("/signin");
@@ -84,14 +40,7 @@ export default function VerifyPage() {
 
       setUser(u);
 
-      // 🚫 GATE 1: Admin check
-      if (!isAdmin(u.email)) {
-        console.log("❌ NOT ADMIN:", u.email);
-        setNotAllowed(true);
-        return;
-      }
-
-      // ✅ GATE 2: Verification
+      // Verification
       try {
         const userRef = doc(db, "users", u.uid);
         const snap = await getDoc(userRef);
@@ -119,7 +68,7 @@ export default function VerifyPage() {
     });
 
     return () => unsubscribe();
-  }, [adminLoaded, router]);
+  }, [router]);
 
   // ⏱ Cooldown
   useEffect(() => {
@@ -150,11 +99,6 @@ export default function VerifyPage() {
   const handleRefresh = async () => {
     if (!user) return;
 
-    if (!isAdmin(user.email)) {
-      setNotAllowed(true);
-      return;
-    }
-
     try {
       await user.reload();
       const refreshedUser = auth.currentUser;
@@ -184,30 +128,8 @@ export default function VerifyPage() {
     }
   };
 
-  // 🚫 BLOCKED UI
-  if (notAllowed) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="bg-white p-8 rounded-xl shadow-md text-center">
-          <h2 className="text-xl font-bold text-red-500 mb-2">
-            EMAIL NOT ALLOWED
-          </h2>
-          <p className="text-sm text-gray-500 mb-4">
-            Your account is not authorized.
-          </p>
-          <button
-            onClick={handleLogout}
-            className="text-sm text-blue-500 hover:underline"
-          >
-            Back to Sign In
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   // ⏳ Loading
-  if (!adminLoaded || !user) {
+  if (!user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="flex items-center gap-2 text-sm text-slate-400">
@@ -230,9 +152,6 @@ export default function VerifyPage() {
             Signed in as{" "}
             <span className="font-medium text-gray-700">
               {user.email}
-            </span>
-            <span className="ml-2 px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
-              Admin
             </span>
           </p>
 
