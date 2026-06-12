@@ -2,11 +2,8 @@
 import Head from "next/head";
 import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
-
 import { FaArrowLeft, FaAngleDown } from "react-icons/fa";
-
 import { useEffect, useState } from "react";
-
 import { auth, db } from "@/app/lib/firebaseClient";
 import {
   query,
@@ -31,6 +28,10 @@ import {
   convertPoundsToOunces,
   mapDocToProduceOption,
 } from "@/app/lib/produceUtil";
+
+
+//QRcode generation imports
+import { useQRCode } from 'next-qrcode';
 
 const KG = "kg";
 const LB = "lb";
@@ -103,6 +104,7 @@ export default function CreateEvent() {
     const notes = formData.get("notes") as string;
     const suppliesInfo = formData.get("suppliesInformation") as string;
     const feedbackText = formData.get("eventFeedback") as string;
+    const checkInLink = formData.get("checkInLink") as string; // get the check-in link for QR code generation
 
     try {
       // create date objects from the string data
@@ -114,6 +116,10 @@ export default function CreateEvent() {
       // create the event beforhand so we have the eventId
       const eventRef = doc(collection(db, "event"));
       const newEventId = eventRef.id;
+      const generatedCheckInLink =
+        typeof window !== "undefined"
+          ? `${window.location.origin}/events/${newEventId}/checkin`
+          : `/events/${newEventId}/checkin`;
 
       // event data
       batch.set(eventRef, {
@@ -127,6 +133,7 @@ export default function CreateEvent() {
         notes: notes,
         suppliesInformation: suppliesInfo,
         feedbackText: feedbackText,
+        checkInLink: generatedCheckInLink,
       });
 
       // add produce

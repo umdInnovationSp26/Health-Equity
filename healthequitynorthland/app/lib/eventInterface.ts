@@ -18,6 +18,7 @@ export interface Event {
     rawTimeStart: number; // used for faster sorting by date
     eventTypeId: number;
     notes: string;
+    checkInLink?: string; // optional field for QR code check-in
 }
 
 
@@ -39,6 +40,7 @@ export function mapDocToEvent(id: string, docData: any): Event {
         increment: docData.increment ?? 1,
         dateStart: formattedStartDate,
         dateEnd: formattedEndDate,
+        checkInLink: docData.checkInLink ?? undefined,
         feedbackText: docData.feedbackText ?? "",
         suppliesInformation: docData.eventInformation ?? "",
         rawTimeStart: docData.timestampStart?.seconds || Number.MAX_VALUE, // used for sorting after grabbing the data

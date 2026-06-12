@@ -18,6 +18,7 @@ import Image from "next/image";
 import calendar_svg from "@/public/calendar.svg";
 import pin_svg from "@/public/pin.svg";
 import clock_svg from "@/public/clock.svg";
+import { useQRCode } from "next-qrcode";
 
 import { useEffect, useState, use, useRef } from "react";
 import { db } from "@/app/lib/firebaseClient";
@@ -36,12 +37,47 @@ import {
   DoughnutController,
 } from "chart.js";
 
+
 Chart.register(ArcElement, Tooltip, Legend, DoughnutController);
 
 type ProduceStat = {
   name: string;
   lbs: number;
 };
+
+function CheckInQRCode({ link }: { link?: string }) {
+  const { Canvas } = useQRCode();
+
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-center">
+      <Canvas
+        text={link?.trim() || "https://health-equity-northland.org"}
+        options={{
+          type: "image/jpeg",
+          quality: 0.3,
+          errorCorrectionLevel: "M",
+          margin: 3,
+          scale: 4,
+          width: 180,
+          color: {
+            dark: "#0F172A",
+            light: "#FFFFFF",
+          },
+        }}
+      />
+      <div className="text-xs text-slate-500">
+      {link ? (
+        <>
+          <p className="trim">{link}</p>
+          <p>Scan this QR code for the check-in page.</p>
+        </>
+      ) : (
+        <p>No check-in link provided for this event.</p>
+      )}
+    </div>
+    </div>
+  );
+}
 
 /* ─── Chart colors ───────────────────────────────────────── */
 const PRODUCE_COLORS = [
@@ -399,7 +435,25 @@ export default function EventDetailsPage({
               </div>
             </div>
 
-            {/* Placeholder for Pie Chart & List */}
+
+
+            {/* Check-In QR Code */}
+
+            // The QR code will only be shown if a check-in link exists for this event. 
+            // The link will also be displayed in text form. 
+            {event.checkInLink?.trim() ? (
+              <div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-5">
+                <h2 className="mb-4 text-sm font-semibold text-slate-500">
+                  Check-In QR Code
+                </h2>
+                <CheckInQRCode link={event.checkInLink} />
+              </div>
+            ) : null}
+
+
+
+
+            {/* Produce chart */}
             <div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-5">
               <h2 className="mb-4 text-sm font-semibold text-slate-500">
                 Produce
