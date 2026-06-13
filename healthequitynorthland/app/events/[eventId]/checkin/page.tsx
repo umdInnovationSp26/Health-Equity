@@ -77,10 +77,13 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
     batch.update(eventRef, {
       attendees: increment(1) // Could also increase by family size?
     });
+ 
 
     // Saves to Checkin and Contacts collection
     await batch.commit();
     setFormKey(prev => prev + 1 )
+
+
   } catch (error) {
     console.error("Batch write failed:", error);
     alert("Error saving information.");

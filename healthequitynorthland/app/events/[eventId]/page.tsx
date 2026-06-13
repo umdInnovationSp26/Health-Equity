@@ -439,8 +439,8 @@ export default function EventDetailsPage({
 
             {/* Check-In QR Code */}
 
-            // The QR code will only be shown if a check-in link exists for this event. 
-            // The link will also be displayed in text form. 
+            {/* The QR code will only be shown if a check-in link exists for this event. */}
+            {/* The link will also be displayed in text form. */}
             {event.checkInLink?.trim() ? (
               <div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-5">
                 <h2 className="mb-4 text-sm font-semibold text-slate-500">

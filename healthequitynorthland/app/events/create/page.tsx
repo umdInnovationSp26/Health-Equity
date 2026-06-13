@@ -171,6 +171,14 @@ export default function CreateEvent() {
         });
       });
 
+      // Create a link to the check-in page for this event, which will be used for QR code generation
+      const checkInLinkRef = doc(db, "event", newEventId, "links", "checkin");
+      batch.set(checkInLinkRef, {
+        url: generatedCheckInLink,
+      });
+
+
+      
       // save to db
       await batch.commit();
 
