@@ -33,15 +33,15 @@ import {
 //QRcode generation imports
 import { useQRCode } from 'next-qrcode';
 
+
 const KG = "kg";
 const LB = "lb";
 const OZ = "oz";
 
-const createCheckInLink = true; // variable to control whether a check-in link should be created for this event. Will be used for QR code generation
-
 export default function CreateEvent() {
   const router = useRouter();
   const [loading, setLoading] = useState(false); // variable for waiting for db to save data
+  const [createCheckInLink, setCreateCheckInLink] = useState(true);
 
   const eventTypeList = eventTypeUtil.getEventTypeSelect(); // list of types in int, string format to make html select options easier to create
 
@@ -106,7 +106,7 @@ export default function CreateEvent() {
     const notes = formData.get("notes") as string;
     const suppliesInfo = formData.get("suppliesInformation") as string;
     const feedbackText = formData.get("eventFeedback") as string;
-    const checkInLink = formData.get("checkInLink") as string; // get the check-in link for QR code generation
+    const shouldCreateCheckInLink = createCheckInLink;
 
     try {
       // create date objects from the string data
@@ -119,9 +119,11 @@ export default function CreateEvent() {
       const eventRef = doc(collection(db, "event"));
       const newEventId = eventRef.id;
       const generatedCheckInLink =
-        typeof window !== "undefined"
+        shouldCreateCheckInLink && typeof window !== "undefined"
           ? `${window.location.origin}/events/${newEventId}/checkin`
-          : `/events/${newEventId}/checkin`;
+          : shouldCreateCheckInLink
+            ? `/events/${newEventId}/checkin`
+            : "";
 
       // event data
       batch.set(eventRef, {
@@ -172,13 +174,6 @@ export default function CreateEvent() {
           oz: ozCount,
         });
       });
-
-      // Create a link to the check-in page for this event, which will be used for QR code generation
-      const checkInLinkRef = doc(db, "event", newEventId, "links", "checkin");
-      batch.set(checkInLinkRef, {
-        url: generatedCheckInLink,
-      });
-
 
       
       // save to db
@@ -252,7 +247,8 @@ export default function CreateEvent() {
                   <input
                     type="checkbox"
                     name="createCheckInLink"
-                    defaultChecked={createCheckInLink}
+                    checked={createCheckInLink}
+                    onChange={(e) => setCreateCheckInLink(e.target.checked)}
                     className="form-checkbox h-5 w-5 text-indigo-600 rounded"
                   />
                   <span className="text-sm font-medium text-slate-700">
