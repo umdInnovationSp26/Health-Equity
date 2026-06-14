@@ -45,11 +45,26 @@ type ProduceStat = {
   lbs: number;
 };
 
-function CheckInQRCode({ link }: { link?: string }) {
+function CheckInQRCode({ link, eventName }: { link?: string; eventName?: string }) {
   const { Canvas } = useQRCode();
 
   return (
+
+
+    
     <div className="flex flex-col items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-center">
+
+            <div className="max-w-full text-xs text-slate-500">
+      {link ? (
+        <>
+          
+          <p style={{ color: 'black', fontSize: '14px', fontWeight: 'bold' }}>Scan this QR code for the {eventName || "this"} check-in page.</p>
+        </>
+      ) : (
+        <p>No check-in link provided for this event.</p>
+      )}
+    </div>
+    
       <Canvas
         text={link?.trim() || "https://health-equity-northland.org"}
         options={{
@@ -65,24 +80,31 @@ function CheckInQRCode({ link }: { link?: string }) {
           },
         }}
       />
-      <div className="max-w-full text-xs text-slate-500">
-      {link ? (
-        <>
-          <a
+
+      <a
             href={link}
             target="_blank"
             rel="noopener noreferrer"
             className="block max-w-full break-all text-blue-500 hover:underline"
-          >
+          style={{ color: 'DodgerBlue', fontSize: '10px' }}>
             {link}
           </a>
-          <p>Scan this QR code for the check-in page.</p>
-        </>
-      ) : (
-        <p>No check-in link provided for this event.</p>
-      )}
+
+
+    <div className="Button">  
+      <button
+        onClick={() => navigator.clipboard.writeText(link || "")}
+        className="mt-2 px-3 py-1 text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200 transition hover:cursor-pointer"
+      >
+        Download QR Code
+      </button>
     </div>
+
+
     </div>
+
+    
+    
   );
 }
 
@@ -453,7 +475,7 @@ export default function EventDetailsPage({
                 <h2 className="mb-4 text-sm font-semibold text-slate-500">
                   Check-In QR Code
                 </h2>
-                <CheckInQRCode link={event.checkInLink} />
+                <CheckInQRCode link={event.checkInLink} eventName={event.title} />
               </div>
             ) : null}
 
