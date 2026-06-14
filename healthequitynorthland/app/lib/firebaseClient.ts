@@ -5,6 +5,7 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getAnalytics, isSupported } from "firebase/analytics";
 
+
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -15,12 +16,15 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
+
 // Initialize once (avoids “already exists” errors)
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+
 
 // Firebase services
 const auth = getAuth(app);
 const db = getFirestore(app);
+
 
 // Analytics (only client-side + supported browsers)
 let analytics: ReturnType<typeof getAnalytics> | null = null;
@@ -30,4 +34,7 @@ if (typeof window !== "undefined") {
   });
 }
 
+
 export { app, auth, db, analytics };
+
+

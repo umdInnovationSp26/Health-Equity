@@ -37,6 +37,8 @@ const KG = "kg";
 const LB = "lb";
 const OZ = "oz";
 
+const createCheckInLink = true; // variable to control whether a check-in link should be created for this event. Will be used for QR code generation
+
 export default function CreateEvent() {
   const router = useRouter();
   const [loading, setLoading] = useState(false); // variable for waiting for db to save data
@@ -242,6 +244,26 @@ export default function CreateEvent() {
                   className="w-full p-3 bg-gray-100 rounded-lg outline-none"
                 />
               </div>
+
+              {/* Checkbox to control whether or not a check-in link/ QR code will be generated for this event */}
+              {/* Enabled by default for all events */}
+              <div>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    name="createCheckInLink"
+                    defaultChecked={createCheckInLink}
+                    className="form-checkbox h-5 w-5 text-indigo-600 rounded"
+                  />
+                  <span className="text-sm font-medium text-slate-700">
+                    Generate Check-In Link
+                  </span>
+                </label>
+              </div>
+
+
+
+              {/* Date, time, and location fields */}
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700">
                   Date
@@ -302,6 +324,8 @@ export default function CreateEvent() {
               />
             </div>
 
+
+            {/* Event type selection */}
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">
                 Event Type
@@ -324,6 +348,7 @@ export default function CreateEvent() {
                 ))}
               </select>
             </div>
+
 
             {/* Outreach and tabling options */}
             {(selectedType == eventTypeUtil.getOutreachId() ||
