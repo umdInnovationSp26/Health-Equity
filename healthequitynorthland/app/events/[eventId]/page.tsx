@@ -65,10 +65,17 @@ function CheckInQRCode({ link }: { link?: string }) {
           },
         }}
       />
-      <div className="text-xs text-slate-500">
+      <div className="max-w-full text-xs text-slate-500">
       {link ? (
         <>
-          <p className="trim">{link}</p>
+          <a
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block max-w-full break-all text-blue-500 hover:underline"
+          >
+            {link}
+          </a>
           <p>Scan this QR code for the check-in page.</p>
         </>
       ) : (
