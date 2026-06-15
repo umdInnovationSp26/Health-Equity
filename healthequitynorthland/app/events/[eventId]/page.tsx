@@ -37,6 +37,8 @@ import {
   DoughnutController,
 } from "chart.js";
 
+import QRCode from 'qrcode';
+import { jsPDF } from "jspdf";
 
 Chart.register(ArcElement, Tooltip, Legend, DoughnutController);
 
@@ -44,6 +46,31 @@ type ProduceStat = {
   name: string;
   lbs: number;
 };
+
+
+{/* Check-In PDF */}
+
+async function generateCheckInPDF(link: string, eventName: string) {
+  //generate QR code onto a canvas
+  const canvas = document.createElement("canvas");
+
+  //draw the QR code onto the canvas
+  await QRCode.toCanvas(canvas, link); 
+  //get QR code as image
+  const qrImage = canvas.toDataURL("image/png");
+
+  //create a new PDF document
+  const doc = new jsPDF();
+  doc.setFontSize(24);
+  doc.text(eventName, 105, 30, { align: "center" });
+  doc.text("Check In Here", 105, 45, { align: "center" });
+  doc.addImage(qrImage, "PNG", 55, 60, 100, 100); // centered QR code
+  doc.setFontSize(12);
+  doc.text(link || "https://health-equity-northland.org", 105, 170, { align: "center" });
+
+  doc.save(`${eventName}-checkin.pdf`);
+}
+
 
 function CheckInQRCode({ link, eventName }: { link?: string; eventName?: string }) {
   const { Canvas } = useQRCode();

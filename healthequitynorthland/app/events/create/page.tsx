@@ -31,7 +31,7 @@ import {
 
 
 //QRcode generation imports
-import { useQRCode } from 'next-qrcode';
+
 
 
 const KG = "kg";

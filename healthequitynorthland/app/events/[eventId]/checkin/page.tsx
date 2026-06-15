@@ -1,8 +1,6 @@
 "use client";
 import React, { use, useEffect, useState } from 'react';
 import Head from "next/head";
-import Navbar from "@/app/components/navbar";
-import Footer from "@/app/components/footer";
 import { FaArrowLeft } from "react-icons/fa";
 import { db } from "@/app/lib/firebaseClient";
 import { useRouter } from "next/navigation";
@@ -15,6 +13,7 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
   const [eventData, setEventData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [formKey, setFormKey] = useState(0);
+  const [partySize, setPartySize] = useState(1);
 
   useEffect(() => {
     async function fetchEvent() {
@@ -98,23 +97,9 @@ return (
       <title>Check-In Form | HealthEquityNorthland</title>
     </Head>
 
-    <Navbar />
-
-    <main className="pt-16 md:pt-20 min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-50">
       {/* Header Bar */}
-      <div className="bg-white shadow-sm flex items-center justify-between p-3 md:p-4 sticky top-0 z-20">
-        <button
-          onClick={() => router.back()}
-          className="p-2 hover:scale-105 transition hover:cursor-pointer z-10"
-        >
-          <FaArrowLeft />
-        </button>
-
-        <h3 className="text-black absolute left-1/2 -translate-x-1/2 font-bold text-sm md:text-base truncate">
-          Check-In Form
-        </h3>
-        <div className="w-10"></div> 
-      </div>
+      
 
       <div className="flex justify-center p-4 md:p-8 lg:p-12">
         <form
@@ -122,75 +107,60 @@ return (
           onSubmit={handleSubmit}
           className="w-full max-w-4xl bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-12 space-y-6 md:space-y-8"
         >
-          <h2 className="text-xl md:text-2xl font-bold text-center text-slate-800">{eventData?.title || "Loading Event..."}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            
-            {/* Name */}
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Name</label>
-              <input name="name" required type="text" className="w-full p-3 bg-gray-100 rounded-lg outline-none focus:ring-2 focus:ring-blue-400" />
-            </div>
+          <h2 className="text-xl md:text-2xl font-bold text-center text-slate-800">{eventData?.title || "Loading Event..."} Check-In Form</h2>
+           
 
-            {/* Email */}
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Email</label>
-              <input name="email" required type="email" className="w-full p-3 bg-gray-100 rounded-lg outline-none focus:ring-2 focus:ring-blue-400" />
-            </div>
+
+          {/* HEN Logo */}
+          <div className="flex justify-center">
+            <img src="/HENsignin.png" alt="HEN Logo" className="h-16 w-auto"
+            style = {{ maxWidth: '100%', height: 'auto' }} />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-            {/* Phone Number */}
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Phone Number</label>
-              <input name="phoneNumber" required type="tel" className="w-full p-3 bg-gray-100 rounded-lg outline-none" />
-            </div>
+          <center style={{ color: 'DodgerBlue', fontWeight: 'bold', fontSize: '2rem' }}> Welcome! </center>
+          <center style={{fontSize: '1rem'}}> Please fill out the fields below to check in for the event. </center>
 
-            {/* Age */}
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Age</label>
-              <input name="age" required type="number" className="w-full p-3 bg-gray-100 rounded-lg outline-none" />
-            </div>
+          {/* REQUIRED: party size */}
+          <div className="flex flex-col items-center gap-4 text-center">
+            <label htmlFor="familySize" className="text-sm font-semibold text-slate-700">
+              How many people are in your party?
+            </label>
 
-            {/* Family Size */}
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Family Size</label>
-              <input name="familySize" required type="number" className="w-full p-3 bg-gray-100 rounded-lg outline-none" />
-            </div>
+            <div className="inline-flex items-center gap-3 rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setPartySize((value) => Math.max(1, value - 1))}
+                className="text-xl font-semibold text-blue-600 disabled:cursor-not-allowed disabled:text-gray-300"
+                disabled={partySize <= 1}
+              >
+                −
+              </button>
 
-            {/* Zip Code */}
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Zip Code</label>
-              <input name="zipCode" required type="text" className="w-full p-3 bg-gray-100 rounded-lg outline-none" />
+              <input
+                type="number"
+                name="familySize"
+                id="familySize"
+                min={1}
+                max={20}
+                required
+                value={partySize}
+                onChange={(event) => {
+                  const nextValue = Number(event.target.value);
+                  setPartySize(Number.isFinite(nextValue) && nextValue > 0 ? Math.min(20, nextValue) : 1);
+                }}
+                className="w-14 border-none bg-transparent text-center text-lg font-semibold text-slate-800 outline-none"
+              />
+
+              <button
+                type="button"
+                onClick={() => setPartySize((value) => Math.min(20, value + 1))}
+                className="text-xl font-semibold text-blue-600 disabled:cursor-not-allowed disabled:text-gray-300"
+                disabled={partySize >= 20}
+              >
+                +
+              </button>
             </div>
           </div>
-
-          {/* Ethnicity/Heritage */}
-          <div className="space-y-4">
-            <label className="text-sm font-semibold text-slate-700">Ethincity/Ancestry/Heritage/National Origin</label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {["African American", "African Heritage", "Asian American/Asian", "EuroAmerican/EuroDescent", "Hispanic American/Latinx", "Native American/Indigenous"].map((item) => (
-                <label key={item} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition">
-                  <input type="checkbox" name="ethnicityOrHeritage" value={item} className="w-5 h-5 rounded text-blue-500" />
-                  <span className="text-sm text-slate-600">{item}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Addition Option */}
-                <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition">
-                  <input type="checkbox" name="ethnicityOrHeritage" value="addition" className="w-5 h-5 rounded text-blue-500" />
-                  <div className="flex items-center gap-2 flex-grow">
-                    <span className="text-sm text-slate-600 whitespace-nowrap">Addition:</span>
-                  <input 
-                    name="additionalEthnicity"
-                    type="text" 
-                    placeholder="Please specify" 
-                    className="bg-transparent border-b border-slate-300 outline-none text-sm text-slate-600 w-full focus:border-blue-400"
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                  </div>
-                </label>
 
           {/* Submit button */}
           <div className="pt-4 flex justify-center">
@@ -199,14 +169,14 @@ return (
               disabled={loading}
               className="w-full md:w-72 bg-blue-600 text-white font-semibold rounded-lg px-6 py-4 md:py-3 hover:bg-blue-700 transition-all shadow-md"
             >
-              {loading ? "Saving..." : "Save Check-In"}
+              {loading ? "Saving..." : "Check-In"}
             </button>
           </div>
+
+
         </form>
       </div>
     </main>
-
-    <Footer />
   </>
 );
 }
