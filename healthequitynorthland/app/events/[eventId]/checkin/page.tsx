@@ -33,34 +33,26 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
     setLoading(true);
 
     const formData = new FormData(event.currentTarget);
-    const email = formData.get("email") as string;
-    const name = formData.get("name") as string;
-    let ethnicities = formData.getAll("ethnicityOrHeritage") as string[];
-    const additionalValue = formData.get("additionalEthnicity") as string;
-
-    // if 'addition' box is checked, replaces other with actual text
-    if (ethnicities.includes("addition") && additionalValue) {
-    ethnicities = ethnicities.filter(item => item !== "addition");
-    ethnicities.push(additionalValue);
-  }
-
+    const email = (formData.get("email") as string | null)?.trim() ?? "";
+    const name = (formData.get("name") as string | null)?.trim() ?? "";
+    const safePartySize = Math.max(1, Number(partySize) || 1);
 
     const checkInData = {
-      name: name,
-      email: email,
-      phoneNumber: formData.get("phoneNumber"),
-      age: formData.get("age"),
-      zipCode: formData.get("zipCode"),
-      familySize: Number(formData.get("familySize")),
-      ethnicityOrHeritage: ethnicities.join(", "),
+      name: name || null,
+      email: email || null,
+      phoneNumber: null,
+      age: null,
+      zipCode: null,
+      familySize: safePartySize,
+      ethnicityOrHeritage: null,
       submittedAt: serverTimestamp(),
     };
 
     const contactData = {
-    name: name,
-    email: email,
-    lastActivity: serverTimestamp(),
-  };
+      name: name || null,
+      email: email || null,
+      lastActivity: serverTimestamp(),
+    };
 
 
     try {
@@ -69,12 +61,13 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
     const checkInRef = doc(collection(db, "event", eventId as string, "checkin"));
     batch.set(checkInRef, checkInData);
 
-    const contactRef = doc(db, "contacts", email.toLowerCase());
+    const contactDocId = email ? email.toLowerCase() : `guest-${eventId}-${Date.now()}`;
+    const contactRef = doc(db, "contacts", contactDocId);
     batch.set(contactRef, contactData, { merge: true });
 
     const eventRef = doc(db, "event", eventId as string);
     batch.update(eventRef, {
-      attendees: increment(1) // Could also increase by family size?
+      attendees: increment(safePartySize),
     });
  
 
@@ -173,8 +166,15 @@ return (
             </button>
           </div>
 
+        <center>
+          Learn more about us at{" "}
+          <a href="https://www.healthequitynorthland.org/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+            https://www.healthequitynorthland.org/
+          </a>
+        </center>
+      </form>
 
-        </form>
+        
       </div>
     </main>
   </>
