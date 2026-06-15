@@ -14,6 +14,7 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
   const [loading, setLoading] = useState(false);
   const [formKey, setFormKey] = useState(0);
   const [partySize, setPartySize] = useState(1);
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     async function fetchEvent() {
@@ -73,7 +74,8 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
 
     // Saves to Checkin and Contacts collection
     await batch.commit();
-    setFormKey(prev => prev + 1 )
+    setSubmitted(true);
+    setFormKey(prev => prev + 1);
 
 
   } catch (error) {
@@ -95,11 +97,51 @@ return (
       
 
       <div className="flex justify-center p-4 md:p-8 lg:p-12">
-        <form
-          key={formKey}
-          onSubmit={handleSubmit}
-          className="w-full max-w-4xl bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-12 space-y-6 md:space-y-8"
-        >
+        {submitted ? (
+           <div className="flex justify-center">
+            <form
+            className="w-full max-w-4xl bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-12 space-y-6 md:space-y-8"
+          >
+            <h2 className="text-xl md:text-2xl font-bold text-center text-slate-800">{eventData?.title || "Loading Event..."} Check-In Form</h2>
+
+            {/* HEN Logo */}
+            <div className="flex justify-center">
+              <img src="/HENsignin.png" alt="HEN Logo" className="h-16 w-auto"
+              style = {{ maxWidth: '100%', height: 'auto' }} />
+            </div>
+
+          {/* Check in confirmation + option to check in another guest */}
+          <section className="w-full max-w-2xl rounded-2xl border border-green-200 bg-green-50 p-8 text-center shadow-sm">
+            <h2 className="text-2xl font-bold text-green-800">You’re checked in!</h2>
+            <p className="mt-3 text-green-700">Thanks for checking in. You can close this page now.</p>
+            <button
+              type="button"
+              onClick={() => setSubmitted(false)}
+              className="mt-6 rounded-lg bg-green-600 px-5 py-3 text-white font-semibold hover:bg-green-700"
+            >
+              Check in another guest
+            </button>
+            
+          </section>
+
+          <center>
+              Learn more about us at{" "}
+              <a href="https://www.healthequitynorthland.org/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                https://www.healthequitynorthland.org/
+              </a>
+            </center>
+            </form>
+            </div>
+            
+
+
+          
+        ) : (
+          <form
+            key={formKey}
+            onSubmit={handleSubmit}
+            className="w-full max-w-4xl bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-12 space-y-6 md:space-y-8"
+          >
           <h2 className="text-xl md:text-2xl font-bold text-center text-slate-800">{eventData?.title || "Loading Event..."} Check-In Form</h2>
            
 
@@ -113,13 +155,15 @@ return (
           <center style={{ color: 'DodgerBlue', fontWeight: 'bold', fontSize: '2rem' }}> Welcome! </center>
           <center style={{fontSize: '1rem'}}> Please fill out the fields below to check in for the event. </center>
 
-          {/* REQUIRED: party size */}
+          {/* REQUIRED: party/family size */}
           <div className="flex flex-col items-center gap-4 text-center">
             <label htmlFor="familySize" className="text-sm font-semibold text-slate-700">
               How many people are in your party?
             </label>
 
             <div className="inline-flex items-center gap-3 rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm">
+
+              {/* decrease button */}
               <button
                 type="button"
                 onClick={() => setPartySize((value) => Math.max(1, value - 1))}
@@ -141,9 +185,9 @@ return (
                   const nextValue = Number(event.target.value);
                   setPartySize(Number.isFinite(nextValue) && nextValue > 0 ? Math.min(20, nextValue) : 1);
                 }}
-                className="w-14 border-none bg-transparent text-center text-lg font-semibold text-slate-800 outline-none"
-              />
+                className="w-14 border-none bg-transparent text-center text-lg font-semibold text-slate-800 outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"/>
 
+              {/* increase button */}
               <button
                 type="button"
                 onClick={() => setPartySize((value) => Math.min(20, value + 1))}
@@ -166,15 +210,14 @@ return (
             </button>
           </div>
 
-        <center>
-          Learn more about us at{" "}
-          <a href="https://www.healthequitynorthland.org/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-            https://www.healthequitynorthland.org/
-          </a>
-        </center>
-      </form>
-
-        
+            <center>
+              Learn more about us at{" "}
+              <a href="https://www.healthequitynorthland.org/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                https://www.healthequitynorthland.org/
+              </a>
+            </center>
+          </form>
+        )}
       </div>
     </main>
   </>
