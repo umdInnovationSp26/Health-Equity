@@ -48,7 +48,7 @@ type ProduceStat = {
 };
 
 
-{/* Check-In PDF */}
+{/* Create Check-In PDF */}
 
 async function generateCheckInPDF(link: string, eventName: string) {
   //generate QR code onto a canvas
@@ -59,14 +59,42 @@ async function generateCheckInPDF(link: string, eventName: string) {
   //get QR code as image
   const qrImage = canvas.toDataURL("image/png");
 
+  //load the HEN logo
+  const logoImg = new (globalThis as any).Image();
+  logoImg.src = "/HENsignin.png";
+  logoImg.crossOrigin = "anonymous";
+  await new Promise((resolve) => {
+    logoImg.onload = resolve;
+  });
+  const logoCanvas = document.createElement("canvas");
+  logoCanvas.width = logoImg.width;
+  logoCanvas.height = logoImg.height;
+  const logoCtx = logoCanvas.getContext("2d");
+  if (logoCtx) {
+    logoCtx.drawImage(logoImg, 0, 0);
+  }
+  const logoImage = logoCanvas.toDataURL("image/png");
+
   //create a new PDF document
   const doc = new jsPDF();
-  doc.setFontSize(24);
-  doc.text(eventName, 105, 30, { align: "center" });
-  doc.text("Check In Here", 105, 45, { align: "center" });
-  doc.addImage(qrImage, "PNG", 55, 60, 100, 100); // centered QR code
-  doc.setFontSize(12);
-  doc.text(link || "https://health-equity-northland.org", 105, 170, { align: "center" });
+  
+  // Add logo at top
+  doc.addImage(logoImage, "PNG", 5, 235, 100, 50);
+  
+  doc.setFontSize(40);
+  doc.setFont("helvetica", "bold");
+  doc.text(eventName, 105, 40, { align: "center" });
+
+  doc.setFontSize(50);
+  doc.text("Check-In Here", 105, 65, { align: "center" });
+
+
+  // doc.text("Check In Here", 105, 50, { align: "center" });
+  doc.addImage(qrImage, "PNG", 45, 80, 120, 120); // centered QR code
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor("#1E90FF");
+  doc.text(link || "https://health-equity-northland.org", 105, 180, { align: "center" });
 
   doc.save(`${eventName}-checkin.pdf`);
 }
@@ -77,11 +105,15 @@ function CheckInQRCode({ link, eventName }: { link?: string; eventName?: string 
 
   return (
 
-
+    
     
     <div className="flex flex-col items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-center">
-
-            <div className="max-w-full text-xs text-slate-500">
+      <div className="flex justify-center">
+            <img src="/HENsignin.png" alt="HEN Logo" className="h-16 w-auto"
+            style = {{ maxWidth: '100%', height: 'auto' }} />
+      </div>
+            
+      <div className="max-w-full text-xs text-slate-500">
       {link ? (
         <>
           
@@ -120,10 +152,10 @@ function CheckInQRCode({ link, eventName }: { link?: string; eventName?: string 
 
     <div className="Button">  
       <button
-        onClick={() => navigator.clipboard.writeText(link || "")}
+        onClick={() => generateCheckInPDF(link || "", eventName || "Event")}
         className="mt-2 px-3 py-1 text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200 transition hover:cursor-pointer"
       >
-        Download QR Code
+        Download Check-In PDF
       </button>
     </div>
 
