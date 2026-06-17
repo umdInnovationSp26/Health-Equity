@@ -78,9 +78,10 @@ async function generateCheckInPDF(link: string, eventName: string) {
   //create a new PDF document
   const doc = new jsPDF();
   
-  // Add logo at top
+  // Add logo at bottom
   doc.addImage(logoImage, "PNG", 5, 235, 100, 50);
   
+  //event name and "Check-In Here" text
   doc.setFontSize(40);
   doc.setFont("helvetica", "bold");
   doc.text(eventName, 105, 40, { align: "center" });
@@ -91,10 +92,10 @@ async function generateCheckInPDF(link: string, eventName: string) {
 
   // doc.text("Check In Here", 105, 50, { align: "center" });
   doc.addImage(qrImage, "PNG", 45, 80, 120, 120); // centered QR code
-  doc.setFontSize(8);
+  doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
   doc.setTextColor("#1E90FF");
-  doc.text(link || "https://health-equity-northland.org", 105, 180, { align: "center" });
+  doc.text(link || "https://health-equity-northland.org", 105, 195, { align: "center" });
 
   doc.save(`${eventName}-checkin.pdf`);
 }
