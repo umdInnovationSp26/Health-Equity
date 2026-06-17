@@ -29,6 +29,7 @@ import {
   mapDocToProduceOption,
 } from "@/app/lib/produceUtil";
 
+import { CheckInFieldOptions, CheckInFieldKey } from "@/app/lib/check-in-fields";
 
 //QRcode generation imports
 
@@ -50,6 +51,19 @@ export default function CreateEvent() {
   const [produceOptions, setProduceOptions] = useState<Produce[]>([]); // preset options to select from
 
   const [produceRows, setProduceRows] = useState<Produce[]>([]); // list of produce for this event
+
+  // State to track what fields are enabled
+  const [checkInFields, setCheckInFields] = useState<Record<CheckInFieldKey, boolean>>(
+    () =>
+      CheckInFieldOptions.reduce(
+        (acc, field) => ({ ...acc, [field.key]: field.defaultChecked }),
+        {} as Record<CheckInFieldKey, boolean>,
+      ),
+  );
+
+  const toggleCheckInField = (key: CheckInFieldKey) => {
+    setCheckInFields((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
 
   // Run this on page load
   useEffect(() => {
@@ -108,7 +122,13 @@ export default function CreateEvent() {
     const feedbackText = formData.get("eventFeedback") as string;
     const shouldCreateCheckInLink = createCheckInLink;
 
+
+    
+    
     try {
+
+
+      
       // create date objects from the string data
       const combinedStartDateTime = new Date(`${date}T${startTime}`);
       const combinedEndDateTime = new Date(`${date}T${endTime}`);
@@ -138,6 +158,11 @@ export default function CreateEvent() {
         suppliesInformation: suppliesInfo,
         feedbackText: feedbackText,
         checkInLink: generatedCheckInLink,
+        checkInFields: shouldCreateCheckInLink
+          ? Object.keys(checkInFields).filter(
+              (k) => checkInFields[k as CheckInFieldKey],
+            )
+          : [],
       });
 
       // add produce
@@ -257,7 +282,30 @@ export default function CreateEvent() {
                 </label>
               </div>
 
+              {/* If the check-in link option is enabled, show options for what fields to include on the check-in form */}
+              {createCheckInLink && (
+                <>
+                  <p className="text-xs font-semibold text-slate-500 uppercase">
+                    Fields to collect at check-in
+                  </p>
+                  {CheckInFieldOptions.map((field) => (
+                    <label key={field.key} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={!!checkInFields[field.key]}
+                        onChange={() => toggleCheckInField(field.key)}
+                        className="form-checkbox h-4 w-4 text-indigo-600 rounded"
+                      />
+                      <span className="text-sm text-slate-600">{field.label}</span>
+                    </label>
+                  ))}
+                  <div className="mt-2 text-sm text-slate-600">
+                    Selected: {Object.keys(checkInFields).filter((k) => checkInFields[k as CheckInFieldKey]).join(", ") || "None"}
+                  </div>
+                </>
+              )}
 
+ 
 
               {/* Date, time, and location fields */}
               <div className="space-y-2">

@@ -522,6 +522,12 @@ export default function EventDetailsPage({
                   {event.attendees || 0}
                 </span>
               </div>
+
+              <div className="flex flex-col items-center">    
+                <div className="mt-2 text-sm text-slate-600">
+                  Attendee Data Gathered: {(event.checkInFields && Array.isArray(event.checkInFields)) ? event.checkInFields.join(", ") : "None"}
+                </div>
+              </div>
             </div>
 
 

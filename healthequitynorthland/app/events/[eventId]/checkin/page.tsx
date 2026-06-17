@@ -1,16 +1,18 @@
 "use client";
-import React, { use, useEffect, useState } from 'react';
+import React, { useEffect, useState, use } from 'react';
 import Head from "next/head";
 import { FaArrowLeft } from "react-icons/fa";
 import { db } from "@/app/lib/firebaseClient";
 import { useRouter } from "next/navigation";
 import { collection, doc, getDoc, increment, serverTimestamp, writeBatch } from "firebase/firestore";
+import { CheckInFieldOptions } from "@/app/lib/check-in-fields";
 
 export default function CheckInForm({ params }: { params: Promise<{ eventId: string }> }) {
   const router = useRouter();
   const { eventId } = use(params);
   
   const [eventData, setEventData] = useState<any>(null);
+  const [enabledFields, setEnabledFields] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [formKey, setFormKey] = useState(0);
   const [partySize, setPartySize] = useState(1);
@@ -22,7 +24,11 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
       const docRef = doc(db, "event", eventId);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        setEventData(docSnap.data());
+        const data = docSnap.data();
+        setEventData(data);
+        if (Array.isArray(data.checkInFields)) {
+          setEnabledFields(data.checkInFields);
+        }
       }
     }
     fetchEvent();
@@ -30,22 +36,26 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!eventId) return alert("Event ID missing from URL")
+    if (!eventId) return alert("Event ID missing from URL");
     setLoading(true);
 
     const formData = new FormData(event.currentTarget);
     const email = (formData.get("email") as string | null)?.trim() ?? "";
     const name = (formData.get("name") as string | null)?.trim() ?? "";
+    const phoneNumber = (formData.get("phoneNumber") as string | null)?.trim() ?? "";
+    const age = formData.get("age") ? Number(formData.get("age")) : null;
+    const zipCode = (formData.get("zipCode") as string | null)?.trim() ?? "";
+    const raceEthnicity = (formData.get("raceEthnicity") as string | null)?.trim() ?? "";
     const safePartySize = Math.max(1, Number(partySize) || 1);
 
     const checkInData = {
       name: name || null,
       email: email || null,
-      phoneNumber: null,
-      age: null,
-      zipCode: null,
+      phoneNumber: phoneNumber || null,
+      age: age,
+      zipCode: zipCode || null,
+      raceEthnicity: raceEthnicity || null,
       familySize: safePartySize,
-      ethnicityOrHeritage: null,
       submittedAt: serverTimestamp(),
     };
 
@@ -55,36 +65,31 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
       lastActivity: serverTimestamp(),
     };
 
-
     try {
-    const batch = writeBatch(db);
+      const batch = writeBatch(db);
 
-    const checkInRef = doc(collection(db, "event", eventId as string, "checkin"));
-    batch.set(checkInRef, checkInData);
+      const checkInRef = doc(collection(db, "event", eventId, "checkin"));
+      batch.set(checkInRef, checkInData);
 
-    const contactDocId = email ? email.toLowerCase() : `guest-${eventId}-${Date.now()}`;
-    const contactRef = doc(db, "contacts", contactDocId);
-    batch.set(contactRef, contactData, { merge: true });
+      const contactDocId = email ? email.toLowerCase() : `guest-${eventId}-${Date.now()}`;
+      const contactRef = doc(db, "contacts", contactDocId);
+      batch.set(contactRef, contactData, { merge: true });
 
-    const eventRef = doc(db, "event", eventId as string);
-    batch.update(eventRef, {
-      attendees: increment(safePartySize),
-    });
- 
+      const eventRef = doc(db, "event", eventId);
+      batch.update(eventRef, {
+        attendees: increment(safePartySize),
+      });
 
-    // Saves to Checkin and Contacts collection
-    await batch.commit();
-    setSubmitted(true);
-    setFormKey(prev => prev + 1);
-
-
-  } catch (error) {
-    console.error("Batch write failed:", error);
-    alert("Error saving information.");
-  } finally {
-    setLoading(false);
+      await batch.commit();
+      setSubmitted(true);
+      setFormKey((prev) => prev + 1);
+    } catch (error) {
+      console.error("Batch write failed:", error);
+      alert("Error saving information.");
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
 return (
   <>
@@ -98,7 +103,7 @@ return (
 
       <div className="flex justify-center p-4 md:p-8 lg:p-12">
         {submitted ? (
-           <div className="flex justify-center">
+        <div className="flex justify-center">
             <form
             className="w-full max-w-4xl bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-12 space-y-6 md:space-y-8"
           >
@@ -198,6 +203,33 @@ return (
               </button>
             </div>
           </div>
+
+          {/* Optional Fields */}
+          {CheckInFieldOptions.filter((field) => enabledFields.includes(field.key)).map((field) => {
+            const inputType =
+              field.key === "email"
+                ? "email"
+                : field.key === "age"
+                ? "number"
+                : field.key === "phoneNumber"
+                ? "tel"
+                : "text";
+
+            return (
+              <div key={field.key} className="space-y-2">
+                <label htmlFor={field.key} className="text-sm font-semibold text-slate-700">
+                  {field.label}
+                </label>
+                <input
+                  id={field.key}
+                  name={field.key}
+                  type={inputType}
+                  className="w-full p-3 bg-gray-100 rounded-lg outline-none"
+                  placeholder={field.label}
+                />
+              </div>
+            );
+          })}
 
           {/* Submit button */}
           <div className="pt-4 flex justify-center">
