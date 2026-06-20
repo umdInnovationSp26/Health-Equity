@@ -39,6 +39,7 @@ import {
 
 import QRCode from 'qrcode';
 import { jsPDF } from "jspdf";
+import { CheckInFieldOptions } from "@/app/lib/check-in-fields";
 
 Chart.register(ArcElement, Tooltip, Legend, DoughnutController);
 
@@ -521,12 +522,38 @@ export default function EventDetailsPage({
                 <span className="text-5xl font-bold text-slate-700">
                   {event.attendees || 0}
                 </span>
-              </div>
 
-              <div className="flex flex-col items-center">    
-                <div className="mt-2 text-sm text-slate-600">
-                  Attendee Data Gathered: {(event.checkInFields && Array.isArray(event.checkInFields)) ? event.checkInFields.join(", ") : "None"}
-                </div>
+
+          <br />
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-tighter">
+            {/* Display what data field options were selected for this event */}
+            {(() => {
+              const raw = event.checkInFields;
+              const keys: string[] = Array.isArray(raw)
+                ? raw
+                : raw && typeof raw === "object"
+                ? Object.keys(raw).filter((k) => (raw as any)[k])
+                : [];
+
+              return keys.length > 0
+                ? "Includes: " +
+                    keys
+                      .map((key: string) => CheckInFieldOptions.find((f) => f.key === key)?.label ?? key)
+                      .join(", ")
+                : "No additional data tracked";
+            })()}
+          </span>
+            
+           
+            <div className="Button">  
+            <button
+              className="mt-2 px-3 py-1 text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200 transition hover:cursor-pointer"
+            >
+              View/Export Event Data
+            </button>
+
+
+          </div>
               </div>
             </div>
 

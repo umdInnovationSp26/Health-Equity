@@ -45,16 +45,17 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
     const phoneNumber = (formData.get("phoneNumber") as string | null)?.trim() ?? "";
     const age = formData.get("age") ? Number(formData.get("age")) : null;
     const zipCode = (formData.get("zipCode") as string | null)?.trim() ?? "";
-    const raceEthnicity = (formData.get("raceEthnicity") as string | null)?.trim() ?? "";
+    const raceEthnicity = formData.getAll("raceEthnicity");
     const safePartySize = Math.max(1, Number(partySize) || 1);
-
+    const hispanicLatino = formData.get("hispanicLatino") as string | null;
     const checkInData = {
       name: name || null,
       email: email || null,
       phoneNumber: phoneNumber || null,
       age: age,
       zipCode: zipCode || null,
-      raceEthnicity: raceEthnicity || null,
+      hispanicLatino: hispanicLatino || null,
+      raceEthnicity: raceEthnicity.length > 0 ? raceEthnicity : null,
       familySize: safePartySize,
       submittedAt: serverTimestamp(),
     };
@@ -206,7 +207,47 @@ return (
 
           {/* Optional Fields */}
           {CheckInFieldOptions.filter((field) => enabledFields.includes(field.key)).map((field) => {
-            const inputType =
+            if (field.key == "raceEthnicity") {
+              return (
+                  <div key={field.key} className="space-y-2">
+                
+                  <fieldset>
+                    <strong>Are you Hispanic or Latino?</strong><br></br>
+                    <input type ="radio" name="hispanicLatino" value="yes" />
+                    <label htmlFor="yes">Yes</label><br></br>
+    
+                    <input type ="radio" name="hispanicLatino" value="no" />
+                    <label htmlFor="no">No</label><br></br>
+
+                    <input type ="radio" name="hispanicPreferNotToSay" value="preferNotToSay" />
+                    <label htmlFor="preferNotToSay">Prefer not to say</label><br></br>
+
+                  </fieldset>
+                  <br /> 
+                  <strong>Regardless of your answer to the prior question, please indicate how you identify yourself. (Select one or more)</strong><br></br>
+
+                  {/* Check-boxes for race/ethnicity */}
+                  <input type="checkbox" id="americanIndian" name="raceEthnicity" value="American Indian or Alaska Native" />
+                  <label htmlFor="americanIndian">American Indian or Alaska Native</label><br></br>
+                  <input type="checkbox" id="asian" name="raceEthnicity" value="Asian" />
+                  <label htmlFor="asian">Asian</label><br></br>
+                  <input type="checkbox" id="black" name="raceEthnicity" value="Black or African American" /> 
+                  <label htmlFor="black">Black or African American</label><br></br>
+                  <input type="checkbox" id="nativeHawaiian" name="raceEthnicity" value="Native Hawaiian or Other Pacific Islander" />
+                  <label htmlFor="nativeHawaiian">Native Hawaiian or Other Pacific Islander</label><br></br>
+                  <input type="checkbox" id="white" name="raceEthnicity" value="White" />
+                  <label htmlFor="white">White</label><br></br>
+                  <input type="checkbox" id="other" name="raceEthnicity" value="Other" />
+                  <label htmlFor="other">Other</label><br></br>
+                  <input type="checkbox" id="preferNotToSay" name="raceEthnicity" value="Prefer not to say" />
+                  <label htmlFor="preferNotToSay">Prefer not to say</label><br></br>
+
+                </div>
+                  );
+            } 
+        
+
+          const inputType =
               field.key === "email"
                 ? "email"
                 : field.key === "age"
@@ -228,6 +269,7 @@ return (
                   placeholder={field.label}
                 />
               </div>
+
             );
           })}
 
