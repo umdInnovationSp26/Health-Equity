@@ -527,6 +527,18 @@ export default function EventDetailsPage({
           <br />
             <span className="text-xs font-bold text-slate-400 uppercase tracking-tighter">
             {/* Display what data field options were selected for this event */}
+
+
+              
+            <div>
+                
+              <label htmlFor="familySize" className="text-xs font-semibold text-slate-600">
+              Data Collected Includes:
+            </label>
+            
+
+            </div>
+
             {(() => {
               const raw = event.checkInFields;
               const keys: string[] = Array.isArray(raw)
@@ -536,7 +548,7 @@ export default function EventDetailsPage({
                 : [];
 
               return keys.length > 0
-                ? "Includes: " +
+                ?
                     keys
                       .map((key: string) => CheckInFieldOptions.find((f) => f.key === key)?.label ?? key)
                       .join(", ")

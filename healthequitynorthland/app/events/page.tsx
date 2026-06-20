@@ -125,11 +125,22 @@ export default function EventsPage() {
 
           {/* Right controls - Bottom row on mobile */}
           <div className="flex items-center justify-center sm:justify-end space-x-2 flex-shrink-0 w-full sm:w-auto order-3">
+
+            {/* Export Event Data */}
+            
+            <button 
+              className="text-black bg-blue-100 rounded-sm px-3 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base whitespace-nowrap" 
+              onClick={() => null}
+            >
+              Export Event Data
+            </button>
+
+
             <button 
               className="text-black bg-blue-100 rounded-sm px-3 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base whitespace-nowrap" 
               onClick={() => setIsOpen(true)}
             >
-              Export Events
+              Export Events to Calendar
             </button>
             <button
               onClick={() => router.push("/events/create")}
