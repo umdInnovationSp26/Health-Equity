@@ -13,6 +13,7 @@
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "chart.js": "^4.5.1",
+    "fast-csv": "^5.0.7",
     "firebase": "^12.11.0",
     "firebase-admin": "^13.10.0",
     "ics": "^3.12.0",

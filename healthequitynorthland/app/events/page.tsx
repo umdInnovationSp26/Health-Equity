@@ -17,6 +17,10 @@ import { collection, query, onSnapshot, orderBy } from "firebase/firestore";
 import { generateIcsString, triggerIcsDownload } from "../lib/calendarUtil";
 import DownloadEventsModal from "@/app/components/calendarModal";
 
+
+
+
+
 export default function EventsPage() {
 
   const router = useRouter();
@@ -26,6 +30,59 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
 
   const [isOpen, setIsOpen] = useState(false); // stores state of the modal
+
+
+
+
+  // Compile the data into one map
+  const cleanedData = events.filter(event => {
+  // If search is empty or just whitespace, show everything
+  if (!searchTerm.trim()) {
+    return true;
+  }
+    return event.title.toLowerCase().includes(searchTerm.toLowerCase());
+  })
+  .map(event => ({
+    id: event.id,
+    date: event.dateStart,
+    name: event.title,
+    attendees: event.attendees
+  }));
+
+
+  const handleDownloadCSV = () => {
+    // CSV headers
+    const headers = ["Event Date", "Event Name", "Number of Attendees"];
+
+    // Format Rows
+    const rows = cleanedData.map((item) => [
+        `${item.date.toLocaleDateString()}`,
+          `"${item.name.replace(/"/g, '""')}"`,
+          `${item.attendees}`,
+    ]); 
+    
+    // combine headers and rows into single string
+    const csvContent= [headers, ...rows].map((row) => row.join(",")).join("\n");
+    
+    // create blob with UTF-8 to prevent corruption
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+
+    // generate pointer to blob
+    const url = URL.createObjectURL(blob);
+
+    // Create invisible anchor link
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "AttendanceData.csv")
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link)
+
+    // free up browser memory
+    URL.revokeObjectURL(url)
+
+  }
+
 
   // Run this on page load and when searchbox is updated
   useEffect(() => {
@@ -53,6 +110,8 @@ export default function EventsPage() {
 
     // Otherwise, check if title includes search term and return the searched list
     return event.title.toLowerCase().includes(searchTerm.toLowerCase());
+
+
   }).sort((a, b) => {
     if (sortBy === "title") {
       return a.title.localeCompare(b.title);
@@ -129,8 +188,9 @@ export default function EventsPage() {
             {/* Export Event Data */}
             
             <button 
+              id='download-button'
               className="text-black bg-blue-100 rounded-sm px-3 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base whitespace-nowrap" 
-              onClick={() => null}
+              onClick={handleDownloadCSV}
             >
               Export Event Data
             </button>
@@ -221,4 +281,4 @@ export default function EventsPage() {
       <Footer />
     </>
   );
-}
+  }
