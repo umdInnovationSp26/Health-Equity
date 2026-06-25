@@ -23,7 +23,7 @@ import { useQRCode } from "next-qrcode";
 import { useEffect, useState, use, useRef } from "react";
 import { db } from "@/app/lib/firebaseClient";
 import { deleteDoc, doc, getDoc, getDocs, collection } from "firebase/firestore";
-import { mapDocToEvent } from "@/app/lib/eventInterface";
+import { Event, mapDocToEvent } from "@/app/lib/eventInterface";
 import { getDateOnlyString, getTimeOnlyString } from "@/app/lib/dateTimeUtil";
 
 import { useRouter } from "next/navigation";
@@ -164,8 +164,6 @@ function CheckInQRCode({ link, eventName }: { link?: string; eventName?: string 
 
     </div>
 
-    
-    
   );
 }
 
@@ -277,8 +275,7 @@ export default function EventDetailsPage({
   // Unwrap the params to get the ID
   const { eventId } = use(params);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [event, setEventData] = useState<any>(null);
+  const [event, setEventData] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -358,6 +355,78 @@ export default function EventDetailsPage({
     }
   };
 
+  const downloadCheckInCsv = async () => {
+    if (!eventId) {
+      alert("Unable to load check-in data: missing event ID.");
+      return;
+    }
+
+    try {
+      const snap = await getDocs(collection(db, "event", eventId, "checkin"));
+      if (snap.empty) {
+        alert("No check-in records found for this event.");
+        return;
+      }
+
+      const enabledFields: string[] = Array.isArray(event.checkInFields)
+        ? event.checkInFields
+        : [];
+
+      const headers = ["Party Size", ...enabledFields.map((key: string) => {
+        if (key === "raceEthnicity") return "Race/Ethnicity";
+        if (key === "phoneNumber") return "Phone Number";
+        if (key === "zipCode") return "Zip Code";
+        if (key === "name") return "Full Name";
+        if (key === "email") return "Email Address";
+        return key;
+      })];
+
+      if (enabledFields.includes("raceEthnicity")) {
+        headers.splice(headers.indexOf("Race/Ethnicity") + 1, 0, "Hispanic/Latino");
+      }
+
+      const escapeCsvValue = (value: unknown) => {
+        if (value === null || value === undefined) return "";
+        const text = Array.isArray(value)
+          ? value.join("; ")
+          : String(value);
+        const escaped = text.replace(/"/g, '""');
+        return `"${escaped}"`;
+      };
+
+      const rows = snap.docs.map((docSnap) => {
+        const data = docSnap.data();
+        const rowValues = [data.familySize ?? ""];
+
+        enabledFields.forEach((key) => {
+          if (key === "raceEthnicity") {
+            rowValues.push(data.raceEthnicity ? (Array.isArray(data.raceEthnicity) ? data.raceEthnicity.join("; ") : data.raceEthnicity) : "");
+            rowValues.push(data.hispanicLatino ?? "");
+            return;
+          }
+
+          const rawValue = data[key as keyof typeof data];
+          rowValues.push(rawValue ?? "");
+        });
+
+        return rowValues.map(escapeCsvValue).join(",");
+      });
+
+      const csvContent = [headers.map(escapeCsvValue).join(","), ...rows].join("\n");
+      const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute("download", `${event.title || "event"}-checkin.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+    } catch (error) {
+      console.error("Error exporting check-in CSV:", error);
+      alert("Unable to export check-in data. Please try again.");
+    }
+  };
+
   const downloadCalendarFile = () => {
     const ics = generateIcsString([event]);
     triggerIcsDownload(ics, `${event.title || "event"}`);
@@ -389,12 +458,23 @@ export default function EventDetailsPage({
           {/* right buttons */}
           <div className="z-20 flex w-full flex-shrink-0 items-center justify-center space-x-2 sm:w-auto sm:justify-end sm:pr-4">
 
+
+            {/* Export Event Specific Data */}
+             <button
+              onClick={downloadCheckInCsv}
+              className="flex items-center gap-2 whitespace-nowrap rounded-sm bg-blue-100 px-4 py-2 font-medium text-sm md:text-md text-blue-700 transition hover:cursor-pointer hover:scale-105 lg:py-2 lg:text-base"
+            >
+              Download Check-In CSV
+            </button>
+
+
             <button
               onClick={downloadCalendarFile}
               className="flex items-center gap-2 whitespace-nowrap rounded-sm bg-blue-100 px-4 py-2 font-medium text-sm md:text-md text-blue-700 transition hover:cursor-pointer hover:scale-105 lg:py-2 lg:text-base"
             >
               Download (.ics)
             </button>
+
 
             {/* Dropdown */}
             <div className="relative w-35">
@@ -533,7 +613,7 @@ export default function EventDetailsPage({
             <div>
                 
               <label htmlFor="familySize" className="text-xs font-semibold text-slate-600">
-              Data Collected Includes:
+              Data Collected:
             </label>
             
 

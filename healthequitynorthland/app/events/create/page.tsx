@@ -267,20 +267,21 @@ export default function CreateEvent() {
 
               {/* Checkbox to control whether or not a check-in link/ QR code will be generated for this event */}
               {/* Enabled by default for all events */}
-              <div>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    name="createCheckInLink"
-                    checked={createCheckInLink}
-                    onChange={(e) => setCreateCheckInLink(e.target.checked)}
-                    className="form-checkbox h-5 w-5 text-indigo-600 rounded"
-                  />
-                  <span className="text-sm font-medium text-slate-700">
-                    Generate Check-In Link
-                  </span>
-                </label>
-              </div>
+
+                <div>
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      name="createCheckInLink"
+                      checked={createCheckInLink}
+                      onChange={(e) => setCreateCheckInLink(e.target.checked)}
+                      className="form-checkbox h-5 w-5 text-indigo-600 rounded"
+                    />
+                    <span className="text-sm font-medium text-slate-700">
+                      Generate Check-In Link
+                    </span>
+                  </label>
+                </div>
 
               {/* If the check-in link option is enabled, show options for what fields to include on the check-in form */}
               {createCheckInLink && (
@@ -289,6 +290,10 @@ export default function CreateEvent() {
                     Fields to collect at check-in
                   </p>
                   {CheckInFieldOptions.map((field) => (
+                    
+                    
+
+
                     <label key={field.key} className="flex items-center space-x-2">
                       <input
                         type="checkbox"
@@ -298,14 +303,12 @@ export default function CreateEvent() {
                       />
                       <span className="text-sm text-slate-600">{field.label}</span>
                     </label>
+                    
                   ))}
-                  <div className="mt-2 text-sm text-slate-600">
-                    Selected: {Object.keys(checkInFields).filter((k) => checkInFields[k as CheckInFieldKey]).join(", ") || "None"}
-                  </div>
+                  
                 </>
               )}
 
- 
 
               {/* Date, time, and location fields */}
               <div className="space-y-2">

@@ -158,13 +158,13 @@ return (
             style = {{ maxWidth: '100%', height: 'auto' }} />
           </div>
 
-          <center style={{ color: 'DodgerBlue', fontWeight: 'bold', fontSize: '2rem' }}> Welcome! </center>
-          <center style={{fontSize: '1rem'}}> Please fill out the fields below to check in for the event. </center>
+          <center style={{ color: 'DodgerBlue', fontWeight: 'bold', fontSize: '2.5rem' }}> Welcome! </center>
+          <center style={{fontSize: '1.5rem'}}> Please fill out the fields below.</center>
 
           {/* REQUIRED: party/family size */}
           <div className="flex flex-col items-center gap-4 text-center">
             <label htmlFor="familySize" className="text-sm font-semibold text-slate-700">
-              How many people are in your party?
+              <strong>How many people are in your party?</strong>
             </label>
 
             <div className="inline-flex items-center gap-3 rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm">
@@ -210,6 +210,9 @@ return (
             if (field.key == "raceEthnicity") {
               return (
                   <div key={field.key} className="space-y-2">
+
+                    {/* Using https://nces.ed.gov/ipeds/report-your-data/race-ethnicity-collecting-data-for-reporting-purposes
+                    as a sort of guide for how to go about race/ethnicity data collection */}
                 
                   <fieldset>
                     <strong>Are you Hispanic or Latino?</strong><br></br>
@@ -224,8 +227,9 @@ return (
 
                   </fieldset>
                   <br /> 
-                  <strong>Regardless of your answer to the prior question, please indicate how you identify yourself. (Select one or more)</strong><br></br>
-
+                <p><strong>How do you identify yourself? (Select all that apply)</strong></p>
+                <p>*If checking in for a group, select all that apply to your party.</p>
+                
                   {/* Check-boxes for race/ethnicity */}
                   <input type="checkbox" id="americanIndian" name="raceEthnicity" value="American Indian or Alaska Native" />
                   <label htmlFor="americanIndian">American Indian or Alaska Native</label><br></br>
@@ -258,8 +262,8 @@ return (
 
             return (
               <div key={field.key} className="space-y-2">
-                <label htmlFor={field.key} className="text-sm font-semibold text-slate-700">
-                  {field.label}
+                <label htmlFor={field.key} className="text-sm font-semibold text-slate-800">
+                  <strong>{field.label}</strong>
                 </label>
                 <input
                   id={field.key}
