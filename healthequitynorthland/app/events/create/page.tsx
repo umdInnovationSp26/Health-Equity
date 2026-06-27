@@ -43,6 +43,7 @@ export default function CreateEvent() {
   const router = useRouter();
   const [loading, setLoading] = useState(false); // variable for waiting for db to save data
   const [createCheckInLink, setCreateCheckInLink] = useState(true);
+  const [otherFieldValue, setOtherFieldValue] = useState("");
 
   const eventTypeList = eventTypeUtil.getEventTypeSelect(); // list of types in int, string format to make html select options easier to create
 
@@ -120,6 +121,7 @@ export default function CreateEvent() {
     const notes = formData.get("notes") as string;
     const suppliesInfo = formData.get("suppliesInformation") as string;
     const feedbackText = formData.get("eventFeedback") as string;
+    const otherFieldLabel = (formData.get("otherFieldLabel") as string)?.trim() || otherFieldValue.trim() || "Other";
     const shouldCreateCheckInLink = createCheckInLink;
 
 
@@ -163,6 +165,7 @@ export default function CreateEvent() {
               (k) => checkInFields[k as CheckInFieldKey],
             )
           : [],
+        otherFieldLabel: shouldCreateCheckInLink ? otherFieldLabel : "",
       });
 
       // add produce
@@ -290,11 +293,9 @@ export default function CreateEvent() {
                     Fields to collect at check-in
                   </p>
                   {CheckInFieldOptions.map((field) => (
-                    
-                    
-
-
-                    <label key={field.key} className="flex items-center space-x-2">
+                    <div key={field.key} >
+                    <label className="flex items-center space-x-2">
+                        
                       <input
                         type="checkbox"
                         checked={!!checkInFields[field.key]}
@@ -303,12 +304,21 @@ export default function CreateEvent() {
                       />
                       <span className="text-sm text-slate-600">{field.label}</span>
                     </label>
-                    
+
+                    {field.key === "other" && checkInFields[field.key] && (
+                    <input 
+                      type="text"
+                      value={otherFieldValue}
+                      onChange={(e) => setOtherFieldValue(e.target.value)}
+                      placeholder="Please specify..."
+                      className="mt-2 ml-6 block w-full rounded border border-slate-300 text-sm p-1"  
+                        />
+                )}
+              </div>
+                
                   ))}
-                  
                 </>
               )}
-
 
               {/* Date, time, and location fields */}
               <div className="space-y-2">

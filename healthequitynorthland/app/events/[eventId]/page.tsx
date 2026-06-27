@@ -464,7 +464,7 @@ export default function EventDetailsPage({
               onClick={downloadCheckInCsv}
               className="flex items-center gap-2 whitespace-nowrap rounded-sm bg-blue-100 px-4 py-2 font-medium text-sm md:text-md text-blue-700 transition hover:cursor-pointer hover:scale-105 lg:py-2 lg:text-base"
             >
-              Download Check-In CSV
+              Download Event Data (.csv)
             </button>
 
 
@@ -596,9 +596,9 @@ export default function EventDetailsPage({
             {/* Gray Stats Box */}
             <div className="bg-slate-50 h-full rounded-3xl p-8 gap-y-8 gap-x-4 shadow-sm border border-gray-100">
               <div className="flex flex-col items-center">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-tighter">
+                <h1 className="text-1.7xl font-bold text-slate-800">
                   Attendees
-                </span>
+                </h1>
                 <span className="text-5xl font-bold text-slate-700">
                   {event.attendees || 0}
                 </span>
@@ -608,18 +608,8 @@ export default function EventDetailsPage({
             <span className="text-xs font-bold text-slate-400 uppercase tracking-tighter">
             {/* Display what data field options were selected for this event */}
 
-
-              
-            <div>
-                
-              <label htmlFor="familySize" className="text-xs font-semibold text-slate-600">
-              Data Collected:
-            </label>
-            
-
-            </div>
-
             {(() => {
+            
               const raw = event.checkInFields;
               const keys: string[] = Array.isArray(raw)
                 ? raw
@@ -628,24 +618,28 @@ export default function EventDetailsPage({
                 : [];
 
               return keys.length > 0
-                ?
-                    keys
+                ? ( <> 
+                <h1 className="text-1.7xl font-bold text-slate-800">
+                  Data collected:
+                </h1>
+    
+
+                    {keys
                       .map((key: string) => CheckInFieldOptions.find((f) => f.key === key)?.label ?? key)
-                      .join(", ")
-                : "No additional data tracked";
+                      .join(", ")}
+                      </>
+                )
+                :     
+            <label htmlFor="familySize" className="text-xs font-semibold text-slate-600">
+              No additional data for this event
+            </label>;
+            
             })()}
+
+
           </span>
             
-           
-            <div className="Button">  
-            <button
-              className="mt-2 px-3 py-1 text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200 transition hover:cursor-pointer"
-            >
-              View/Export Event Data
-            </button>
-
-
-          </div>
+      
               </div>
             </div>
 

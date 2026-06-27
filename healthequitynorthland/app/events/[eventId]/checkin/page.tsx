@@ -45,6 +45,7 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
     const phoneNumber = (formData.get("phoneNumber") as string | null)?.trim() ?? "";
     const age = formData.get("age") ? Number(formData.get("age")) : null;
     const zipCode = (formData.get("zipCode") as string | null)?.trim() ?? "";
+    const other = (formData.get("other") as string | null)?.trim() ?? "";
     const raceEthnicity = formData.getAll("raceEthnicity");
     const safePartySize = Math.max(1, Number(partySize) || 1);
     const hispanicLatino = formData.get("hispanicLatino") as string | null;
@@ -54,6 +55,7 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
       phoneNumber: phoneNumber || null,
       age: age,
       zipCode: zipCode || null,
+      other: other || null,
       hispanicLatino: hispanicLatino || null,
       raceEthnicity: raceEthnicity.length > 0 ? raceEthnicity : null,
       familySize: safePartySize,
@@ -207,6 +209,12 @@ return (
 
           {/* Optional Fields */}
           {CheckInFieldOptions.filter((field) => enabledFields.includes(field.key)).map((field) => {
+            const fieldLabel =
+              field.key === "other"
+                ? eventData?.otherFieldLabel || "Other"
+                : field.label;
+
+
             if (field.key == "raceEthnicity") {
               return (
                   <div key={field.key} className="space-y-2">
@@ -254,23 +262,36 @@ return (
           const inputType =
               field.key === "email"
                 ? "email"
-                : field.key === "age"
+              : field.key === "age"
                 ? "number"
-                : field.key === "phoneNumber"
+              : field.key === "other"
+                ? "text"
+              : field.key === "phoneNumber"
                 ? "tel"
                 : "text";
+              
 
             return (
+
+                
               <div key={field.key} className="space-y-2">
                 <label htmlFor={field.key} className="text-sm font-semibold text-slate-800">
-                  <strong>{field.label}</strong>
+                  <strong>{fieldLabel}</strong>
                 </label>
                 <input
                   id={field.key}
                   name={field.key}
                   type={inputType}
                   className="w-full p-3 bg-gray-100 rounded-lg outline-none"
-                  placeholder={field.label}
+
+                  placeholder={field.key == "other"? "":
+                              field.key =="age"? "E.g. 45":
+                              field.key =="name"?"E.g. Joe Doe":
+                              field.key=="email"?"joedoe@email.com":
+                              field.key=="zipCode"?"E.g. 54321":
+                              field.key=="phoneNumber"?"E.g. 6512213354":""
+                              
+                  }
                 />
               </div>
 

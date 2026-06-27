@@ -20,6 +20,7 @@ export interface Event {
     notes: string;
     checkInLink?: string; // optional field for QR code check-in
     checkInFields?: string[]; // keys of enabled check-in fields
+    otherFieldLabel?: string;
 }
 
 
@@ -43,6 +44,7 @@ export function mapDocToEvent(id: string, docData: any): Event {
         dateEnd: formattedEndDate,
         checkInLink: docData.checkInLink ?? undefined,
         checkInFields: docData.checkInFields ?? [],
+        otherFieldLabel: docData.otherFieldLabel ?? undefined,
         feedbackText: docData.feedbackText ?? "",
         suppliesInformation: docData.eventInformation ?? "",
         rawTimeStart: docData.timestampStart?.seconds || Number.MAX_VALUE, // used for sorting after grabbing the data
