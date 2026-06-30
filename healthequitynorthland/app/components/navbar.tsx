@@ -60,6 +60,7 @@ export default function Navbar() {
     { name: "Events", href: "/events" },
     { name: "Produce", href: "/produce" },
     { name: "Contacts", href: "/contacts" },
+      
   ];
 
   return (

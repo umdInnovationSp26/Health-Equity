@@ -648,6 +648,8 @@ export default function HomePage() {
                 {firstName ? `Hi, ${firstName}` : "Welcome back"}
               </h1>
             </div>
+
+            <div className="flex items-center gap-3">
             <Link
               href="/events/create"
               className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 hover:scale-102 transition-colors"
@@ -665,6 +667,16 @@ export default function HomePage() {
               </svg>
               New event
             </Link>
+
+            <Link
+            href="/produce/inventory"
+            className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 hover:scale-102 transition-colors"
+            >
+                Take Inventory
+
+            </Link>
+
+            </div>
           </div>
 
           {/* Stat pills */}

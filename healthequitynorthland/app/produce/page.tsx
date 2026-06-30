@@ -127,9 +127,9 @@ export default function ProducePage() {
           <div className="content-end text-right pr-4">
             <button
               onClick={() => setShowAdd(true)}
-              className="bg-white rounded-xl px-3 sm:px-4 py-2 hover:scale-105 transition text-sm sm:text-base text-white"
+              className="bg-blue-600 rounded-xl px-3 sm:px-4 py-2 hover:scale-105 transition text-sm sm:text-base text-white"
             >
-              ...
+              Take Inventory
             </button>
           </div>
         </div>
