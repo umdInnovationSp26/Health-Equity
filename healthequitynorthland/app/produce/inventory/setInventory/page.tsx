@@ -1,28 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 export default function SetNewInventoryLevels() {
   const router = useRouter();
-  const [isExiting, setIsExiting] = useState(false);
+  const isExitingRef = useRef(false);
 
-  const handleExit = () => {
-    if (isExiting) {
-      return true;
-    }
+ const handleManualExit = () => {
+  window.removeEventListener("popstate", handlePopStateExit);
+   window.history.go(-1);
+};
+  
+  const handlePopStateExit = () => {
+  if (isExitingRef.current) return;
 
-    setIsExiting(true);
-    const shouldLeave = window.confirm("Are you sure you want to exit this page? Any unsaved changes will be lost.");
-    setIsExiting(false);
-
-    if (shouldLeave) {
-      router.back();
-      return true;
-    }
-
-    return false;
-  };
+  window.history.go(-1);
+};
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -30,19 +24,13 @@ export default function SetNewInventoryLevels() {
       event.returnValue = "";
     };
 
-    const handlePopState = () => {
-      if (!handleExit()) {
-        window.history.pushState(null, "", window.location.href);
-      }
-    };
-
     window.history.pushState(null, "", window.location.href);
     window.addEventListener("beforeunload", handleBeforeUnload);
-    window.addEventListener("popstate", handlePopState);
+    window.addEventListener("popstate", handlePopStateExit);
 
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
-      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("popstate", handlePopStateExit);
     };
   }, [router]);
 
@@ -50,8 +38,7 @@ export default function SetNewInventoryLevels() {
     <div className="min-h-screen bg-slate-50 p-4 sm:p-6">
       <button
         type="button"
-        onClick={() => handleExit()}
-        disabled={isExiting}
+        onClick={handleManualExit}
         aria-label="Exit page"
         className="fixed right-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl font-semibold text-slate-600 shadow-sm transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
       >

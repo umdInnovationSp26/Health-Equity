@@ -46,7 +46,8 @@ const router = useRouter();
          </div>
          <div className="flex flex-col gap-4 m-4 max-w-3xl mx-auto">
            <a
-            href="/produce/Inventory/setnewInventoryLevels"
+          
+            href="/produce/inventory/setInventory"
             className="flex items-center justify-between w-full p-6 bg-blue-500 border border-gray-200 rounded-xl transition-transform duration-200 hover:scale-[1.01] shadow-sm"
             >
             <h1 className="text-lg font-semibold text-white">Set New Inventory Levels</h1>
