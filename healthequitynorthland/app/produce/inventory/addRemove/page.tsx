@@ -1,7 +1,7 @@
 "use client";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-
+import { FaArrowLeft, FaAngleDown } from "react-icons/fa";
 import { db } from "@/app/lib/firebaseClient";
 import {
   collection,
@@ -219,7 +219,7 @@ function ProduceTable({
                           </div>
                         </div>
                         <div>
-                          <label className="text-xs text-slate-500">Or adjust quickly</label>
+                          <label className="text-xs text-slate-500">Quick Adjust</label>
                           <div className="flex flex-wrap gap-2 mt-1">
                             {QUICK_DELTAS.map((delta) => (
                               <button
@@ -301,8 +301,14 @@ function MobileProduceList({
     }`;
 
   return (
+
+    
     <div className="md:hidden rounded-2xl border border-slate-100 bg-white overflow-hidden">
+
+        
       <div className="p-4 border-b border-slate-100 space-y-2">
+
+        
         <input
           value={filter}
           onChange={(e) => onFilterChange(e.target.value)}
@@ -385,7 +391,7 @@ function MobileProduceList({
                   </button>
                 </div>
 
-                <label className="text-xs text-slate-500 mt-3 block">Or adjust quickly</label>
+                <label className="text-xs text-slate-500 mt-3 block">Quick adjustment</label>
                 <div className="flex flex-wrap gap-2 mt-1">
                   {QUICK_DELTAS.map((delta) => (
                     <button
@@ -525,58 +531,31 @@ export default function AddRemove() {
   const [sortDesc, setSortDesc] = useState(true);
   const [filter, setFilter] = useState("");
 
-  const handleExit = useCallback(
-    (alreadyNavigatedBack: boolean = false) => {
-      if (hasExitedRef.current) return true;
-      if (isExitingRef.current) return true;
+   const handleManualExit = () => {
+  router.back();
+};
+  
+  const handlePopStateExit = () => {
+  if (isExitingRef.current) return;
 
-      isExitingRef.current = true;
-      setIsExiting(true);
+  window.history.go(-1);
+};
 
-      const hasPending = Object.values(pendingDeltas).some((d) => d !== 0);
-      const message = hasPending
-        ? "You have unsaved changes that haven't been submitted. Are you sure you want to exit this page? Any unsaved changes will be lost."
-        : "Are you sure you want to exit this page? Any unsaved changes will be lost.";
-      const shouldLeave = window.confirm(message);
-
-      isExitingRef.current = false;
-      setIsExiting(false);
-
-      if (shouldLeave) {
-        hasExitedRef.current = true;
-        window.history.go(alreadyNavigatedBack ? -1 : -2);
-        return true;
-      }
-
-      if (alreadyNavigatedBack) {
-        window.history.pushState(null, "", window.location.href);
-      }
-
-      return false;
-    },
-    [pendingDeltas]
-  );
-
-  useEffect(() => {
+     useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
       event.returnValue = "";
     };
 
-    const handlePopState = () => {
-      if (hasExitedRef.current) return;
-      handleExit(true);
-    };
-
     window.history.pushState(null, "", window.location.href);
     window.addEventListener("beforeunload", handleBeforeUnload);
-    window.addEventListener("popstate", handlePopState);
+    window.addEventListener("popstate", handlePopStateExit);
 
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
-      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("popstate", handlePopStateExit);
     };
-  }, [handleExit]);
+  }, [router]);
 
   const loadProduce = useCallback(async () => {
     setLoading(true);
@@ -701,21 +680,20 @@ export default function AddRemove() {
   };
 
   return (
+
+    <>    
     <div className="min-h-screen bg-slate-50 p-4 sm:p-6">
       <button
-        type="button"
-        onClick={() => handleExit()}
-        disabled={isExiting}
-        aria-label="Exit page"
-        className="fixed right-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl font-semibold text-slate-600 shadow-sm transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        ×
-      </button>
+                    onClick={() => handleManualExit()}
+                    className="p-2 hover:scale-105 transition hover:cursor-pointer"
+                  >
+                    <FaArrowLeft />
+                  </button>
 
       <div className="mx-auto max-w-5xl">
         <div className="mb-6">
           <h1 className="text-2xl font-semibold text-slate-900">Add/Remove Produce</h1>
-          <p className="mt-2 text-sm text-slate-600">Use this </p>
+          <p className="mt-2 text-sm text-slate-600">Use this page to add or remove produce from the inventory.</p>
         </div>
 
         {loading ? (
@@ -757,5 +735,9 @@ export default function AddRemove() {
         )}
       </div>
     </div>
+    </>
   );
 }
+
+
+
