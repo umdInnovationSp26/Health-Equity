@@ -6,7 +6,8 @@ import { collection, getDocs, addDoc, Timestamp } from "firebase/firestore";
 import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
 import { Chart, DoughnutController, ArcElement, Tooltip, Legend } from "chart.js";
-
+import Link from "next/link";
+{/*TanStack for table imports */}
 
 Chart.register(ArcElement, Tooltip, Legend, DoughnutController);
 
@@ -125,12 +126,13 @@ export default function ProducePage() {
           </h3>
 
           <div className="content-end text-right pr-4">
-            <button
-              onClick={() => setShowAdd(true)}
-              className="bg-blue-600 rounded-xl px-3 sm:px-4 py-2 hover:scale-105 transition text-sm sm:text-base text-white"
+           <Link
+            href="/produce/inventory"
+            className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 hover:scale-102 transition-colors"
             >
-              Take Inventory
-            </button>
+                Take Inventory
+
+            </Link>
           </div>
         </div>
 
@@ -143,6 +145,7 @@ export default function ProducePage() {
                 Total Produce
               </h2>
               <ProduceChart data={produce} />
+              <ProduceTable data ={produce} />
             </div>
           </div>
         </div>
@@ -152,6 +155,110 @@ export default function ProducePage() {
     </>
   );
 }
+
+
+/* ─── Produce Table ──────────────────────────────────────── */
+
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  flexRender,
+  createColumnHelper,
+  type SortingState,
+} from "@tanstack/react-table";
+import { Produce } from "../lib/ConsumableUtil";
+
+const columnHelper = createColumnHelper<ProduceStat>();
+
+const produceColumns = [
+  columnHelper.accessor("name", {
+    header: "Produce",
+    cell: (info) => (
+          <span className="font-medium text-slate-900">{info.getValue()}</span>
+          
+    ),
+  }),
+  columnHelper.accessor("lbs", {
+    header: "Amount (lbs)",
+    cell: (info) => (
+      <span className="font-semibold text-slate-900">{info.getValue()}</span>
+    ),
+  }),
+];
+
+function ProduceTable({data} : { data: ProduceStat[] }){
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "lbs", desc: true },
+  ]);
+  const [filter, setFilter] = useState("");
+
+  const table = useReactTable({
+    data,
+    columns: produceColumns,
+    state: { sorting, globalFilter: filter },
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setFilter,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+  });
+
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-5">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-slate-500">Produce Detail</h2>
+        <input
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder="Search produce..."
+          className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm"
+        />
+      </div>
+
+      <table className="w-full text-sm">
+        <thead>
+          {table.getHeaderGroups().map((hg) => (
+            <tr key={hg.id} className="border-b border-slate-100 text-left">
+              {hg.headers.map((header) => (
+                <th
+                  key={header.id}
+                  onClick={header.column.getToggleSortingHandler()}
+                  className="cursor-pointer select-none py-2 text-xs font-semibold text-slate-500"
+                >
+                  {flexRender(header.column.columnDef.header, header.getContext())}
+                  {{ asc: " ↑", desc: " ↓" }[header.column.getIsSorted() as string] ?? ""}
+                </th>
+              ))}
+            </tr>
+          ))}
+        </thead>
+        <tbody>
+          {table.getRowModel().rows.map((row) => (
+            <tr key={row.id} className="border-b border-slate-50 last:border-0">
+              {row.getVisibleCells().map((cell) => (
+                <td key={cell.id} className="py-2">
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </td>
+              ))}
+            </tr>
+          ))}
+          {table.getRowModel().rows.length === 0 && (
+            <tr>
+              <td colSpan={2} className="py-4 text-center text-xs text-slate-400">
+                No matching produce.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+
+
 
 /* ─── Produce Chart ──────────────────────────────────────── */
 function ProduceChart({ data }: { data: ProduceStat[] }) {
@@ -212,7 +319,9 @@ function ProduceChart({ data }: { data: ProduceStat[] }) {
           aria-label="Produce sold this month by item"
         />
       </div>
+
       <div className="space-y-2">
+        
         {data.map((item, i) => (
           <div
             key={`${item.name}-${i}`}
@@ -228,6 +337,8 @@ function ProduceChart({ data }: { data: ProduceStat[] }) {
                 {item.lbs} lbs
               </span>
             </span>
+
+            
           </div>
         ))}
       </div>
