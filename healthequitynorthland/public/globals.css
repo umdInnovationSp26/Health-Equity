@@ -2,6 +2,75 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Scoped calculator styles for the inventory overlay only */
+
+.count-overlay .overlay-calculator {
+  margin: 0 auto;
+  padding: 0.75rem;
+  background-color: #f8fafc;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.count-overlay .overlay-calculator-display {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.125rem;
+  text-align: right;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  outline: none;
+  background-color: #fff;
+}
+
+.count-overlay .overlay-calculator-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.625rem;
+}
+
+.count-overlay .overlay-calculator-button {
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  background-color: #f1f5f9;
+  color: #0f172a;
+  transition: background-color 0.2s ease;
+}
+
+.count-overlay .overlay-calculator-button:hover,
+.count-overlay .overlay-calculator-button.operator:hover {
+  background-color: #e2e8f0;
+}
+
+.count-overlay .overlay-calculator-button.operator {
+  font-size: 1rem;
+  font-weight: 600;
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.count-overlay .overlay-calculator-button.wide,
+.count-overlay .overlay-calculator-button.clear {
+  grid-column: span 2;
+}
+
+.count-overlay .overlay-calculator-button.clear {
+  background-color: #f59e0b;
+  color: white;
+}
+
+.count-overlay .overlay-calculator-button.clear:hover {
+  background-color: #d97706;
+}
+
+
+
 :root {
   --background: oklch(0.9842 0.0034 247.8575);
   --foreground: oklch(0.2795 0.0368 260.0310);
@@ -171,3 +240,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+
+

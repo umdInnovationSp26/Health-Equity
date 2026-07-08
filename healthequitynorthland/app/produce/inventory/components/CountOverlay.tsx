@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { FaArrowLeft, FaArrowRight, FaTimes } from "react-icons/fa";
 import type { ProduceStat } from "../lib/actions";
+import "@/public/globals.css";
+
 
 interface OverlayProps {
   item: ProduceStat;
@@ -13,6 +15,7 @@ interface OverlayProps {
   onConfirm: (lbs: number) => void;
   onClose: () => void;
 }
+
 
 const CountOverlay = ({
   item,
@@ -41,7 +44,7 @@ const CountOverlay = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4">
+    <div className="count-overlay fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4">
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -113,6 +116,46 @@ const CountOverlay = ({
             </div>
           </div>
         </form>
+
+
+        <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <div className="overlay-calculator">
+            <input
+              type="text"
+              className="overlay-calculator-display"
+              value={inputValue}
+              readOnly
+            />
+
+            <div className="overlay-calculator-grid">
+              <button type="button" className="overlay-calculator-button" onClick={() => null}>7</button>
+              <button type="button" className="overlay-calculator-button" onClick={() => null}>8</button>
+              <button type="button" className="overlay-calculator-button" onClick={() => null}>9</button>
+              <button type="button" className="overlay-calculator-button operator" onClick={() => null}>CE</button>
+
+              <button type="button" className="overlay-calculator-button" onClick={() => null}>4</button>
+              <button type="button" className="overlay-calculator-button" onClick={() => null}>5</button>
+              <button type="button" className="overlay-calculator-button" onClick={() => null}>6</button>
+              <button type="button" className="overlay-calculator-button operator" onClick={() => null}>/</button>
+
+              <button type="button" className="overlay-calculator-button" onClick={() => null}>1</button>
+              <button type="button" className="overlay-calculator-button" onClick={() => null}>2</button>
+              <button type="button" className="overlay-calculator-button" onClick={() => null}>3</button>
+              <button type="button" className="overlay-calculator-button operator" onClick={() => null}>*</button>
+
+              <button type="button" className="overlay-calculator-button" onClick={() => null}>0</button>
+              <button type="button" className="overlay-calculator-button" onClick={() => null}>.</button>
+              <button type="button" className="overlay-calculator-button" onClick={() => null}>00</button>
+              <button type="button" className="overlay-calculator-button operator" onClick={() => null}>-</button>
+
+              <button type="button" className="overlay-calculator-button clear" onClick={() => null}>C</button>
+              <button type="button" className="overlay-calculator-button operator" onClick={() => null}>+</button>
+            </div>
+          </div>
+        </div>
+
+
+
       </div>
     </div>
   );
