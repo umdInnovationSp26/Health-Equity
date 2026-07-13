@@ -236,12 +236,9 @@ export default function SetNewInventoryLevels() {
         </div>
       </div>
 
-      {/*
-        CountOverlay isn't built yet - this is where it plugs in once it exists.
-        It should receive `activeItem`, call `goToOffset(1)` / `goToOffset(-1)`
-        for the arrow buttons, `handleConfirmCount` on submit, and
-        `() => setActiveItemId(null)` to close. */}
 
+          {/* Count Overlay */}
+          
         {activeItem && (
           <CountOverlay
             item={activeItem}

@@ -59,11 +59,20 @@
 .count-overlay .overlay-calculator-button.clear {
   grid-column: span 2;
 }
+.count-overlay .overlay-calculator-button.enter {
+  grid-column: span 2;
+}
 
 .count-overlay .overlay-calculator-button.clear {
   background-color: #f59e0b;
   color: white;
 }
+
+.count-overlay .overlay-calculator-button.enter {
+  background-color: #3B82F6;
+  color: white;
+}
+
 
 .count-overlay .overlay-calculator-button.clear:hover {
   background-color: #d97706;

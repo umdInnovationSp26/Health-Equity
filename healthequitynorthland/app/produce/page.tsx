@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { db } from "@/app/lib/firebaseClient";
-import { collection, getDocs, addDoc, Timestamp } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
 import { Chart, DoughnutController, ArcElement, Tooltip, Legend } from "chart.js";
 import Link from "next/link";
-{/*TanStack for table imports */}
+import InventoryTable from "@/app/produce/inventory/components/InventoryTable";
 
 Chart.register(ArcElement, Tooltip, Legend, DoughnutController);
 
@@ -32,21 +32,10 @@ type Contact = {
   phone?: string;
 };
 
-type SortKey = "name" | "email";
-
 export default function ProducePage() {
   const [produce, setProduce] = useState<ProduceStat[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [search, setSearch] = useState("");
-  const [sortKey, setSortKey] = useState<SortKey>("name");
   const [loading, setLoading] = useState(true);
-
-  /* Add contact state */
-  const [showAdd, setShowAdd] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newEmail, setNewEmail] = useState("");
-  const [newPhone, setNewPhone] = useState("");
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const loadProduce = async () => {
@@ -145,7 +134,7 @@ export default function ProducePage() {
                 Total Produce
               </h2>
               <ProduceChart data={produce} />
-              <ProduceTable data ={produce} />
+              <InventoryTable data={produce} />
             </div>
           </div>
         </div>
@@ -159,103 +148,6 @@ export default function ProducePage() {
 
 /* ─── Produce Table ──────────────────────────────────────── */
 
-import {
-  useReactTable,
-  getCoreRowModel,
-  getSortedRowModel,
-  getFilteredRowModel,
-  flexRender,
-  createColumnHelper,
-  type SortingState,
-} from "@tanstack/react-table";
-import { Produce } from "../lib/ConsumableUtil";
-
-const columnHelper = createColumnHelper<ProduceStat>();
-
-const produceColumns = [
-  columnHelper.accessor("name", {
-    header: "Produce",
-    cell: (info) => (
-          <span className="font-medium text-slate-900">{info.getValue()}</span>
-          
-    ),
-  }),
-  columnHelper.accessor("lbs", {
-    header: "Amount (lbs)",
-    cell: (info) => (
-      <span className="font-semibold text-slate-900">{info.getValue()}</span>
-    ),
-  }),
-];
-
-function ProduceTable({data} : { data: ProduceStat[] }){
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: "lbs", desc: true },
-  ]);
-  const [filter, setFilter] = useState("");
-
-  const table = useReactTable({
-    data,
-    columns: produceColumns,
-    state: { sorting, globalFilter: filter },
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setFilter,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-  });
-
-  return (
-    <div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-5">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-slate-500">Produce Detail</h2>
-        <input
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          placeholder="Search produce..."
-          className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm"
-        />
-      </div>
-
-      <table className="w-full text-sm">
-        <thead>
-          {table.getHeaderGroups().map((hg) => (
-            <tr key={hg.id} className="border-b border-slate-100 text-left">
-              {hg.headers.map((header) => (
-                <th
-                  key={header.id}
-                  onClick={header.column.getToggleSortingHandler()}
-                  className="cursor-pointer select-none py-2 text-xs font-semibold text-slate-500"
-                >
-                  {flexRender(header.column.columnDef.header, header.getContext())}
-                  {{ asc: " ↑", desc: " ↓" }[header.column.getIsSorted() as string] ?? ""}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="border-b border-slate-50 last:border-0">
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="py-2">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-          {table.getRowModel().rows.length === 0 && (
-            <tr>
-              <td colSpan={2} className="py-4 text-center text-xs text-slate-400">
-                No matching produce.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
-}
 
 
 
