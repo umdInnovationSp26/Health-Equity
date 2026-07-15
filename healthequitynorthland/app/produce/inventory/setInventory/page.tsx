@@ -241,6 +241,7 @@ export default function SetNewInventoryLevels() {
           
         {activeItem && (
           <CountOverlay
+            key={activeItem.id}
             item={activeItem}
             hasNext={activeIndex < items.length - 1}
             hasPrev={activeIndex > 0}

@@ -33,17 +33,6 @@ type DraftProduceStat = ProduceStat & {
   displayLbs: number;
 };
 
-/**
- * ASSUMPTION: the app aggregates produce across every doc in the "event"
- * collection (see loadProduce below). There's no single "current event" to
- * attribute manual add/remove edits to, so submitted changes write into a
- * dedicated sentinel event, "manual-adjustments". Because loadProduce sums
- * every event's produce subcollection, entries written here flow into the
- * totals automatically — no read-side changes needed.
- *
- * If your app has a notion of "the active event" instead, swap
- * MANUAL_EVENT_ID for that event's real id.
- */
 const MANUAL_EVENT_ID = "manual-adjustments";
 
 /** Commits every pending delta in one atomic batch write. */

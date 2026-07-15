@@ -8,7 +8,7 @@ import Footer from "@/app/components/footer";
 import { Chart, DoughnutController, ArcElement, Tooltip, Legend } from "chart.js";
 import Link from "next/link";
 import InventoryTable from "@/app/produce/inventory/components/InventoryTable";
-
+import ProduceChart from "@/app/produce/inventory/components/ProduceChart"
 Chart.register(ArcElement, Tooltip, Legend, DoughnutController);
 
 type ProduceStat = {
@@ -16,14 +16,6 @@ type ProduceStat = {
   lbs: number;
 };
 
-const PRODUCE_COLORS = [
-  "#378ADD",
-  "#85B7EB",
-  "#B5D4F4",
-  "#185FA5",
-  "#0C447C",
-  "#63A3D9",
-];
 
 type Contact = {
   id: string;
@@ -34,7 +26,6 @@ type Contact = {
 
 export default function ProducePage() {
   const [produce, setProduce] = useState<ProduceStat[]>([]);
-  const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -94,7 +85,6 @@ export default function ProducePage() {
         };
       });
 
-      setContacts(data);
       setLoading(false);
     };
 
@@ -109,32 +99,36 @@ export default function ProducePage() {
         {/* Top bar with search */}
         <div className="bg-white shadow-sm flex items-center justify-between p-4 gap-2 relative">
           <div className="content-start px-4"></div>
-
           <h3 className="text-black absolute left-1/2 -translate-x-1/2 font-bold">
             Produce
           </h3>
-
           <div className="content-end text-right pr-4">
            <Link
-            href="/produce/inventory"
+            href="/produce/inventory/reportHarvest"
             className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 hover:scale-102 transition-colors"
             >
-                Take Inventory
-
+                Report Harvest
             </Link>
+
           </div>
         </div>
-
         {/* Search + sort */}
         <div className="mx-auto max-w-2xl space-y-5 p-6">
           {/* Charts row */}
           <div className="grid grid-cols-1 gap-4">
             <div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-5">
               <h2 className="mb-4 text-sm font-semibold text-slate-500">
-                Total Produce
+                Currently Held Produce
               </h2>
               <ProduceChart data={produce} />
               <InventoryTable data={produce} />
+            </div>
+          </div>
+        </div>
+        <div className="mx-auto max-w-2xl space-y-5 p-6">
+          <div className="grid grid-cols-1 gap-4">
+            <div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-5">
+              secondary content
             </div>
           </div>
         </div>
@@ -146,94 +140,3 @@ export default function ProducePage() {
 }
 
 
-/* ─── Produce Table ──────────────────────────────────────── */
-
-
-
-
-
-/* ─── Produce Chart ──────────────────────────────────────── */
-function ProduceChart({ data }: { data: ProduceStat[] }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const chartRef = useRef<Chart | null>(null);
-
-  useEffect(() => {
-    if (!canvasRef.current || data.length === 0) return;
-    chartRef.current?.destroy();
-
-    chartRef.current = new Chart(canvasRef.current, {
-      type: "doughnut",
-      data: {
-        labels: data.map((d) => d.name),
-        datasets: [
-          {
-            data: data.map((d) => d.lbs),
-            backgroundColor: PRODUCE_COLORS.slice(0, data.length),
-            borderWidth: 2,
-            borderColor: "#fff",
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: "50%",
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: { label: (ctx) => `${ctx.label}: ${ctx.parsed} lbs` },
-          },
-        },
-      },
-    });
-
-    return () => chartRef.current?.destroy();
-  }, [data]);
-
-  if (data.length === 0) {
-    return (
-      <div className="flex h-[130px] flex-col items-center justify-center gap-1 text-center text-xs text-slate-400">
-        <span>No produce data yet.</span>
-        <span>
-          Add documents to{" "}
-          <code className="rounded bg-slate-100 px-1">produceStats</code>.
-        </span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center gap-4">
-      <div className="relative h-[130px] w-[130px] flex-shrink-0">
-        <canvas
-          ref={canvasRef}
-          role="img"
-          aria-label="Produce sold this month by item"
-        />
-      </div>
-
-      <div className="space-y-2">
-        
-        {data.map((item, i) => (
-          <div
-            key={`${item.name}-${i}`}
-            className="flex items-center gap-2 text-xs text-slate-500"
-          >
-            <div
-              className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
-              style={{ background: PRODUCE_COLORS[i] }}
-            />
-            <span>
-              {item.name}{" "}
-              <span className="font-semibold text-slate-900">
-                {item.lbs} lbs
-              </span>
-            </span>
-
-            
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}

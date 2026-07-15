@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FaArrowLeft, FaArrowRight, FaTimes } from "react-icons/fa";
 import type { ProduceStat } from "../lib/actions";
 import "@/public/globals.css";
@@ -29,11 +29,7 @@ const CountOverlay = ({
   onConfirm,
   onClose,
 }: OverlayProps) => {
-  const [displayValue, setDisplayValue] = useState(String(item.lbs ?? 0));
-
-  useEffect(() => {
-    setDisplayValue(String(item.lbs ?? 0));
-  }, [item.id, item.lbs]);
+  const [displayValue, setDisplayValue] = useState(() => String(item.lbs ?? 0));
 
   const normalizePounds = (value: number) => Math.round(value * 100) / 100;
 
