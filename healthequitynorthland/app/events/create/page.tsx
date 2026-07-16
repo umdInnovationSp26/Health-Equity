@@ -268,58 +268,6 @@ export default function CreateEvent() {
                 />
               </div>
 
-              {/* Checkbox to control whether or not a check-in link/ QR code will be generated for this event */}
-              {/* Enabled by default for all events */}
-
-                <div>
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      name="createCheckInLink"
-                      checked={createCheckInLink}
-                      onChange={(e) => setCreateCheckInLink(e.target.checked)}
-                      className="form-checkbox h-5 w-5 text-indigo-600 rounded"
-                    />
-                    <span className="text-sm font-medium text-slate-700">
-                      Generate Check-In Link
-                    </span>
-                  </label>
-                </div>
-
-              {/* If the check-in link option is enabled, show options for what fields to include on the check-in form */}
-              {createCheckInLink && (
-                <>
-                  <p className="text-xs font-semibold text-slate-500 uppercase">
-                    Fields to collect at check-in
-                  </p>
-                  {CheckInFieldOptions.map((field) => (
-                    <div key={field.key} >
-                    <label className="flex items-center space-x-2">
-                        
-                      <input
-                        type="checkbox"
-                        checked={!!checkInFields[field.key]}
-                        onChange={() => toggleCheckInField(field.key)}
-                        className="form-checkbox h-4 w-4 text-indigo-600 rounded"
-                      />
-                      <span className="text-sm text-slate-600">{field.label}</span>
-                    </label>
-
-                    {field.key === "other" && checkInFields[field.key] && (
-                    <input 
-                      type="text"
-                      value={otherFieldValue}
-                      onChange={(e) => setOtherFieldValue(e.target.value)}
-                      placeholder="Please specify..."
-                      className="mt-2 ml-6 block w-full rounded border border-slate-300 text-sm p-1"  
-                        />
-                )}
-              </div>
-                
-                  ))}
-                </>
-              )}
-
               {/* Date, time, and location fields */}
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700">
@@ -332,6 +280,66 @@ export default function CreateEvent() {
                   className="w-full p-3 bg-gray-100 rounded-lg outline-none"
                 />
               </div>
+            </div>
+
+            {/* Check-in link section */}
+            {/* Controls whether a check-in link / QR code is generated for this event. */}
+            {/* Enabled by default for all events. */}
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 sm:p-6 space-y-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="createCheckInLink"
+                  checked={createCheckInLink}
+                  onChange={(e) => setCreateCheckInLink(e.target.checked)}
+                  className="form-checkbox mt-0.5 h-5 w-5 shrink-0 text-indigo-600 rounded"
+                />
+                <span>
+                  <span className="block text-sm font-semibold text-slate-700">
+                    Generate Check-In Link
+                  </span>
+                  <span className="block text-xs text-slate-500">
+                    Create a shareable link and QR code so attendees can check
+                    in.
+                  </span>
+                </span>
+              </label>
+
+              {/* If the check-in link option is enabled, show options for what fields to include on the check-in form */}
+              {createCheckInLink && (
+                <div className="space-y-3 border-t border-slate-200 pt-4">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    Fields to collect at check-in
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3">
+                    {CheckInFieldOptions.map((field) => (
+                      <div key={field.key} className="space-y-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={!!checkInFields[field.key]}
+                            onChange={() => toggleCheckInField(field.key)}
+                            className="form-checkbox h-4 w-4 shrink-0 text-indigo-600 rounded"
+                          />
+                          <span className="text-sm text-slate-600 capitalize">
+                            {field.label}
+                          </span>
+                        </label>
+
+                        {field.key === "other" && checkInFields[field.key] && (
+                          <input
+                            type="text"
+                            value={otherFieldValue}
+                            onChange={(e) => setOtherFieldValue(e.target.value)}
+                            placeholder="Please specify..."
+                            className="ml-6 block w-[calc(100%-1.5rem)] rounded-lg border border-slate-300 bg-white text-sm p-2 outline-none focus:ring-1 focus:ring-indigo-400"
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">

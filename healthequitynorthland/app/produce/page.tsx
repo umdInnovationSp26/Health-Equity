@@ -9,6 +9,8 @@ import { Chart, DoughnutController, ArcElement, Tooltip, Legend } from "chart.js
 import Link from "next/link";
 import InventoryTable from "@/app/produce/inventory/components/InventoryTable";
 import ProduceChart from "@/app/produce/inventory/components/ProduceChart"
+import RecentHarvests from "@/app/produce/inventory/components/RecentHarvests";
+import { getRecentHarvests, type HarvestRecord } from "@/app/produce/inventory/lib/actions";
 Chart.register(ArcElement, Tooltip, Legend, DoughnutController);
 
 type ProduceStat = {
@@ -27,6 +29,8 @@ type Contact = {
 export default function ProducePage() {
   const [produce, setProduce] = useState<ProduceStat[]>([]);
   const [loading, setLoading] = useState(true);
+  const [harvests, setHarvests] = useState<HarvestRecord[]>([]);
+  const [harvestsLoading, setHarvestsLoading] = useState(true);
 
   useEffect(() => {
     const loadProduce = async () => {
@@ -68,6 +72,14 @@ export default function ProducePage() {
     loadProduce();
   }, []);
 
+  /* Load recent harvests */
+  useEffect(() => {
+    getRecentHarvests()
+      .then(setHarvests)
+      .catch((err) => console.error("Error loading harvests:", err))
+      .finally(() => setHarvestsLoading(false));
+  }, []);
+
   /* Load contacts */
   useEffect(() => {
     const loadContacts = async () => {
@@ -105,7 +117,7 @@ export default function ProducePage() {
           <div className="content-end text-right pr-4">
            <Link
             href="/produce/inventory/reportHarvest"
-            className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 hover:scale-102 transition-colors"
+            className="flex items-center gap-1.5 rounded-xl bg-green-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 hover:scale-102 transition-colors"
             >
                 Report Harvest
             </Link>
@@ -127,9 +139,7 @@ export default function ProducePage() {
         </div>
         <div className="mx-auto max-w-2xl space-y-5 p-6">
           <div className="grid grid-cols-1 gap-4">
-            <div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-5">
-              secondary content
-            </div>
+            <RecentHarvests data={harvests} loading={harvestsLoading} />
           </div>
         </div>
       </main>
