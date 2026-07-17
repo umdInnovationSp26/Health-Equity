@@ -21,6 +21,7 @@ import {
 import {
   getProduceItems,
   submitItemCount,
+  clearAllCountMarks,
   type ProduceStat,
 } from "@/app/produce/inventory/lib/actions";
 
@@ -76,9 +77,11 @@ function buildColumns(onRowClick: (id: string) => void) {
 function ProduceTable({
   data,
   onRowClick,
+  onOrderedIdsChange,
 }: {
   data: ProduceStat[];
   onRowClick: (id: string) => void;
+  onOrderedIdsChange: (ids: string[]) => void;
 }) {
   const [sorting, setSorting] = useState<SortingState>([{ id: "lbs", desc: true }]);
   const [filter, setFilter] = useState("");
@@ -94,6 +97,15 @@ function ProduceTable({
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
   });
+
+  // Report the visible (sorted + filtered) row order up so the count overlay
+  // steps through items in the same order the user sees, not fetch order.
+  const orderedIds = table.getRowModel().rows.map((r) => r.original.id);
+  const orderedKey = orderedIds.join("|");
+  useEffect(() => {
+    onOrderedIdsChange(orderedIds);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderedKey]);
 
   return (
     <div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-5">
@@ -151,6 +163,10 @@ export default function SetNewInventoryLevels() {
   const [items, setItems] = useState<ProduceStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  // Visible row order reported by the table, so the overlay steps through
+  // items exactly as they're displayed (sorted/filtered), not fetch order.
+  const [orderedIds, setOrderedIds] = useState<string[]>([]);
 
   const router = useRouter();
   const isExitingRef = useRef(false);
@@ -187,29 +203,57 @@ export default function SetNewInventoryLevels() {
   }, []);
 
   function handleConfirmCount(itemId: string, lbs: number) {
+    const item = items.find((it) => it.id === itemId);
+    if (!item) return;
+    const previousLbs = item.lbs;
+
     // optimistic local update so the UI feels instant
     setItems((prev) =>
       prev.map((it) => (it.id === itemId ? { ...it, lbs, counted: true } : it))
     );
 
-    submitItemCount(itemId, lbs).catch((err) => {
+    // Pass the name + current total so the count is folded into the aggregate
+    // the produce page reads (see submitItemCount).
+    submitItemCount(item.id, item.name, lbs, previousLbs).catch((err) => {
       console.error("Failed to save count", err);
       // TODO: surface a toast here and consider rolling back the optimistic update
     });
   }
 
+  const countedCount = items.filter((it) => it.counted).length;
+
+  async function handleSubmit() {
+    if (submitting || countedCount === 0) return;
+    setSubmitting(true);
+    try {
+      // Counts are already persisted per-item; submitting just clears the
+      // "counted" check marks so the next session starts fresh.
+      await clearAllCountMarks();
+      setItems((prev) => prev.map((it) => ({ ...it, counted: false })));
+      router.push("/produce");
+    } catch (err) {
+      console.error("Failed to submit inventory", err);
+      alert("Error submitting inventory. Please try again.");
+      setSubmitting(false);
+    }
+  }
+
+  // Fall back to fetch order until the table has reported its visible order.
+  const navIds = orderedIds.length ? orderedIds : items.map((it) => it.id);
   const activeItem = items.find((it) => it.id === activeItemId) ?? null;
-  const activeIndex = activeItem ? items.findIndex((it) => it.id === activeItemId) : -1;
+  const activeIndex = activeItemId ? navIds.indexOf(activeItemId) : -1;
+  const hasNext = activeIndex >= 0 && activeIndex < navIds.length - 1;
+  const hasPrev = activeIndex > 0;
 
   function goToOffset(offset: number) {
     if (activeIndex === -1) return;
     const nextIndex = activeIndex + offset;
-    if (nextIndex < 0 || nextIndex >= items.length) return;
-    setActiveItemId(items[nextIndex].id);
+    if (nextIndex < 0 || nextIndex >= navIds.length) return;
+    setActiveItemId(navIds[nextIndex]);
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 sm:p-6">
+    <div className="min-h-screen bg-slate-50 p-4 sm:p-6 pb-28">
       <button
         onClick={handleManualExit}
         className="p-2 hover:scale-105 transition hover:cursor-pointer"
@@ -230,7 +274,11 @@ export default function SetNewInventoryLevels() {
             {loading ? (
               <p className="text-sm text-slate-400">Loading inventory…</p>
             ) : (
-              <ProduceTable data={items} onRowClick={setActiveItemId} />
+              <ProduceTable
+                data={items}
+                onRowClick={setActiveItemId}
+                onOrderedIdsChange={setOrderedIds}
+              />
             )}
           </div>
         </div>
@@ -243,17 +291,42 @@ export default function SetNewInventoryLevels() {
           <CountOverlay
             key={activeItem.id}
             item={activeItem}
-            hasNext={activeIndex < items.length - 1}
-            hasPrev={activeIndex > 0}
+            hasNext={hasNext}
+            hasPrev={hasPrev}
             onNext={() => goToOffset(1)}
             onPrev={() => goToOffset(-1)}
             onConfirm={(lbs) => {
               handleConfirmCount(activeItem.id, lbs);
-              goToOffset(1);
+              // Advance to the next item, or close the overlay (back to the
+              // list) once the last item is confirmed.
+              if (hasNext) {
+                goToOffset(1);
+              } else {
+                setActiveItemId(null);
+              }
             }}
             onClose={() => setActiveItemId(null)}
           />
         )}
+
+      {/* Submit bar */}
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 shadow-[0_-1px_6px_rgba(0,0,0,0.04)] backdrop-blur">
+        <div className="mx-auto flex max-w-2xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+          <p className="text-sm text-slate-600">
+            <span className="font-semibold text-slate-900">{countedCount}</span>
+            {" of "}
+            <span className="font-semibold text-slate-900">{items.length}</span>
+            {" counted"}
+          </p>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || countedCount === 0}
+            className="rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {submitting ? "Submitting…" : "Submit Inventory"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -9,8 +9,6 @@ import { Chart, DoughnutController, ArcElement, Tooltip, Legend } from "chart.js
 import Link from "next/link";
 import InventoryTable from "@/app/produce/inventory/components/InventoryTable";
 import ProduceChart from "@/app/produce/inventory/components/ProduceChart"
-import RecentHarvests from "@/app/produce/inventory/components/RecentHarvests";
-import { getRecentHarvests, type HarvestRecord } from "@/app/produce/inventory/lib/actions";
 Chart.register(ArcElement, Tooltip, Legend, DoughnutController);
 
 type ProduceStat = {
@@ -29,8 +27,6 @@ type Contact = {
 export default function ProducePage() {
   const [produce, setProduce] = useState<ProduceStat[]>([]);
   const [loading, setLoading] = useState(true);
-  const [harvests, setHarvests] = useState<HarvestRecord[]>([]);
-  const [harvestsLoading, setHarvestsLoading] = useState(true);
 
   useEffect(() => {
     const loadProduce = async () => {
@@ -72,14 +68,6 @@ export default function ProducePage() {
     loadProduce();
   }, []);
 
-  /* Load recent harvests */
-  useEffect(() => {
-    getRecentHarvests()
-      .then(setHarvests)
-      .catch((err) => console.error("Error loading harvests:", err))
-      .finally(() => setHarvestsLoading(false));
-  }, []);
-
   /* Load contacts */
   useEffect(() => {
     const loadContacts = async () => {
@@ -109,19 +97,26 @@ export default function ProducePage() {
 
       <main className="pt-20 min-h-screen">
         {/* Top bar with search */}
-        <div className="bg-white shadow-sm flex items-center justify-between p-4 gap-2 relative">
-          <div className="content-start px-4"></div>
-          <h3 className="text-black absolute left-1/2 -translate-x-1/2 font-bold">
+        <div className="bg-white shadow-sm flex flex-col sm:flex-row items-center justify-between p-4 gap-3 sm:gap-2 sm:relative">
+          <h3 className="text-black font-bold sm:absolute sm:left-1/2 sm:-translate-x-1/2">
             Produce
           </h3>
-          <div className="content-end text-right pr-4">
-           <Link
-            href="/produce/inventory/reportHarvest"
-            className="flex items-center gap-1.5 rounded-xl bg-green-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 hover:scale-102 transition-colors"
+
+          {/* Action buttons */}
+          <div className="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto sm:ml-auto">
+            <Link
+              href="/produce/inventory/reportHarvest"
+              className="flex items-center justify-center gap-1.5 rounded-xl bg-green-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700 hover:scale-102 transition-colors whitespace-nowrap"
             >
-                Report Harvest
+              Report Harvest
             </Link>
 
+            <Link
+              href="/produce/inventory/setInventory"
+              className="flex items-center justify-center gap-1.5 rounded-xl bg-green-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700 hover:scale-102 transition-colors whitespace-nowrap"
+            >
+              Set New Inventory Levels
+            </Link>
           </div>
         </div>
         {/* Search + sort */}
@@ -135,11 +130,6 @@ export default function ProducePage() {
               <ProduceChart data={produce} />
               <InventoryTable data={produce} />
             </div>
-          </div>
-        </div>
-        <div className="mx-auto max-w-2xl space-y-5 p-6">
-          <div className="grid grid-cols-1 gap-4">
-            <RecentHarvests data={harvests} loading={harvestsLoading} />
           </div>
         </div>
       </main>

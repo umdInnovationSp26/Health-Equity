@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaArrowLeft, FaArrowRight, FaTimes } from "react-icons/fa";
 import type { ProduceStat } from "../lib/actions";
 import "@/public/globals.css";
@@ -112,6 +112,71 @@ const CountOverlay = ({
       return `${current}${value}`;
     });
   };
+
+  // Physical-keyboard support — desktop only. We attach a global listener
+  // rather than making the input editable, so the on-screen input stays
+  // readOnly and the mobile soft keyboard never pops up. The `(hover: hover)
+  // and (pointer: fine)` query only matches pointer devices (mouse/trackpad),
+  // so touch-only phones and tablets are excluded entirely.
+  useEffect(() => {
+    const isDesktop =
+      typeof window !== "undefined" &&
+      window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    if (!isDesktop) return;
+
+    const appendRaw = (char: string) =>
+      setDisplayValue((current) => `${current}${char}`);
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Don't hijack typing in a real text field (e.g. the table's search box).
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "TEXTAREA" ||
+          (target.tagName === "INPUT" &&
+            !(target as HTMLInputElement).readOnly) ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      const { key } = event;
+
+      if (key >= "0" && key <= "9") {
+        handleClick(key);
+      } else if (key === ".") {
+        handleClick(".");
+      } else if (["+", "-", "*", "/", "(", ")"].includes(key)) {
+        appendRaw(key);
+      } else if (/^[kglboz]$/i.test(key)) {
+        // unit letters: kg, g, lb, oz
+        appendRaw(key.toLowerCase());
+      } else if (key === "Backspace") {
+        event.preventDefault();
+        handleClick("CE");
+      } else if (key === "Enter" || key === "=") {
+        event.preventDefault();
+        const parsedValue = evaluateExpression(displayValue);
+        if (Number.isFinite(parsedValue) && parsedValue >= 0) {
+          onConfirm(parsedValue);
+        }
+      } else if (key === "Escape") {
+        onClose();
+      } else if (key === "ArrowRight" && hasNext) {
+        event.preventDefault();
+        onNext();
+      } else if (key === "ArrowLeft" && hasPrev) {
+        event.preventDefault();
+        onPrev();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+    // displayValue is needed so Enter evaluates the latest expression.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayValue, hasNext, hasPrev, onConfirm, onClose, onNext, onPrev]);
+
   return (
     <div className="count-overlay fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4">
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">

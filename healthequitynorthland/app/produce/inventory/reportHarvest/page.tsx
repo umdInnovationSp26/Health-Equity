@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FaArrowLeft, FaPlus, FaSearch, FaLeaf, FaTrash, FaMapMarkerAlt } from "react-icons/fa";
+import { FaArrowLeft, FaPlus, FaSearch, FaLeaf, FaTrash } from "react-icons/fa";
 
 import {
   getProduceItems,
@@ -14,7 +14,6 @@ import CountOverlay from "@/app/produce/inventory/components/CountOverlay";
 type HarvestEntry = {
   item: ProduceStat;
   lbs: number;
-  location: string;
 };
 
 export default function ReportHarvest() {
@@ -81,19 +80,12 @@ export default function ReportHarvest() {
       const existing = prev.findIndex((e) => e.item.id === selectedItem.id);
       if (existing !== -1) {
         const updated = [...prev];
-        // Preserve any location already typed for this row.
         updated[existing] = { ...updated[existing], item: selectedItem, lbs };
         return updated;
       }
-      return [...prev, { item: selectedItem, lbs, location: "" }];
+      return [...prev, { item: selectedItem, lbs }];
     });
     setSelectedItem(null);
-  };
-
-  const handleUpdateLocation = (id: string, location: string) => {
-    setHarvestLog((prev) =>
-      prev.map((e) => (e.item.id === id ? { ...e, location } : e)),
-    );
   };
 
   const handleRemoveEntry = (id: string) => {
@@ -108,7 +100,6 @@ export default function ReportHarvest() {
         harvestLog.map((e) => ({
           produceName: e.item.name,
           lbs: e.lbs,
-          location: e.location,
         })),
       );
       setHarvestLog([]);
@@ -313,17 +304,6 @@ export default function ReportHarvest() {
                           <FaTrash size={12} />
                         </button>
                       </div>
-                    </div>
-
-                    {/* Storage location for this batch */}
-                    <div className="mt-2 flex items-center gap-2 pl-5">
-                      <FaMapMarkerAlt className="shrink-0 text-slate-300" size={11} />
-                      <input
-                        value={entry.location}
-                        onChange={(e) => handleUpdateLocation(entry.item.id, e.target.value)}
-                        placeholder="Storage location (e.g. Cooler A)"
-                        className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-700 placeholder-slate-400 outline-none transition focus:border-green-400 focus:bg-white focus:ring-2 focus:ring-green-100"
-                      />
                     </div>
                   </div>
                 ))}

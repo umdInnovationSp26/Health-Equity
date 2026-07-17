@@ -4,17 +4,42 @@ import {
   doc,
   getDocs,
   increment,
-  limit,
-  orderBy,
-  query,
   serverTimestamp,
-  Timestamp,
   updateDoc,
   writeBatch,
 } from "firebase/firestore";
 
 const PRODUCE_COLLECTION = "produce";
-const HARVEST_COLLECTION = "harvests";
+
+// The produce page shows inventory totals by summing the `lb` field across
+// every event's `produce` subcollection. Manually-set inventory levels are
+// folded into those totals through this synthetic event bucket - the same one
+// the addRemove page writes to - so a level set here shows up on that page.
+const MANUAL_EVENT_ID = "manual-adjustments";
+
+/**
+ * Sum the `lb` field for every produce name across all events' `produce`
+ * subcollections. This mirrors exactly what the produce page computes, so
+ * numbers stay in sync between the two views.
+ */
+async function aggregateInventoryLbs(): Promise<Record<string, number>> {
+  const eventsSnap = await getDocs(collection(db, "event"));
+  const produceSubSnaps = await Promise.all(
+    eventsSnap.docs.map((eventDoc) =>
+      getDocs(collection(db, "event", eventDoc.id, "produce")),
+    ),
+  );
+
+  const totals: Record<string, number> = {};
+  produceSubSnaps.forEach((snap) => {
+    snap.docs.forEach((d) => {
+      const name = d.id; // subcollection doc id is the produce name
+      totals[name] = (totals[name] ?? 0) + (d.data().lb ?? 0);
+    });
+  });
+
+  return totals;
+}
 
 // Harvest lbs are folded into the inventory totals shown on the produce
 // page. That page aggregates lbs across every event's `produce` subcollection,
@@ -41,17 +66,42 @@ export type ProduceStat = {
  * SWR hook if you want caching + revalidation).
  */
 export async function getProduceItems(): Promise<ProduceStat[]> {
-  const snapshot = await getDocs(collection(db, PRODUCE_COLLECTION));
+  const [snapshot, totals] = await Promise.all([
+    getDocs(collection(db, PRODUCE_COLLECTION)),
+    aggregateInventoryLbs(),
+  ]);
 
-  return snapshot.docs.map((docSnap) => {
+  const items: ProduceStat[] = [];
+  const seenNames = new Set<string>();
+
+  snapshot.docs.forEach((docSnap) => {
     const data = docSnap.data();
-    return {
+    const name = data.name ?? docSnap.id;
+    seenNames.add(name);
+    items.push({
       id: docSnap.id,
-      name: data.name ?? "",
+      name,
       counted: data.countedAt != null,
-      lbs: data.lbs ?? 0,
-    };
+      // Show the same aggregated total the produce page shows, not a separate
+      // lbs field on the master produce doc (which the produce page ignores).
+      lbs: Math.round((totals[name] ?? 0) * 100) / 100,
+    });
   });
+
+  // Include produce that only exists in the inventory totals (e.g. a new name
+  // typed into a harvest report) but was never registered in the master
+  // produce list - otherwise it would never appear here to be counted.
+  Object.keys(totals).forEach((name) => {
+    if (seenNames.has(name)) return;
+    items.push({
+      id: name,
+      name,
+      counted: false,
+      lbs: Math.round(totals[name] * 100) / 100,
+    });
+  });
+
+  return items;
 }
 
 /**
@@ -63,14 +113,40 @@ export async function getProduceItems(): Promise<ProduceStat[]> {
  */
 export async function submitItemCount(
   itemId: string,
-  lbs: number
+  produceName: string,
+  desiredLbs: number,
+  currentLbs: number
 ): Promise<void> {
-  const itemRef = doc(db, PRODUCE_COLLECTION, itemId);
+  // "Set exact" via an increment against the current aggregate total: writing
+  // (desired - current) into the manual-adjustments bucket makes the produce
+  // page's summed total land on the desired level. Mirrors addRemove's
+  // set-exact behavior.
+  const delta = Math.round((desiredLbs - currentLbs) * 100) / 100;
 
-  await updateDoc(itemRef, {
-    lbs,
-    countedAt: serverTimestamp(),
-  });
+  const batch = writeBatch(db);
+
+  // The synthetic event doc must exist for getDocs("event") to list it.
+  batch.set(
+    doc(db, "event", MANUAL_EVENT_ID),
+    { isManualAdjustments: true },
+    { merge: true },
+  );
+  batch.set(
+    doc(db, "event", MANUAL_EVENT_ID, "produce", produceName),
+    { lb: increment(delta) },
+    { merge: true },
+  );
+
+  // Mark the master produce doc as counted this session (drives the checkmark).
+  // `name` is merged too so a harvest-only item (whose doc doesn't exist yet)
+  // is created well-formed rather than as a nameless doc.
+  batch.set(
+    doc(db, PRODUCE_COLLECTION, itemId),
+    { name: produceName, countedAt: serverTimestamp() },
+    { merge: true },
+  );
+
+  await batch.commit();
 }
 
 /**
@@ -111,34 +187,49 @@ export async function resetAllCounts(): Promise<void> {
   }
 }
 
+/**
+ * Clear only the "counted" check marks across every item, leaving the lbs
+ * (the inventory levels the user just set) intact. This is what the "Submit"
+ * bar on the Set New Inventory Levels page calls to finish a counting session:
+ * the counts are already persisted per-item, so submitting just resets the
+ * derived checkmarks so the list starts fresh next time.
+ *
+ * Batched writes cap at 500 ops, so this chunks the doc list just in case
+ * the produce list ever grows past that.
+ */
+export async function clearAllCountMarks(): Promise<void> {
+  const snapshot = await getDocs(collection(db, PRODUCE_COLLECTION));
+  const docs = snapshot.docs;
+
+  const CHUNK_SIZE = 500;
+  for (let i = 0; i < docs.length; i += CHUNK_SIZE) {
+    const batch = writeBatch(db);
+    const chunk = docs.slice(i, i + CHUNK_SIZE);
+
+    chunk.forEach((docSnap) => {
+      batch.update(docSnap.ref, {
+        countedAt: null,
+      });
+    });
+
+    await batch.commit();
+  }
+}
+
 /* ─── Harvests ────────────────────────────────────────────────── */
 
 /** One produce item recorded in a harvest report. */
 export type HarvestEntryInput = {
   produceName: string;
   lbs: number;
-  /** Free-text storage location for this batch, e.g. "Cooler A". */
-  location: string;
-};
-
-/** A persisted harvest record, as read back for display. */
-export type HarvestRecord = {
-  id: string;
-  produceName: string;
-  lbs: number;
-  location: string;
-  /** When the harvest was recorded. Null only while the write is in flight. */
-  harvestedAt: Date | null;
 };
 
 /**
- * Persist a harvest report. Each entry is written to the `harvests` log
- * (with a server timestamp + location, so the produce page can show how old
- * a batch is and where it's stored) AND folded into the inventory totals by
- * incrementing the item's lbs under the synthetic harvest event.
+ * Add a harvest to the inventory totals. Just like addRemove's submitDeltas,
+ * each reported amount is folded into the totals by incrementing the item's
+ * lbs under the synthetic harvest event - nothing else is recorded.
  *
- * Everything happens in one atomic batch, so a partial harvest can never
- * land the log and the inventory totals out of sync.
+ * Everything happens in one atomic batch.
  */
 export async function submitHarvest(entries: HarvestEntryInput[]): Promise<void> {
   const valid = entries.filter((e) => e.produceName.trim() && e.lbs > 0);
@@ -158,14 +249,6 @@ export async function submitHarvest(entries: HarvestEntryInput[]): Promise<void>
     const name = entry.produceName.trim();
     const lbs = Math.round(entry.lbs * 100) / 100;
 
-    // Harvest log entry (auto-generated id).
-    batch.set(doc(collection(db, HARVEST_COLLECTION)), {
-      produceName: name,
-      lbs,
-      location: entry.location.trim(),
-      harvestedAt: serverTimestamp(),
-    });
-
     // Add to inventory totals.
     batch.set(
       doc(db, "event", HARVEST_EVENT_ID, "produce", name),
@@ -175,29 +258,4 @@ export async function submitHarvest(entries: HarvestEntryInput[]): Promise<void>
   }
 
   await batch.commit();
-}
-
-/**
- * Most recent harvests, newest first - drives the "Recent Harvests" section
- * on the produce page so users can see how fresh their stock is.
- */
-export async function getRecentHarvests(max = 8): Promise<HarvestRecord[]> {
-  const q = query(
-    collection(db, HARVEST_COLLECTION),
-    orderBy("harvestedAt", "desc"),
-    limit(max),
-  );
-  const snapshot = await getDocs(q);
-
-  return snapshot.docs.map((docSnap) => {
-    const data = docSnap.data();
-    const ts = data.harvestedAt;
-    return {
-      id: docSnap.id,
-      produceName: data.produceName ?? "",
-      lbs: data.lbs ?? 0,
-      location: data.location ?? "",
-      harvestedAt: ts instanceof Timestamp ? ts.toDate() : null,
-    };
-  });
 }

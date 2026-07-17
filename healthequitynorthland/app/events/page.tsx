@@ -183,28 +183,28 @@ export default function EventsPage() {
           </div>
 
           {/* Right controls - Bottom row on mobile */}
-          <div className="flex items-center justify-center sm:justify-end space-x-2 flex-shrink-0 w-full sm:w-auto order-3">
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2 flex-shrink-0 w-full sm:w-auto order-3">
 
             {/* Export Event Data */}
-            
-            <button 
+
+            <button
               id='download-button'
-              className="text-black bg-blue-100 rounded-sm px-3 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base whitespace-nowrap" 
+              className="flex-1 sm:flex-none text-black bg-blue-100 rounded-sm px-3 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base whitespace-nowrap"
               onClick={handleDownloadCSV}
             >
               Export Event Data
             </button>
 
 
-            <button 
-              className="text-black bg-blue-100 rounded-sm px-3 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base whitespace-nowrap" 
+            <button
+              className="flex-1 sm:flex-none text-black bg-blue-100 rounded-sm px-3 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base whitespace-nowrap"
               onClick={() => setIsOpen(true)}
             >
               Export Events to Calendar
             </button>
             <button
               onClick={() => router.push("/events/create")}
-              className="bg-blue-500 text-white rounded-sm px-3 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base whitespace-nowrap"
+              className="flex-1 sm:flex-none bg-blue-500 text-white rounded-sm px-3 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base whitespace-nowrap"
             >
               Add New Event
             </button>
@@ -217,13 +217,13 @@ export default function EventsPage() {
             <a
               key={event.id}
               href={`/events/${event.id}`}
-              className="flex items-center justify-between w-full p-6 bg-white border border-gray-200 rounded-xl transition-transform duration-200 hover:scale-[1.01] shadow-sm"
+              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full p-4 sm:p-6 bg-white border border-gray-200 rounded-xl transition-transform duration-200 hover:scale-[1.01] shadow-sm"
             >
-              <div className="w-full flex flex-col gap-2 max-w-sm">
+              <div className="w-full flex flex-col gap-2 sm:max-w-sm">
                 <span className="w-fit px-3 py-1 text-xs font-medium bg-indigo-100 text-indigo-700 rounded-full">
                   {event.category}
                 </span>
-                <h3 className="text-xl font-bold text-slate-800">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-800">
                   {event.title}
                 </h3>
                 <p className="text-sm text-gray-500 line-clamp-2">

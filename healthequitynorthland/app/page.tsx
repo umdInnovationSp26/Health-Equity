@@ -669,10 +669,10 @@ export default function HomePage() {
             </Link>
 
             <Link
-            href="/produce/inventory"
-            className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 hover:scale-102 transition-colors"
+            href="/produce/inventory/reportHarvest"
+            className="flex items-center gap-1.5 rounded-xl bg-green-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700 hover:scale-102 transition-colors"
             >
-                Take Inventory
+                Report Harvest
 
             </Link>
 
