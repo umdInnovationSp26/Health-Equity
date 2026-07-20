@@ -381,10 +381,6 @@ export default function EventDetailsPage({
         return key;
       })];
 
-      if (enabledFields.includes("raceEthnicity")) {
-        headers.splice(headers.indexOf("Race/Ethnicity") + 1, 0, "Hispanic/Latino");
-      }
-
       const escapeCsvValue = (value: unknown) => {
         if (value === null || value === undefined) return "";
         const text = Array.isArray(value)
@@ -401,7 +397,6 @@ export default function EventDetailsPage({
         enabledFields.forEach((key) => {
           if (key === "raceEthnicity") {
             rowValues.push(data.raceEthnicity ? (Array.isArray(data.raceEthnicity) ? data.raceEthnicity.join("; ") : data.raceEthnicity) : "");
-            rowValues.push(data.hispanicLatino ?? "");
             return;
           }
 

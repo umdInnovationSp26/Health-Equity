@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { db } from "@/app/lib/firebaseClient";
-import { collection, getDocs, addDoc, Timestamp } from "firebase/firestore";
+import { collection, getDocs, addDoc, deleteDoc, doc, Timestamp } from "firebase/firestore";
 import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft, FaTrash } from "react-icons/fa";
 import router from "next/router";
 
 type Contact = {
@@ -29,6 +29,10 @@ export default function ContactsPage() {
   const [newEmail, setNewEmail] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [saving, setSaving] = useState(false);
+
+  /* Delete contact state */
+  const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   /* Load contacts */
   useEffect(() => {
@@ -72,6 +76,24 @@ export default function ContactsPage() {
     setNewPhone("");
     setShowAdd(false);
     setSaving(false);
+  };
+
+  /* Delete contact */
+  const handleDeleteContact = async () => {
+    if (!contactToDelete) return;
+
+    setDeleting(true);
+    try {
+      await deleteDoc(doc(db, "contacts", contactToDelete.id));
+      // Remove from local state so the list updates without a reload.
+      setContacts((prev) => prev.filter((c) => c.id !== contactToDelete.id));
+      setContactToDelete(null);
+    } catch (err) {
+      console.error("Failed to delete contact", err);
+      window.alert("Something went wrong deleting this contact. Please try again.");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   /* Filter + sort */
@@ -139,13 +161,23 @@ export default function ContactsPage() {
               filtered.map((c) => (
                 <div
                   key={c.id}
-                  className="rounded-xl border border-gray-100 shadow-sm bg-white p-4"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 shadow-sm bg-white p-4"
                 >
-                  <p className="font-semibold text-slate-900">{c.name}</p>
-                  <p className="text-sm text-slate-500">{c.email}</p>
-                  {c.phone && (
-                    <p className="text-xs text-slate-400">{c.phone}</p>
-                  )}
+                  <div className="min-w-0">
+                    <p className="font-semibold text-slate-900 truncate">{c.name}</p>
+                    <p className="text-sm text-slate-500 truncate">{c.email}</p>
+                    {c.phone && (
+                      <p className="text-xs text-slate-400 truncate">{c.phone}</p>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => setContactToDelete(c)}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-300 transition hover:bg-red-50 hover:text-red-500 active:bg-red-100 hover:cursor-pointer"
+                    aria-label={`Delete ${c.name}`}
+                  >
+                    <FaTrash size={14} />
+                  </button>
                 </div>
               ))
             )}
@@ -194,6 +226,40 @@ export default function ContactsPage() {
                 className="px-3 py-2 hover:cursor-pointer hover:scale-105 text-xs rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
               >
                 {saving ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE CONTACT CONFIRMATION */}
+      {contactToDelete && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+          <div className="w-full max-w-md rounded-2xl bg-white p-5 space-y-3">
+            <h2 className="text-lg font-bold text-slate-900">Delete contact?</h2>
+            <p className="text-sm text-slate-600">
+              This will permanently delete{" "}
+              <span className="font-semibold text-slate-900">
+                {contactToDelete.name}
+              </span>
+              . This action cannot be undone.
+            </p>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => setContactToDelete(null)}
+                disabled={deleting}
+                className="px-3 py-2 hover:cursor-pointer hover:scale-105 text-xs rounded-lg border disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleDeleteContact}
+                disabled={deleting}
+                className="px-3 py-2 hover:cursor-pointer hover:scale-105 text-xs rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>

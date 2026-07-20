@@ -2,7 +2,7 @@ import { db } from "@/app/lib/firebaseClient";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { generateIcsString } from "@/app/lib/calendarUtil";
 import { mapDocToEvent } from "@/app/lib/eventInterface";
-import { adminDb } from "@/app/lib/firebaseAdmin";
+import { getAdminDb } from "@/app/lib/firebaseAdmin";
 
 export async function GET(request: Request) {
   // NEVER DO A DELETE OR WRITE IN THIS FUNCTION!
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 
   try {
     // fetch the data use firebase admin sdk
-    const snapshot = await adminDb.collection("event").orderBy("rawTimeStart", "asc").get();
+    const snapshot = await getAdminDb().collection("event").orderBy("rawTimeStart", "asc").get();
 
     if (snapshot.empty) {
       return new Response("BEGIN:VCALENDAR\nVERSION:2.0\nEND:VCALENDAR", {

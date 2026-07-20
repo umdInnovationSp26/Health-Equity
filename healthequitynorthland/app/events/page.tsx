@@ -189,22 +189,20 @@ export default function EventsPage() {
 
             <button
               id='download-button'
-              className="flex-1 sm:flex-none text-black bg-blue-100 rounded-sm px-3 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base whitespace-nowrap"
-              onClick={handleDownloadCSV}
+             className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 hover:scale-102 transition-colors"
             >
               Export Event Data
             </button>
 
 
             <button
-              className="flex-1 sm:flex-none text-black bg-blue-100 rounded-sm px-3 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base whitespace-nowrap"
-              onClick={() => setIsOpen(true)}
+              className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 hover:scale-102 transition-colors"
             >
               Export Events to Calendar
             </button>
             <button
               onClick={() => router.push("/events/create")}
-              className="flex-1 sm:flex-none bg-blue-500 text-white rounded-sm px-3 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base whitespace-nowrap"
+             className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 hover:scale-102 transition-colors"
             >
               Add New Event
             </button>

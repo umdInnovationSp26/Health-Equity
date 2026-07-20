@@ -4,7 +4,7 @@ export const CheckInFieldOptions = [
   { key: "phoneNumber", label: "Phone number", defaultChecked: false },
   { key: "age", label: "Age", defaultChecked: false },
   { key: "zipCode", label: "Zip code", defaultChecked: false },
-  { key: "raceEthnicity", label: "Race", defaultChecked: false },
+  { key: "raceEthnicity", label: "Ethnicity/Ancestry/Heritage", defaultChecked: false },
   { key: "other", label: "other", defaultChecked: false },
 ] as const;
 
