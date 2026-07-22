@@ -30,6 +30,7 @@ import {
 } from "@/app/lib/produceUtil";
 
 import { CheckInFieldOptions, CheckInFieldKey } from "@/app/lib/check-in-fields";
+import { CheckInTrackableOptions, CheckInTrackableKey } from "@/app/lib/check-in-trackable-data";
 
 //QRcode generation imports
 
@@ -39,11 +40,27 @@ const KG = "kg";
 const LB = "lb";
 const OZ = "oz";
 
+
 export default function CreateEvent() {
   const router = useRouter();
   const [loading, setLoading] = useState(false); // variable for waiting for db to save data
   const [createCheckInLink, setCreateCheckInLink] = useState(true);
-  const [otherFieldValue, setOtherFieldValue] = useState("");
+  const [customCheckInFields, setCustomCheckInFields] = useState<string[]>([""]);
+  const [customTrackableFields, setCustomTrackableFields] = useState<string[]>([""]);
+
+  const addCustomCheckInField = () =>
+    setCustomCheckInFields((prev) => [...prev, ""]);
+  const updateCustomCheckInField = (index: number, value: string) =>
+    setCustomCheckInFields((prev) => prev.map((v, i) => (i === index ? value : v)));
+  const removeCustomCheckInField = (index: number) =>
+    setCustomCheckInFields((prev) => prev.filter((_, i) => i !== index));
+
+  const addCustomTrackableField = () =>
+    setCustomTrackableFields((prev) => [...prev, ""]);
+  const updateCustomTrackableField = (index: number, value: string) =>
+    setCustomTrackableFields((prev) => prev.map((v, i) => (i === index ? value : v)));
+  const removeCustomTrackableField = (index: number) =>
+    setCustomTrackableFields((prev) => prev.filter((_, i) => i !== index));
 
   const eventTypeList = eventTypeUtil.getEventTypeSelect(); // list of types in int, string format to make html select options easier to create
 
@@ -52,6 +69,8 @@ export default function CreateEvent() {
   const [produceOptions, setProduceOptions] = useState<Produce[]>([]); // preset options to select from
 
   const [produceRows, setProduceRows] = useState<Produce[]>([]); // list of produce for this event
+
+  const [producePerPerson, setProducePerPerson] = useState(""); // lbs of produce handed out per person
 
   // State to track what fields are enabled
   const [checkInFields, setCheckInFields] = useState<Record<CheckInFieldKey, boolean>>(
@@ -64,6 +83,18 @@ export default function CreateEvent() {
 
   const toggleCheckInField = (key: CheckInFieldKey) => {
     setCheckInFields((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const [checkInTrackableFields, setCheckInTrackableFields] = useState<Record<CheckInTrackableKey, boolean>>(
+    () =>
+      CheckInTrackableOptions.reduce(
+        (acc, field) => ({ ...acc, [field.key]: field.defaultChecked }),
+        {} as Record<CheckInTrackableKey, boolean>,
+      ),
+  );
+
+  const toggleCheckInTrackableField = (key: CheckInTrackableKey) => {
+    setCheckInTrackableFields((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   // Run this on page load
@@ -121,12 +152,19 @@ export default function CreateEvent() {
     const notes = formData.get("notes") as string;
     const suppliesInfo = formData.get("suppliesInformation") as string;
     const feedbackText = formData.get("eventFeedback") as string;
-    const otherFieldLabel = (formData.get("otherFieldLabel") as string)?.trim() || otherFieldValue.trim() || "Other";
     const shouldCreateCheckInLink = createCheckInLink;
 
+    // "Other" fields are only relevant when their checkbox is enabled
+    const includeCheckInOther = shouldCreateCheckInLink && checkInFields.other;
+    const includeTrackableOther = shouldCreateCheckInLink && checkInTrackableFields.other;
 
-    
-    
+    const customCheckInFieldLabels = customCheckInFields
+      .map((label) => label.trim())
+      .filter(Boolean);
+    const customTrackableFieldLabels = customTrackableFields
+      .map((label) => label.trim())
+      .filter(Boolean);
+
     try {
 
 
@@ -165,7 +203,14 @@ export default function CreateEvent() {
               (k) => checkInFields[k as CheckInFieldKey],
             )
           : [],
-        otherFieldLabel: shouldCreateCheckInLink ? otherFieldLabel : "",
+        trackableFields: shouldCreateCheckInLink
+          ? Object.keys(checkInTrackableFields).filter(
+              (k) => checkInTrackableFields[k as CheckInTrackableKey],
+            )
+          : [],
+        customCheckInFields: includeCheckInOther ? customCheckInFieldLabels : [],
+        customTrackableFields: includeTrackableOther ? customTrackableFieldLabels : [],
+        producePerPersonLb: producePerPerson === "" ? null : Number(producePerPerson),
       });
 
       // add produce
@@ -313,7 +358,7 @@ export default function CreateEvent() {
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3">
                     {CheckInFieldOptions.map((field) => (
-                      <div key={field.key} className="space-y-2">
+                      <div key={field.key} className={`space-y-2 ${ field.key === "other" && checkInFields[field.key] ? "col-span-full" : ""}`}>
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
                             type="checkbox"
@@ -326,21 +371,111 @@ export default function CreateEvent() {
                           </span>
                         </label>
 
+
+                {/* If the "other" option is checked, let the user add one or more custom fields */}
                         {field.key === "other" && checkInFields[field.key] && (
+                          <div className="space-y-2">
+                            {customCheckInFields.map((value, i) => (
+                              <div key={i} className="flex items-center gap-2">
+                                <input
+                                  type="text"
+                                  value={value}
+                                  onChange={(e) => updateCustomCheckInField(i, e.target.value)}
+                                  placeholder="Name this field (e.g. Preferred Language)"
+                                  className="w-full rounded-lg border border-slate-300 bg-white p-2 text-sm outline-none focus:ring-1 focus:ring-indigo-400"
+                                />
+                                {customCheckInFields.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => removeCustomCheckInField(i)}
+                                    aria-label="Remove field"
+                                    className="shrink-0 text-lg leading-none text-red-500 hover:text-red-600"
+                                  >
+                                    ×
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={addCustomCheckInField}
+                              className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+                            >
+                              + Add another field
+                            </button>
+                          </div>
+                  )}
+                      </div>
+                    ))}
+                  </div>
+
+
+                {/* Track #bags of health products distributed, #Information brochures distributed, Total poundage of produce distributed, and anything else */}
+                  <div className="space-y-3 border-t border-slate-200 pt-4">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    Information to Track at Check-In (Attendance is automatically tracked)
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3">
+                    {CheckInTrackableOptions.map((field) => (
+                      <div key={field.key} className={`space-y-2 ${ field.key === "other" && checkInTrackableFields[field.key] ? "col-span-full" : ""}`}>
+                        <label className="flex items-center gap-2 cursor-pointer">
                           <input
-                            type="text"
-                            value={otherFieldValue}
-                            onChange={(e) => setOtherFieldValue(e.target.value)}
-                            placeholder="Please specify..."
-                            className="ml-6 block w-[calc(100%-1.5rem)] rounded-lg border border-slate-300 bg-white text-sm p-2 outline-none focus:ring-1 focus:ring-indigo-400"
+                            type="checkbox"
+                            checked={!!checkInTrackableFields[field.key]}
+                            onChange={() => toggleCheckInTrackableField(field.key)}
+                            className="form-checkbox h-4 w-4 shrink-0 text-blue-600 rounded"
                           />
-                        )}
+                          <span className="text-sm text-slate-600 capitalize">
+                            {field.label}
+                          </span>
+                        </label>
+
+                {/* If the "other" option is checked, let the user add one or more custom items */}
+                       {field.key === "other" && checkInTrackableFields[field.key] && (
+                          <div className="space-y-2">
+                            {customTrackableFields.map((value, i) => (
+                              <div key={i} className="flex items-center gap-2">
+                                <input
+                                  type="text"
+                                  value={value}
+                                  onChange={(e) => updateCustomTrackableField(i, e.target.value)}
+                                  placeholder="Name this item (e.g. Water Bottles)"
+                                  className="w-full rounded-lg border border-slate-300 bg-white p-2 text-sm outline-none focus:ring-1 focus:ring-indigo-400"
+                                />
+                                {customTrackableFields.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => removeCustomTrackableField(i)}
+                                    aria-label="Remove item"
+                                    className="shrink-0 text-lg leading-none text-red-500 hover:text-red-600"
+                                  >
+                                    ×
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={addCustomTrackableField}
+                              className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+                            >
+                              + Add another item
+                            </button>
+                          </div>
+                  )}
+
                       </div>
                     ))}
                   </div>
                 </div>
-              )}
             </div>
+              )
+              
+            }
+            </div>
+
+
+            {/* Location, start time, end time, and description fields */}
 
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700">
@@ -527,6 +662,37 @@ export default function CreateEvent() {
               >
                 + Add produce
               </button>
+
+              {/* Amount of produce distributed to each person who takes produce */}
+              <div className="mt-6 space-y-2">
+                <label
+                  htmlFor="producePerPerson"
+                  className="text-sm font-semibold text-slate-700"
+                >
+                  Produce per person (lbs)
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="producePerPerson"
+                    type="number"
+                    min="0"
+                    step="any"
+                    placeholder="0.00"
+                    value={producePerPerson}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (Number(val) >= 0 || val === "") {
+                        setProducePerPerson(val);
+                      }
+                    }}
+                    className="w-32 bg-gray-100 border-none rounded-lg p-3 text-slate-600 focus:ring-1 focus:ring-indigo-400 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <span className="text-sm text-slate-500">lbs per person</span>
+                </div>
+                <p className="text-xs text-slate-500">
+                  How many pounds of produce each person receives.
+                </p>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -551,8 +717,10 @@ export default function CreateEvent() {
                 {loading ? "Saving..." : "Save"}
               </button>
             </div>
+            
           </form>
         </div>
+
       </main>
 
       <Footer />

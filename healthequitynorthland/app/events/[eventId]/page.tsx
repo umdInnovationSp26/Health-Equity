@@ -40,6 +40,7 @@ import {
 import QRCode from 'qrcode';
 import { jsPDF } from "jspdf";
 import { CheckInFieldOptions } from "@/app/lib/check-in-fields";
+import { CheckInTrackableOptions } from "@/app/lib/check-in-trackable-data";
 
 Chart.register(ArcElement, Tooltip, Legend, DoughnutController);
 
@@ -228,7 +229,7 @@ function ProduceChart({ data }: { data: ProduceStat[] }) {
   }
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex flex-col sm:flex-row items-center gap-4">
       <div className="relative h-[130px] w-[130px] flex-shrink-0">
         <canvas
           ref={canvasRef}
@@ -280,6 +281,11 @@ export default function EventDetailsPage({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const [produce, setProduce] = useState<ProduceStat[]>([]);
+  // How many check-ins reported taking each trackable item, keyed by label
+  const [trackingTotals, setTrackingTotals] = useState<Record<string, number>>({});
+  const [totalCheckIns, setTotalCheckIns] = useState(0);
+  // Number of people (summed party sizes) whose check-in reported taking produce
+  const [produceTakers, setProduceTakers] = useState(0);
 
   // Fetch the event
   useEffect(() => {
@@ -323,6 +329,32 @@ export default function EventDetailsPage({
     });
   }, [eventId]);
 
+  // Tally which trackable items attendees reported taking across all check-ins
+  useEffect(() => {
+    if (!eventId) return;
+
+    getDocs(collection(db, "event", eventId, "checkin")).then((snap) => {
+      const totals: Record<string, number> = {};
+      let produceCount = 0;
+      snap.docs.forEach((d) => {
+        const data = d.data();
+        const tracked = data.trackedItems;
+        if (tracked && typeof tracked === "object") {
+          Object.entries(tracked).forEach(([label, taken]) => {
+            if (taken) totals[label] = (totals[label] ?? 0) + 1;
+          });
+          // Count actual people (party size) who took produce
+          if (tracked["Produce"]) {
+            produceCount += Number(data.familySize) || 1;
+          }
+        }
+      });
+      setTrackingTotals(totals);
+      setTotalCheckIns(snap.size);
+      setProduceTakers(produceCount);
+    });
+  }, [eventId]);
+
   if (loading)
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
@@ -343,6 +375,19 @@ export default function EventDetailsPage({
       </div>
     );
   if (!event) return <div className="p-25 text-center">Event not found.</div>;
+
+  // Trackable items the coordinator chose to collect at check-in.
+  // Built-in options first, then any custom "Other" labels.
+  const trackableLabels: string[] = [
+    ...CheckInTrackableOptions.filter(
+      (option) => option.key !== "other" && event.trackableFields?.includes(option.key),
+    ).map((option) => option.label),
+    ...(event.trackableFields?.includes("other")
+      ? (event.customTrackableFields?.length ?? 0) > 0
+        ? event.customTrackableFields!
+        : ["Other Supplies"]
+      : []),
+  ];
 
   const handleDelete = async () => {
     try {
@@ -372,14 +417,25 @@ export default function EventDetailsPage({
         ? event.checkInFields
         : [];
 
-      const headers = ["Party Size", ...enabledFields.map((key: string) => {
-        if (key === "raceEthnicity") return "Race/Ethnicity";
-        if (key === "phoneNumber") return "Phone Number";
-        if (key === "zipCode") return "Zip Code";
-        if (key === "name") return "Full Name";
-        if (key === "email") return "Email Address";
-        return key;
-      })];
+      // Labels for the coordinator's custom "Other" fields (fallback to a single "Other")
+      const customFieldLabels: string[] =
+        Array.isArray(event.customCheckInFields) && event.customCheckInFields.length > 0
+          ? event.customCheckInFields
+          : [event.otherFieldLabel || "Other"];
+
+      const headers = [
+        "Party Size",
+        ...enabledFields.flatMap((key: string) => {
+          if (key === "other") return customFieldLabels;
+          if (key === "raceEthnicity") return ["Race/Ethnicity"];
+          if (key === "phoneNumber") return ["Phone Number"];
+          if (key === "zipCode") return ["Zip Code"];
+          if (key === "name") return ["Full Name"];
+          if (key === "email") return ["Email Address"];
+          return [key];
+        }),
+        ...trackableLabels.map((label) => `Took: ${label}`),
+      ];
 
       const escapeCsvValue = (value: unknown) => {
         if (value === null || value === undefined) return "";
@@ -392,9 +448,16 @@ export default function EventDetailsPage({
 
       const rows = snap.docs.map((docSnap) => {
         const data = docSnap.data();
-        const rowValues = [data.familySize ?? ""];
+        const rowValues: unknown[] = [data.familySize ?? ""];
 
         enabledFields.forEach((key) => {
+          if (key === "other") {
+            customFieldLabels.forEach((label) => {
+              rowValues.push(data.customFields?.[label] ?? "");
+            });
+            return;
+          }
+
           if (key === "raceEthnicity") {
             rowValues.push(data.raceEthnicity ? (Array.isArray(data.raceEthnicity) ? data.raceEthnicity.join("; ") : data.raceEthnicity) : "");
             return;
@@ -402,6 +465,11 @@ export default function EventDetailsPage({
 
           const rawValue = data[key as keyof typeof data];
           rowValues.push(rawValue ?? "");
+        });
+
+        // One column per tracked item: whether this check-in reported taking it
+        trackableLabels.forEach((label) => {
+          rowValues.push(data.trackedItems?.[label] ? "Yes" : "No");
         });
 
         return rowValues.map(escapeCsvValue).join(",");
@@ -451,13 +519,13 @@ export default function EventDetailsPage({
           </div>
 
           {/* right buttons */}
-          <div className="z-20 flex w-full flex-shrink-0 items-center justify-center space-x-2 sm:w-auto sm:justify-end sm:pr-4">
+          <div className="z-20 mt-3 flex w-full flex-shrink-0 flex-wrap items-center justify-center gap-2 sm:mt-0 sm:w-auto sm:flex-nowrap sm:justify-end sm:pr-4">
 
 
             {/* Export Event Specific Data */}
              <button
               onClick={downloadCheckInCsv}
-              className="flex items-center gap-2 whitespace-nowrap rounded-sm bg-blue-100 px-4 py-2 font-medium text-sm md:text-md text-blue-700 transition hover:cursor-pointer hover:scale-105 lg:py-2 lg:text-base"
+              className="flex items-center gap-2 whitespace-nowrap rounded-sm bg-blue-100 px-3 py-2 font-medium text-xs text-blue-700 transition hover:cursor-pointer hover:scale-105 sm:px-4 sm:text-sm lg:text-base"
             >
               Download Event Data (.csv)
             </button>
@@ -465,14 +533,14 @@ export default function EventDetailsPage({
 
             <button
               onClick={downloadCalendarFile}
-              className="flex items-center gap-2 whitespace-nowrap rounded-sm bg-blue-100 px-4 py-2 font-medium text-sm md:text-md text-blue-700 transition hover:cursor-pointer hover:scale-105 lg:py-2 lg:text-base"
+              className="flex items-center gap-2 whitespace-nowrap rounded-sm bg-blue-100 px-3 py-2 font-medium text-xs text-blue-700 transition hover:cursor-pointer hover:scale-105 sm:px-4 sm:text-sm lg:text-base"
             >
               Download (.ics)
             </button>
 
 
             {/* Dropdown */}
-            <div className="relative w-35">
+            <div className="relative w-full sm:w-35">
               <Menu>
                 <MenuButton className="inline-flex w-full items-center justify-between rounded-sm bg-blue-500 px-4 py-2 text-sm md:text-md font-medium text-white transition-all hover:cursor-pointer hover:scale-105 active:scale-95 lg:py-2 lg:text-base">
                   Track Data
@@ -521,7 +589,7 @@ export default function EventDetailsPage({
           </div>
         </div>
 
-        <div className="min-h-screen max-w-6xl mx-auto pt-10 px-6">
+        <div className="min-h-screen max-w-6xl mx-auto pt-6 sm:pt-10 px-4 sm:px-6">
           {/* Top Header Section */}
           <div className="flex flex-col items-center mb-5 relative">
             <span className="px-6 py-1 bg-indigo-100 text-indigo-600 rounded-full text-sm font-medium mb-4">
@@ -529,13 +597,13 @@ export default function EventDetailsPage({
             </span>
 
             <div className="flex items-center gap-4">
-              <h1 className="text-4xl font-bold text-slate-800">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800 text-center px-2">
                 {event.title}
               </h1>
 
             </div>
 
-            <div className="sm:absolute top-0 right-0 pt-5 sm:pt-0 flex">
+            <div className="mt-3 flex sm:mt-0 sm:absolute sm:top-0 sm:right-0 sm:pt-0">
               <button
                 className="mr-3 flex items-center justify-center px-4 py-2 font-bold hover:bg-gray-200 text-xl hover:cursor-pointer rounded-xl transition tracking-wider"
                 onClick={() => router.push("/events/" + eventId + "/edit")}
@@ -587,9 +655,9 @@ export default function EventDetailsPage({
           </div>
 
           {/* Dashboard Section */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 items-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 items-start">
             {/* Gray Stats Box */}
-            <div className="bg-slate-50 h-full rounded-3xl p-8 gap-y-8 gap-x-4 shadow-sm border border-gray-100">
+            <div className="bg-slate-50 h-full rounded-3xl p-6 sm:p-8 gap-y-8 gap-x-4 shadow-sm border border-gray-100">
               <div className="flex flex-col items-center">
                 <h1 className="text-1.7xl font-bold text-slate-800">
                   Attendees
@@ -617,8 +685,6 @@ export default function EventDetailsPage({
                 <h1 className="text-1.7xl font-bold text-slate-800">
                   Data collected:
                 </h1>
-    
-
                     {keys
                       .map((key: string) => CheckInFieldOptions.find((f) => f.key === key)?.label ?? key)
                       .join(", ")}
@@ -628,16 +694,10 @@ export default function EventDetailsPage({
             <label htmlFor="familySize" className="text-xs font-semibold text-slate-600">
               No additional data for this event
             </label>;
-            
             })()}
-
-
           </span>
-            
-      
               </div>
             </div>
-
 
 
             {/* Check-In QR Code */}
@@ -653,7 +713,61 @@ export default function EventDetailsPage({
               </div>
             ) : null}
 
+            {/* Tracking */}
+            <div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-5">
+              <h2 className="mb-4 text-sm font-semibold text-slate-500">
+                Tracked Items
+              </h2>
 
+              {trackableLabels.length > 0 ? (
+                <div className="space-y-3">
+                  <ul className="space-y-2">
+                    {trackableLabels.map((label) => (
+                      <li
+                        key={label}
+                        className="flex items-center justify-between gap-3 text-sm"
+                      >
+                        <span className="text-slate-600 capitalize">{label}</span>
+                        <span className="shrink-0 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+                          {trackingTotals[label] ?? 0}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="border-t border-slate-100 pt-2 text-xs text-slate-400">
+                    Number of check-ins that took each item ({totalCheckIns} check-in
+                    {totalCheckIns === 1 ? "" : "s"} total).
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 text-center py-8">
+                  No tracked items for this event.
+                </p>
+              )}
+
+              {/* Produce per person stat */}
+              {typeof event.producePerPersonLb === "number" && (
+                <div className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2 text-sm">
+                  <span className="text-slate-600">Produce per person</span>
+                  <span className="font-semibold text-slate-800">
+                    {event.producePerPersonLb} lbs
+                  </span>
+                </div>
+                
+              )}
+
+              {/* Estimated total produce stat */}
+               {typeof event.producePerPersonLb === "number" && (
+                <div className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2 text-sm">
+                  <span className="text-slate-600">Estimated total produce distributed</span>
+                  <span className="font-semibold text-slate-800">
+                    {event.producePerPersonLb * produceTakers} lbs
+                  </span>
+                </div>
+
+              )}
+
+            </div>
 
 
             {/* Produce chart */}
@@ -710,7 +824,7 @@ export default function EventDetailsPage({
           </div>
 
           {/* Text Sections */}
-          <div className="mt-16 space-y-12 border-t border-gray-100 pt-12">
+          <div className="mt-10 sm:mt-16 space-y-8 sm:space-y-12 border-t border-gray-100 pt-8 sm:pt-12">
             {event.description && (
               <div>
                 <h3 className="text-lg font-bold text-slate-800 mb-4">

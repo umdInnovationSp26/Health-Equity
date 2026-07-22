@@ -6,6 +6,7 @@ import { db } from "@/app/lib/firebaseClient";
 import { useRouter } from "next/navigation";
 import { collection, doc, getDoc, increment, serverTimestamp, writeBatch } from "firebase/firestore";
 import { CheckInFieldOptions } from "@/app/lib/check-in-fields";
+import { CheckInTrackableOptions } from "@/app/lib/check-in-trackable-data";
 import CountOverlay from "@/app/produce/inventory/components/CountOverlay";
 import { PhoneInput } from "@/app/components/phone-input";
 
@@ -17,11 +18,32 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
   const additionalValueRef = React.useRef<HTMLInputElement | null>(null);
   const [eventData, setEventData] = useState<any>(null);
   const [enabledFields, setEnabledFields] = useState<string[]>([]);
+  const [customCheckInLabels, setCustomCheckInLabels] = useState<string[]>([]);
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
+  const [enabledTrackables, setEnabledTrackables] = useState<string[]>([]);
+  const [customTrackableLabels, setCustomTrackableLabels] = useState<string[]>([]);
+  const [trackedItems, setTrackedItems] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(false);
   const [formKey, setFormKey] = useState(0);
   const [partySize, setPartySize] = useState(1);
   const [submitted, setSubmitted] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
+
+  // Trackable items the coordinator chose to collect at check-in.
+  // Built-in options first, then any custom "Other" labels.
+  const trackableItems: string[] = [
+    ...CheckInTrackableOptions.filter(
+      (option) => option.key !== "other" && enabledTrackables.includes(option.key),
+    ).map((option) => option.label),
+    ...(enabledTrackables.includes("other")
+      ? customTrackableLabels.length > 0
+        ? customTrackableLabels
+        : ["Other Supplies"]
+      : []),
+  ];
+
+  const toggleTrackedItem = (label: string) =>
+    setTrackedItems((prev) => ({ ...prev, [label]: !prev[label] }));
 
   useEffect(() => {
     async function fetchEvent() {
@@ -33,6 +55,15 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
         setEventData(data);
         if (Array.isArray(data.checkInFields)) {
           setEnabledFields(data.checkInFields);
+        }
+        if (Array.isArray(data.customCheckInFields)) {
+          setCustomCheckInLabels(data.customCheckInFields);
+        }
+        if (Array.isArray(data.trackableFields)) {
+          setEnabledTrackables(data.trackableFields);
+        }
+        if (Array.isArray(data.customTrackableFields)) {
+          setCustomTrackableLabels(data.customTrackableFields);
         }
       }
     }
@@ -50,22 +81,45 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
     const phoneNumberValue = phoneNumber.trim();
     const age = formData.get("age") ? Number(formData.get("age")) : null;
     const zipCode = (formData.get("zipCode") as string | null)?.trim() ?? "";
-    const other = (formData.get("other") as string | null)?.trim() ?? "";
+    // Values for the coordinator's custom "Other" fields, keyed by their label
+    const customFieldLabels =
+      customCheckInLabels.length > 0
+        ? customCheckInLabels
+        : [eventData?.otherFieldLabel || "Other"];
+    const customFieldsData = enabledFields.includes("other")
+      ? customFieldLabels.reduce(
+          (acc, label) => {
+            const value = (customFieldValues[label] ?? "").trim();
+            if (value) acc[label] = value;
+            return acc;
+          },
+          {} as Record<string, string>,
+        )
+      : {};
     const additionalRaceEthnicity = (formData.get("additionalRaceEthnicity") as string | null)?.trim() ?? "";
     const raceEthnicity = formData
       .getAll("raceEthnicity")
       .map((value) => (value === "Additional" ? additionalRaceEthnicity : value))
       .filter((value) => typeof value === "string" && value.trim().length > 0);
     const safePartySize = Math.max(1, Number(partySize) || 1);
+    // Boolean map of which trackable items this attendee grabbed
+    const trackedItemsData = trackableItems.reduce(
+      (acc, label) => {
+        acc[label] = !!trackedItems[label];
+        return acc;
+      },
+      {} as Record<string, boolean>,
+    );
     const checkInData = {
       name: name || null,
       email: email || null,
       phoneNumber: phoneNumberValue || null,
       age: age,
       zipCode: zipCode || null,
-      other: other || null,
+      customFields: Object.keys(customFieldsData).length > 0 ? customFieldsData : null,
       raceEthnicity: raceEthnicity.length > 0 ? raceEthnicity : null,
       familySize: safePartySize,
+      trackedItems: trackableItems.length > 0 ? trackedItemsData : null,
       submittedAt: serverTimestamp(),
     };
 
@@ -93,6 +147,9 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
       await batch.commit();
       setSubmitted(true);
       setPhoneNumber("");
+      setTrackedItems({});
+      setCustomFieldValues({});
+      setPartySize(1);
       setFormKey((prev) => prev + 1);
     } catch (error) {
       console.error("Batch write failed:", error);
@@ -330,13 +387,43 @@ return (
               );
             }
 
+            // "Other" renders one labeled input per custom field the coordinator added.
+            if (field.key === "other") {
+              const labels =
+                customCheckInLabels.length > 0
+                  ? customCheckInLabels
+                  : [eventData?.otherFieldLabel || "Other"];
+              return (
+                <div key={field.key} className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 sm:p-6 space-y-4">
+                  {labels.map((label, i) => (
+                    <div key={`${label}-${i}`} className="space-y-2">
+                      <label
+                        htmlFor={`custom-${i}`}
+                        className="block text-sm font-semibold text-slate-700"
+                      >
+                        {label}
+                      </label>
+                      <input
+                        id={`custom-${i}`}
+                        type="text"
+                        value={customFieldValues[label] ?? ""}
+                        onChange={(e) =>
+                          setCustomFieldValues((prev) => ({ ...prev, [label]: e.target.value }))
+                        }
+                        placeholder={`Enter ${label.toLowerCase()}`}
+                        className="block w-full rounded-lg border border-slate-300 bg-white text-sm p-3 outline-none focus:ring-1 focus:ring-indigo-400"
+                      />
+                    </div>
+                  ))}
+                </div>
+              );
+            }
+
           const inputType =
               field.key === "email"
                 ? "email"
               : field.key === "age"
                 ? "number"
-              : field.key === "other"
-                ? "text"
                 : "text";
               
 
@@ -353,18 +440,46 @@ return (
                   type={inputType}
                   className="block w-full rounded-lg border border-slate-300 bg-white text-sm p-3 outline-none focus:ring-1 focus:ring-indigo-400"
 
-                  placeholder={field.key == "other"? "":
-                              field.key =="age"? "e.g. 45":
-                              field.key =="name"?"e.g. Lorem Ipsum":
+                  placeholder={field.key =="age"? "your age":
+                              field.key =="name"?"Lorem Ipsum":
                               field.key=="email"?"joedoe@email.com":
-                              field.key=="zipCode"?"e.g. 54321":""
-
+                              field.key=="zipCode"?"your zipcode":""
                   }
                 />
               </div>
 
             );
           })}
+
+          {/* Trackable items — only shown if the coordinator chose to track them */}
+          {trackableItems.length > 0 && (
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 sm:p-6 space-y-4">
+              <span>
+                <span className="block text-sm font-semibold text-slate-700">
+                  Did you take any of the following?
+                </span>
+                <span className="block text-xs text-slate-500">
+                  Check all that apply.
+                </span>
+              </span>
+
+              <div className="space-y-3 border-t border-slate-200 pt-4">
+                {trackableItems.map((label) => (
+                  <label key={label} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={!!trackedItems[label]}
+                      onChange={() => toggleTrackedItem(label)}
+                      className="form-checkbox h-4 w-4 shrink-0 text-indigo-600 rounded"
+                    />
+                    <span className="text-sm text-slate-600 capitalize">
+                      {label}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Submit button */}
           <div className="pt-4 flex justify-center">

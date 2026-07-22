@@ -20,7 +20,28 @@ export interface Event {
     notes: string;
     checkInLink?: string; // optional field for QR code check-in
     checkInFields?: string[]; // keys of enabled check-in fields
+    trackableFields?: string[]; // keys of enabled trackable items
+    customCheckInFields?: string[]; // labels for custom check-in fields
+    customTrackableFields?: string[]; // labels for custom trackable items
     otherFieldLabel?: string;
+    otherTrackableFieldLabel?: string;
+    producePerPersonLb?: number | null; // lbs of produce handed out per person
+
+    //new requirments 7/16/2006
+    //#bags of health products distributed
+    bagWithHealthProducts?: boolean;
+    totalBagsDistributed?: number;
+    //Produce
+    produceDistributed?: boolean;
+    totalProduceDistributed?: number;
+    //Brochures
+    brochuresDistributed?: boolean;
+    totalBrochuresDistributed?: number;
+    //Other
+    otherSuppliesDistributed?: boolean;
+    totalOtherSuppliesDistributed?: number;
+
+    
 }
 
 
@@ -45,8 +66,13 @@ export function mapDocToEvent(id: string, docData: any): Event {
         checkInLink: docData.checkInLink ?? undefined,
         checkInFields: docData.checkInFields ?? [],
         otherFieldLabel: docData.otherFieldLabel ?? undefined,
+        otherTrackableFieldLabel: docData.otherTrackableFieldLabel ?? undefined,
+        trackableFields: docData.trackableFields ?? [],
+        customCheckInFields: docData.customCheckInFields ?? [],
+        customTrackableFields: docData.customTrackableFields ?? [],
+        producePerPersonLb: docData.producePerPersonLb ?? null,
         feedbackText: docData.feedbackText ?? "",
-        suppliesInformation: docData.eventInformation ?? "",
+        suppliesInformation: docData.suppliesInformation ?? "",
         rawTimeStart: docData.timestampStart?.seconds || Number.MAX_VALUE, // used for sorting after grabbing the data
         eventTypeId: docData.eventType,
         notes: docData.notes
