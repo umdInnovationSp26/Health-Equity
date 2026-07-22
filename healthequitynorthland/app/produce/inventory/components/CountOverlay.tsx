@@ -16,10 +16,6 @@ interface OverlayProps {
   onClose: () => void;
 }
 
-
-
-
-
 const CountOverlay = ({
   item,
   hasNext,
@@ -113,10 +109,10 @@ const CountOverlay = ({
     });
   };
 
-  // Physical-keyboard support — desktop only. We attach a global listener
+  // Physical-keyboard support (desktop only). We attach a global listener
   // rather than making the input editable, so the on-screen input stays
-  // readOnly and the mobile soft keyboard never pops up. The `(hover: hover)
-  // and (pointer: fine)` query only matches pointer devices (mouse/trackpad),
+  // readOnly and the mobile soft keyboard never pops up. The (hover: hover)
+  // and (pointer: fine) query only matches pointer devices (mouse/trackpad),
   // so touch-only phones and tablets are excluded entirely.
   useEffect(() => {
     const isDesktop =

@@ -29,6 +29,7 @@ import { getDateOnlyString, getTimeOnlyString } from "@/app/lib/dateTimeUtil";
 import { useRouter } from "next/navigation";
 import { generateIcsString, triggerIcsDownload } from "@/app/lib/calendarUtil";
 import DeleteConfirmationModal from "@/app/components/deleteModal";
+import DownloadOverlay from "@/app/components/dowloadOverlay";
 import {
   Chart,
   ArcElement,
@@ -279,6 +280,7 @@ export default function EventDetailsPage({
   const [event, setEventData] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const [produce, setProduce] = useState<ProduceStat[]>([]);
   // How many check-ins reported taking each trackable item, keyed by label
@@ -400,20 +402,19 @@ export default function EventDetailsPage({
     }
   };
 
-  const downloadCheckInCsv = async () => {
+  // Builds the check-in CSV as a string. Thrown errors surface to the caller
+  // (the download overlay), which shows the message to the user.
+  const buildCheckInCsv = async (): Promise<string> => {
     if (!eventId) {
-      alert("Unable to load check-in data: missing event ID.");
-      return;
+      throw new Error("Unable to load check-in data: missing event ID.");
     }
 
-    try {
-      const snap = await getDocs(collection(db, "event", eventId, "checkin"));
-      if (snap.empty) {
-        alert("No check-in records found for this event.");
-        return;
-      }
+    const snap = await getDocs(collection(db, "event", eventId, "checkin"));
+    if (snap.empty) {
+      throw new Error("No check-in records found for this event.");
+    }
 
-      const enabledFields: string[] = Array.isArray(event.checkInFields)
+    const enabledFields: string[] = Array.isArray(event.checkInFields)
         ? event.checkInFields
         : [];
 
@@ -475,19 +476,7 @@ export default function EventDetailsPage({
         return rowValues.map(escapeCsvValue).join(",");
       });
 
-      const csvContent = [headers.map(escapeCsvValue).join(","), ...rows].join("\n");
-      const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.setAttribute("download", `${event.title || "event"}-checkin.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-    } catch (error) {
-      console.error("Error exporting check-in CSV:", error);
-      alert("Unable to export check-in data. Please try again.");
-    }
+    return [headers.map(escapeCsvValue).join(","), ...rows].join("\n");
   };
 
   const downloadCalendarFile = () => {
@@ -524,10 +513,10 @@ export default function EventDetailsPage({
 
             {/* Export Event Specific Data */}
              <button
-              onClick={downloadCheckInCsv}
+              onClick={() => setIsDownloadOpen(true)}
               className="flex items-center gap-2 whitespace-nowrap rounded-sm bg-blue-100 px-3 py-2 font-medium text-xs text-blue-700 transition hover:cursor-pointer hover:scale-105 sm:px-4 sm:text-sm lg:text-base"
             >
-              Download Event Data (.csv)
+              Download Event Data
             </button>
 
 
@@ -865,6 +854,13 @@ export default function EventDetailsPage({
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDelete}
         eventTitle={event.title}
+      />
+
+      <DownloadOverlay
+        isOpen={isDownloadOpen}
+        onClose={() => setIsDownloadOpen(false)}
+        csvContent={buildCheckInCsv}
+        fileName={`${event.title || "event"}-checkin`}
       />
 
       <Footer />
