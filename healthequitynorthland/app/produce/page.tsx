@@ -6,7 +6,7 @@ import { collection, getDocs } from "firebase/firestore";
 import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
 import { Chart, DoughnutController, ArcElement, Tooltip, Legend } from "chart.js";
-import Link from "next/link";
+import { ButtonLink } from "@/app/components/button";
 import InventoryTable from "@/app/produce/inventory/components/InventoryTable";
 import ProduceChart from "@/app/produce/inventory/components/ProduceChart"
 Chart.register(ArcElement, Tooltip, Legend, DoughnutController);
@@ -104,19 +104,21 @@ export default function ProducePage() {
 
           {/* Action buttons */}
           <div className="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto sm:ml-auto">
-            <Link
+            <ButtonLink
               href="/produce/inventory/reportHarvest"
-              className="flex items-center justify-center gap-1.5 rounded-xl bg-green-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700 hover:scale-102 transition-colors whitespace-nowrap"
+              variant="success"
+              className="whitespace-nowrap"
             >
               Report Harvest
-            </Link>
+            </ButtonLink>
 
-            <Link
+            <ButtonLink
               href="/produce/inventory/setInventory"
-              className="flex items-center justify-center gap-1.5 rounded-xl bg-green-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700 hover:scale-102 transition-colors whitespace-nowrap"
+              variant="success"
+              className="whitespace-nowrap"
             >
               Set New Inventory Levels
-            </Link>
+            </ButtonLink>
           </div>
         </div>
         {/* Search + sort */}

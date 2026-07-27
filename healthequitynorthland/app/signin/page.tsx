@@ -12,6 +12,7 @@ import { createOrUpdateUserDoc } from "@/app/lib/authUtils";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/app/components/navbar";
+import Button from "@/app/components/button";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
@@ -193,13 +194,14 @@ export default function SignInPage() {
               )}
 
               {/* Sign In button */}
-              <button
+              <Button
+                variant="primary"
                 onClick={handleEmailSignIn}
                 disabled={loading}
-                className="mt-1 w-full py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 active:scale-95 text-white font-semibold text-sm transition disabled:opacity-60 cursor-pointer"
+                className="mt-1 w-full"
               >
                 {loading ? "Signing in…" : "Sign In"}
-              </button>
+              </Button>
 
               {/* Divider */}
               <div className="flex items-center gap-3 text-gray-400 text-xs">
@@ -209,10 +211,11 @@ export default function SignInPage() {
               </div>
 
               {/* Google Sign In */}
-              <button
+              <Button
+                variant="primary"
                 onClick={handleGoogleSignIn}
                 disabled={loading}
-                className="w-full py-2.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 active:scale-95 text-gray-700 font-semibold text-sm transition flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
+                className="w-full"
               >
                 <svg
                   className="w-4 h-4"
@@ -227,7 +230,7 @@ export default function SignInPage() {
                   />
                 </svg>
                 {loading ? "Please wait…" : "Sign In with Google"}
-              </button>
+              </Button>
 
               {/* Footer links */}
               <p className="text-center text-xs text-gray-500 mt-1">

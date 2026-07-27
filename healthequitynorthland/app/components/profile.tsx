@@ -17,6 +17,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
+import Button from "@/app/components/button";
 
 /* ─── Types ─────────────────────────────────────────────── */
 type Profile = {
@@ -158,18 +159,12 @@ function DeleteModal({
           be undone.
         </p>
         <div className="flex justify-end gap-3">
-          <button
-            onClick={onCancel}
-            className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 active:scale-95"
-          >
+          <Button onClick={onCancel} variant="secondary">
             Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-600 active:scale-95"
-          >
+          </Button>
+          <Button onClick={onConfirm} variant="danger">
             Delete
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -405,13 +400,10 @@ export default function Profile() {
           </div>
 
           {/* Edit / Done button */}
-          <button
-            onClick={handleEditToggle}
-            className="hover:cursor-pointer hover:scale-105 flex items-center gap-1.5 rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-600 active:scale-95"
-          >
+          <Button onClick={handleEditToggle} variant="primary">
             <PencilIcon size={12} color="white" />
             {editing ? "Done" : "Edit"}
-          </button>
+          </Button>
         </div>
 
         {/* Cancel bar (only in edit mode) */}
@@ -555,18 +547,15 @@ export default function Profile() {
 
             {/* ── Actions ── */}
             <div className="flex flex-wrap gap-3 pt-1">
-              <button
-                onClick={handleSignOut}
-                className="hover:scale-102 hover:cursor-pointer rounded-lg border border-gray-100 shadow-sm bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 active:scale-95"
-              >
+              <Button onClick={handleSignOut} variant="secondary">
                 Sign out
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => setShowDeleteModal(true)}
-                className="hover:scale-102 hover:cursor-pointer rounded-lg border border-gray-100 shadow-sm bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 active:scale-95"
+                variant="danger"
               >
                 Delete account
-              </button>
+              </Button>
             </div>
             
           </div>

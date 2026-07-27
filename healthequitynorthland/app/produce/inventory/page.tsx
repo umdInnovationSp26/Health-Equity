@@ -7,6 +7,7 @@ import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
 import { Chart, DoughnutController, ArcElement, Tooltip, Legend } from "chart.js";
 import { useRouter } from "next/navigation";
+import { ButtonLink } from "@/app/components/button";
 
 Chart.register(DoughnutController, ArcElement, Tooltip, Legend);
 
@@ -36,23 +37,14 @@ const router = useRouter();
         <br />
 
          <div className="flex flex-col gap-4 m-4 max-w-3xl mx-auto">
-           <a
-            href="/produce/inventory/addRemove"    
-            className="flex items-center justify-between w-full p-6 bg-blue-500 border border-gray-200 rounded-xl transition-transform duration-200 hover:scale-[1.01] shadow-sm"
-            >
+           <ButtonLink href="/produce/inventory/addRemove" variant="primary" className="w-full">
             <h1 className="text-lg font-semibold text-white">Add/Remove from Existing Inventory</h1>
-
-            </a>
+            </ButtonLink>
          </div>
          <div className="flex flex-col gap-4 m-4 max-w-3xl mx-auto">
-           <a
-          
-            href="/produce/inventory/setInventory"
-            className="flex items-center justify-between w-full p-6 bg-blue-500 border border-gray-200 rounded-xl transition-transform duration-200 hover:scale-[1.01] shadow-sm"
-            >
+           <ButtonLink href="/produce/inventory/setInventory" variant="primary" className="w-full">
             <h1 className="text-lg font-semibold text-white">Set New Inventory Levels</h1>
-
-            </a>
+            </ButtonLink>
          </div>
 
         

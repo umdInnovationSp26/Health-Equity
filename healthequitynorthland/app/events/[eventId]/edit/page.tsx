@@ -15,6 +15,7 @@ import { convertDateToTimestamp, getDateInHTML, getTimeInHTML, getTimeOnlyString
 import * as eventTypeUtil from "@/app/lib/eventTypeUtil";
 import { Produce, convertKilogramsToOunces, convertKilogramsToPounds, convertOuncesToKilograms, convertOuncesToPounds, convertPoundsToKilograms, convertPoundsToOunces, mapDocToEventProduce, mapDocToProduceOption } from "@/app/lib/produceUtil";
 import { Event, mapDocToEvent } from "@/app/lib/eventInterface";
+import Button from "@/app/components/button";
 
 
 const KG = "kg"
@@ -470,13 +471,14 @@ export default function CreateEvent({
             
             {/* Submit button */}
             <div className="pt-6 flex justify-center">
-              <button
+              <Button
                 type="submit"
+                variant="primary"
                 disabled={loading}
-                className="w-full md:w-64 bg-blue-500 text-white rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base"
+                className="w-full md:w-64"
               >
                 {loading ? "Saving..." : "Save"}
-              </button>
+              </Button>
             </div>
           </form>
         </div>

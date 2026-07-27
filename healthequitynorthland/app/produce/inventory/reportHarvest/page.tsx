@@ -10,6 +10,7 @@ import {
   type ProduceStat,
 } from "@/app/produce/inventory/lib/actions";
 import CountOverlay from "@/app/produce/inventory/components/CountOverlay";
+import Button from "@/app/components/button";
 
 type HarvestEntry = {
   item: ProduceStat;
@@ -143,13 +144,9 @@ export default function ReportHarvest() {
           </div>
 
           {harvestLog.length > 0 && (
-            <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="shrink-0 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700 active:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60"
-            >
+            <Button variant="success" className="shrink-0" onClick={handleSubmit} disabled={submitting}>
               {submitting ? "Submitting…" : "Submit"}
-            </button>
+            </Button>
           )}
         </div>
       </header>
@@ -290,12 +287,9 @@ export default function ReportHarvest() {
 
                       {/* Actions */}
                       <div className="flex shrink-0 items-center gap-2">
-                        <button
-                          onClick={() => setSelectedItem(entry.item)}
-                          className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 active:bg-slate-200"
-                        >
+                        <Button variant="secondary" onClick={() => setSelectedItem(entry.item)}>
                           Edit
-                        </button>
+                        </Button>
                         <button
                           onClick={() => handleRemoveEntry(entry.item.id)}
                           className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-300 transition hover:bg-red-50 hover:text-red-400 active:bg-red-100"
@@ -322,15 +316,11 @@ export default function ReportHarvest() {
       {/* mobile submit button */}
       {harvestLog.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-slate-100 bg-white px-4 py-3 sm:hidden">
-          <button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="w-full rounded-xl bg-green-600 py-3.5 text-sm font-bold text-white shadow-md transition hover:bg-green-700 active:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60"
-          >
+          <Button variant="success" className="w-full" onClick={handleSubmit} disabled={submitting}>
             {submitting
               ? "Submitting…"
               : `Submit Harvest · ${harvestLog.length} item${harvestLog.length !== 1 ? "s" : ""}`}
-          </button>
+          </Button>
         </div>
       )}
 

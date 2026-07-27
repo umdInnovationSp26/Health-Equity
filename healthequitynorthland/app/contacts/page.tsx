@@ -5,6 +5,7 @@ import { db } from "@/app/lib/firebaseClient";
 import { collection, getDocs, addDoc, deleteDoc, doc, Timestamp } from "firebase/firestore";
 import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
+import Button from "@/app/components/button";
 import { FaArrowLeft, FaTrash } from "react-icons/fa";
 import router from "next/router";
 
@@ -122,12 +123,9 @@ export default function ContactsPage() {
           </h3>
 
           <div className="content-end text-right pr-4">
-            <button
-              onClick={() => setShowAdd(true)}
-              className="bg-blue-600 rounded-xl px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base text-white"
-            >
+            <Button onClick={() => setShowAdd(true)}>
               + Add
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -213,20 +211,13 @@ export default function ContactsPage() {
             />
 
             <div className="flex justify-end gap-2 pt-2">
-              <button
-                onClick={() => setShowAdd(false)}
-                className="px-3 py-2 hover:cursor-pointer hover:scale-105 text-xs rounded-lg border"
-              >
+              <Button variant="secondary" onClick={() => setShowAdd(false)}>
                 Cancel
-              </button>
+              </Button>
 
-              <button
-                onClick={handleAddContact}
-                disabled={saving}
-                className="px-3 py-2 hover:cursor-pointer hover:scale-105 text-xs rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-              >
+              <Button onClick={handleAddContact} disabled={saving}>
                 {saving ? "Saving..." : "Save"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -246,21 +237,13 @@ export default function ContactsPage() {
             </p>
 
             <div className="flex justify-end gap-2 pt-2">
-              <button
-                onClick={() => setContactToDelete(null)}
-                disabled={deleting}
-                className="px-3 py-2 hover:cursor-pointer hover:scale-105 text-xs rounded-lg border disabled:opacity-50"
-              >
+              <Button variant="secondary" onClick={() => setContactToDelete(null)} disabled={deleting}>
                 Cancel
-              </button>
+              </Button>
 
-              <button
-                onClick={handleDeleteContact}
-                disabled={deleting}
-                className="px-3 py-2 hover:cursor-pointer hover:scale-105 text-xs rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
-              >
+              <Button variant="danger" onClick={handleDeleteContact} disabled={deleting}>
                 {deleting ? "Deleting..." : "Delete"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

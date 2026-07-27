@@ -19,6 +19,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { mapDocToEvent } from "@/app/lib/eventInterface";
+import Button from "@/app/components/button";
 
 interface CounterData {
   id: string;
@@ -178,13 +179,14 @@ const updateGlobalAttendance = async (id: string, newVal: number) => {
                 </div>
 
                 <div className="flex-1 flex justify-end">
-                    <button
+                    <Button
+                        variant="primary"
                         onClick={() => setIsAddModalOpen(true)}
-                        className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white p-2 md:px-4 md:py-2 rounded-lg text-sm font-semibold transition-all shadow-md active:scale-95 min-w-[40px]"
+                        className="min-w-[40px]"
                     >
                         <span className="hidden md:inline">Add Counter</span>
                         <Plus size={18} />
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>
@@ -238,8 +240,8 @@ const updateGlobalAttendance = async (id: string, newVal: number) => {
                  onKeyDown={(e) => e.key === 'Enter' && addCounter()}
                />
                <div className="flex gap-4">
-                 <button onClick={() => setIsAddModalOpen(false)} className="flex-1 py-3 bg-slate-200 rounded-xl">Cancel</button>
-                 <button onClick={addCounter} className="flex-1 py-3 bg-blue-100 text-blue-600 rounded-xl">Add</button>
+                 <Button variant="secondary" onClick={() => setIsAddModalOpen(false)} className="flex-1">Cancel</Button>
+                 <Button variant="primary" onClick={addCounter} className="flex-1">Add</Button>
                </div>
              </div>
            </div>
@@ -305,12 +307,13 @@ const updateGlobalAttendance = async (id: string, newVal: number) => {
           </div>
         </div>
 
-        <button
+        <Button
+          variant="primary"
           onClick={() => saveEditedCounter(editingCounter)}
-          className="w-full mt-8 py-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors"
+          className="w-full mt-8"
               >
                 Save
-              </button>
+              </Button>
             </div>
           </div>
         )}

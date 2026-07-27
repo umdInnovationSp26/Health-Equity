@@ -3,9 +3,10 @@
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { FaEye, FaEyeSlash,FaDownload, FaTimes, FaCalendarAlt, FaCheck, FaCopy } from "react-icons/fa";
 import { generateIcsString, triggerIcsDownload } from "@/app/lib/calendarUtil";
-import { Event } from "@/app/lib/eventInterface"; 
+import { Event } from "@/app/lib/eventInterface";
 import { useEffect, useState } from "react";
 import Link from 'next/link';
+import Button from "@/app/components/button";
 
 interface DownloadModalProps {
   isOpen: boolean;
@@ -77,13 +78,14 @@ export default function DownloadEventsModal({ isOpen, onClose, allEvents }: Down
 
             <div className="space-y-6">
               <div>
-                <button
+                <Button
                   onClick={handleDownload}
-                  className="flex w-full items-center justify-center gap-3 bg-blue-500 text-white rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition sm:text-base "
+                  variant="primary"
+                  className="w-full"
                 >
                   <FaDownload />
                   Download .ics File
-                </button>
+                </Button>
               </div>
 
               <div className="space-y-2 pt-3">

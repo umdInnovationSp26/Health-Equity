@@ -6,6 +6,7 @@ import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/app/lib/firebaseClient";
 import { useRouter } from "next/navigation";
 import Navbar from "@/app/components/navbar";
+import Button from "@/app/components/button";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -81,13 +82,14 @@ export default function ResetPasswordPage() {
               )}
 
               {/* Send Reset Email button */}
-              <button
+              <Button
+                variant="primary"
                 onClick={handleReset}
                 disabled={loading || isSuccess}
-                className="mt-1 w-full py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 active:scale-95 text-white font-semibold text-sm transition disabled:opacity-60 cursor-pointer"
+                className="mt-1 w-full"
               >
                 {loading ? "Sending…" : isSuccess ? "Email Sent!" : "Send Reset Email"}
-              </button>
+              </Button>
 
               {/* Back to Sign In */}
               <p className="text-center text-xs text-gray-500 mt-1">

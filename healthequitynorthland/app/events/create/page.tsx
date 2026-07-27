@@ -31,6 +31,7 @@ import {
 
 import { CheckInFieldOptions, CheckInFieldKey } from "@/app/lib/check-in-fields";
 import { CheckInTrackableOptions, CheckInTrackableKey } from "@/app/lib/check-in-trackable-data";
+import Button from "@/app/components/button";
 
 //QRcode generation imports
 
@@ -709,13 +710,14 @@ export default function CreateEvent() {
 
             {/* Submit button */}
             <div className="pt-6 flex justify-center">
-              <button
+              <Button
                 type="submit"
+                variant="primary"
                 disabled={loading}
-                className="w-full md:w-64 bg-blue-500 text-white rounded-sm px-3 sm:px-4 py-2 hover:cursor-pointer hover:scale-105 transition text-sm sm:text-base"
+                className="w-full md:w-64"
               >
                 {loading ? "Saving..." : "Save"}
-              </button>
+              </Button>
             </div>
             
           </form>

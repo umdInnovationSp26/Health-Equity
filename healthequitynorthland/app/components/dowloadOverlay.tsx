@@ -3,64 +3,13 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { FaTimes } from "react-icons/fa";
+import { GOOGLE_SCOPES, isGsiReady, loadGsi, requestAccessToken } from "@/app/lib/googleAuth";
+import Button, { buttonClasses } from "@/app/components/button";
 
 /** CSV text, or a (possibly async) function that builds it when the user clicks download. */
 type CsvSource = string | (() => string | Promise<string>);
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-const GSI_SRC = "https://accounts.google.com/gsi/client";
-const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets";
-
-/** Load the Google Identity Services script once and reuse the same promise. */
-let gsiPromise: Promise<void> | null = null;
-function loadGsi(): Promise<void> {
-  if (typeof window === "undefined") return Promise.reject(new Error("No window"));
-  if ((window as any).google?.accounts?.oauth2) return Promise.resolve();
-  if (gsiPromise) return gsiPromise;
-
-  gsiPromise = new Promise<void>((resolve, reject) => {
-    const existing = document.querySelector<HTMLScriptElement>(`script[src="${GSI_SRC}"]`);
-    if (existing) {
-      existing.addEventListener("load", () => resolve());
-      existing.addEventListener("error", () => reject(new Error("Failed to load Google script")));
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = GSI_SRC;
-    script.async = true;
-    script.defer = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Failed to load Google script"));
-    document.head.appendChild(script);
-  });
-  return gsiPromise;
-}
-
-/** Prompt the user for consent and resolve with a Google OAuth access token. */
-function requestAccessToken(): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const oauth2 = (window as any).google?.accounts?.oauth2;
-    if (!oauth2) {
-      reject(new Error("Google Identity Services not loaded."));
-      return;
-    }
-    const tokenClient = oauth2.initTokenClient({
-      client_id: GOOGLE_CLIENT_ID,
-      scope: SHEETS_SCOPE,
-      callback: (response: { access_token?: string; error?: string }) => {
-        if (response.error || !response.access_token) {
-          reject(new Error(response.error || "Authorization was cancelled."));
-        } else {
-          resolve(response.access_token);
-        }
-      },
-      error_callback: (error: { message?: string }) => {
-        reject(new Error(error?.message || "Authorization was cancelled."));
-      },
-    });
-    tokenClient.requestAccessToken();
-  });
-}
 
 /**
  * Parse the CSV produced for download back into rows for the Sheets API.
@@ -206,16 +155,16 @@ export default function DownloadOverlay({
     // (we preload it when the overlay opens). If it isn't ready yet, kick off
     // the load and ask the user to click again — we can't await here without
     // losing the user gesture that lets the popup through.
-    if (!(window as any).google?.accounts?.oauth2) {
+    if (!isGsiReady()) {
       loadGsi().catch(() => {});
       alert("Google sign-in is still loading — please click again in a moment.");
       return;
     }
 
     setBusy(true);
-    // Open the popup FIRST (before any await, so it stays inside the gesture)...
-    const tokenPromise = requestAccessToken();
-    // ...and build the CSV in parallel while the user consents.
+    // Open the popup FIRST (before any await, so it stays inside the gesture)
+    const tokenPromise = requestAccessToken(GOOGLE_SCOPES.sheets);
+    // and build the CSV in parallel while the user consents.
     const dataPromise = (async () => {
       const text = typeof csvContent === "function" ? await csvContent() : csvContent;
       const values = parseCsv(text ?? "");
@@ -310,7 +259,7 @@ export default function DownloadOverlay({
               href={resultUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block rounded-md bg-green-600 text-white px-4 py-2 transition hover:bg-green-700"
+              className={buttonClasses("success")}
             >
               Open Google Sheet
             </a>
@@ -321,22 +270,12 @@ export default function DownloadOverlay({
             <p className="mb-4">Select the format in which you would like to download the data.</p>
 
             <div className="flex justify-center gap-4">
-              <button
-                type="button"
-                onClick={downloadCsv}
-                disabled={!csvContent || busy}
-                className="rounded-md bg-blue-500 text-white px-4 py-2 transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
-              >
+              <Button onClick={downloadCsv} disabled={!csvContent || busy}>
                 {busy ? "Working…" : "Download as CSV"}
-              </button>
-              <button
-                type="button"
-                onClick={exportToSheets}
-                disabled={!csvContent || busy}
-                className="rounded-md bg-green-600 text-white px-4 py-2 transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
+              </Button>
+              <Button variant="success" onClick={exportToSheets} disabled={!csvContent || busy}>
                 {busy ? "Working…" : "Export to Google Sheets"}
-              </button>
+              </Button>
               {/* PDF export button to be added when downloadPDF is implemented. */}
             </div>
           </>

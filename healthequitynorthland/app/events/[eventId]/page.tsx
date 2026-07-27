@@ -27,9 +27,10 @@ import { Event, mapDocToEvent } from "@/app/lib/eventInterface";
 import { getDateOnlyString, getTimeOnlyString } from "@/app/lib/dateTimeUtil";
 
 import { useRouter } from "next/navigation";
-import { generateIcsString, triggerIcsDownload } from "@/app/lib/calendarUtil";
+import { GOOGLE_SCOPES, isGsiReady, loadGsi, requestAccessToken } from "@/app/lib/googleAuth";
 import DeleteConfirmationModal from "@/app/components/deleteModal";
 import DownloadOverlay from "@/app/components/dowloadOverlay";
+import Button from "@/app/components/button";
 import {
   Chart,
   ArcElement,
@@ -357,6 +358,12 @@ export default function EventDetailsPage({
     });
   }, [eventId]);
 
+  // Preload Google Identity Services so the consent popup opens synchronously
+  // on click (otherwise the browser blocks it).
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) loadGsi().catch(() => {});
+  }, []);
+
   if (loading)
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
@@ -479,9 +486,81 @@ export default function EventDetailsPage({
     return [headers.map(escapeCsvValue).join(","), ...rows].join("\n");
   };
 
-  const downloadCalendarFile = () => {
-    const ics = generateIcsString([event]);
-    triggerIcsDownload(ics, `${event.title || "event"}`);
+  const exportToGoogleCalendar = async () => {
+    if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
+      alert("Google Calendar export is not configured (missing NEXT_PUBLIC_GOOGLE_CLIENT_ID).");
+      return;
+    }
+    // The consent popup must open synchronously from this click, so GSI has to
+    // be loaded already (preloaded on mount). If not, kick off the load and ask
+    // the user to click again rather than awaiting and losing the gesture.
+    if (!isGsiReady()) {
+      loadGsi().catch(() => {});
+      alert("Google sign-in is still loading — please click again in a moment.");
+      return;
+    }
+
+    // Open the popup FIRST (before any await) so the browser doesn't block it.
+    const tokenPromise = requestAccessToken(GOOGLE_SCOPES.calendar);
+    try {
+      const token = await tokenPromise;
+
+      const description = [
+        event.description,
+        event.suppliesInformation ? `Supplies: ${event.suppliesInformation}` : "",
+        event.notes ? `Notes: ${event.notes}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n\n");
+
+      // Google rejects an empty/reversed range, so ensure end is after start.
+      const start = event.dateStart;
+      const end =
+        event.dateEnd && event.dateEnd.getTime() > start.getTime()
+          ? event.dateEnd
+          : new Date(start.getTime() + 60 * 60 * 1000);
+      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+      const res = await fetch(
+        "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            summary: event.title,
+            location: event.location || undefined,
+            description: description || undefined,
+            start: { dateTime: start.toISOString(), timeZone },
+            end: { dateTime: end.toISOString(), timeZone },
+          }),
+        },
+      );
+      if (!res.ok) {
+        // Surface Google's own explanation (e.g. "The specified time range is empty").
+        const detail = await res
+          .json()
+          .then((body) => body?.error?.message)
+          .catch(() => null);
+        throw new Error(
+          detail
+            ? `Could not add the event to your calendar: ${detail}`
+            : `Could not add the event to your calendar (${res.status}).`,
+        );
+      }
+
+      const created = await res.json();
+      // Opening the event tab happens after awaits, so it may be popup-blocked;
+      // fall back to a plain confirmation if so.
+      if (!created.htmlLink || !window.open(created.htmlLink, "_blank", "noopener")) {
+        alert("Event added to your Google Calendar.");
+      }
+    } catch (error) {
+      console.error("Google Calendar export failed:", error);
+      alert(error instanceof Error ? error.message : "Unable to add the event to Google Calendar.");
+    }
   };
 
   return (
@@ -512,26 +591,19 @@ export default function EventDetailsPage({
 
 
             {/* Export Event Specific Data */}
-             <button
-              onClick={() => setIsDownloadOpen(true)}
-              className="flex items-center gap-2 whitespace-nowrap rounded-sm bg-blue-100 px-3 py-2 font-medium text-xs text-blue-700 transition hover:cursor-pointer hover:scale-105 sm:px-4 sm:text-sm lg:text-base"
-            >
+            <Button className="whitespace-nowrap" onClick={() => setIsDownloadOpen(true)}>
               Download Event Data
-            </button>
+            </Button>
 
-
-            <button
-              onClick={downloadCalendarFile}
-              className="flex items-center gap-2 whitespace-nowrap rounded-sm bg-blue-100 px-3 py-2 font-medium text-xs text-blue-700 transition hover:cursor-pointer hover:scale-105 sm:px-4 sm:text-sm lg:text-base"
-            >
-              Download (.ics)
-            </button>
+            <Button className="whitespace-nowrap" onClick={exportToGoogleCalendar}>
+              Export to Calendar
+            </Button>
 
 
             {/* Dropdown */}
             <div className="relative w-full sm:w-35">
               <Menu>
-                <MenuButton className="inline-flex w-full items-center justify-between rounded-sm bg-blue-500 px-4 py-2 text-sm md:text-md font-medium text-white transition-all hover:cursor-pointer hover:scale-105 active:scale-95 lg:py-2 lg:text-base">
+                <MenuButton className="inline-flex w-full items-center justify-between gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:scale-[1.02] hover:cursor-pointer hover:bg-blue-700">
                   Track Data
                   <span className="ml-2 text-[10px] transition-transform data-[open]:rotate-180">
                     ▼

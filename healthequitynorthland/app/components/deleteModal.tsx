@@ -2,6 +2,7 @@
 
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { FaExclamationTriangle, FaTimes } from "react-icons/fa";
+import Button from "@/app/components/button";
 
 interface DeleteConfirmationModalProps {
   isOpen: boolean;
@@ -45,19 +46,13 @@ export default function DeleteConfirmationModal({
             </div>
 
             <div className="mt-8 flex flex-row items-center justify-between w-full">
-                <button
-                    onClick={onClose}
-                    className="hover:cursor-pointer inline-flex justify-center rounded-xl bg-slate-100 px-6 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-200 transition active:scale-95"
-                >
+                <Button onClick={onClose} variant="secondary">
                     Cancel
-                </button>
+                </Button>
 
-                <button
-                    onClick={onConfirm}
-                    className="hover:cursor-pointer inline-flex justify-center rounded-xl bg-red-700 px-6 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-red-800 transition active:scale-95"
-                >
+                <Button onClick={onConfirm} variant="danger">
                     Delete Event
-                </button>
+                </Button>
             </div>
           </DialogPanel>
         </div>

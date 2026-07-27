@@ -16,6 +16,7 @@ import { auth, db } from "@/app/lib/firebaseClient";
 import { collection, query, onSnapshot, orderBy } from "firebase/firestore";
 import { generateIcsString, triggerIcsDownload } from "../lib/calendarUtil";
 import DownloadEventsModal from "@/app/components/calendarModal";
+import Button from "@/app/components/button";
 
 
 
@@ -187,25 +188,20 @@ export default function EventsPage() {
 
             {/* Export Event Data */}
 
-            <button
-              id='download-button'
-             className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 hover:scale-102 transition-colors"
-            >
+            <Button id="download-button" variant="primary">
               Export Event Data
-            </button>
+            </Button>
 
 
-            <button
-              className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 hover:scale-102 transition-colors"
-            >
+            <Button variant="primary">
               Export Events to Calendar
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
               onClick={() => router.push("/events/create")}
-             className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 hover:scale-102 transition-colors"
             >
               Add New Event
-            </button>
+            </Button>
           </div>
         </div>
 

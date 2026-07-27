@@ -9,6 +9,7 @@ import { CheckInFieldOptions } from "@/app/lib/check-in-fields";
 import { CheckInTrackableOptions } from "@/app/lib/check-in-trackable-data";
 import CountOverlay from "@/app/produce/inventory/components/CountOverlay";
 import { PhoneInput } from "@/app/components/phone-input";
+import Button from "@/app/components/button";
 
 
 export default function CheckInForm({ params }: { params: Promise<{ eventId: string }> }) {
@@ -187,13 +188,13 @@ return (
           <section className="w-full max-w-2xl rounded-2xl border border-green-200 bg-green-50 p-8 text-center shadow-sm">
             <h2 className="text-2xl font-bold text-green-800">You’re checked in!</h2>
             <p className="mt-3 text-green-700">Thanks for checking in. You can close this page now.</p>
-            <button
-              type="button"
+            <Button
+              variant="success"
               onClick={() => setSubmitted(false)}
-              className="mt-6 rounded-lg bg-green-600 px-5 py-3 text-white font-semibold hover:bg-green-700"
+              className="mt-6"
             >
               Check in another guest
-            </button>
+            </Button>
             
           </section>
 
@@ -483,13 +484,14 @@ return (
 
           {/* Submit button */}
           <div className="pt-4 flex justify-center">
-            <button
+            <Button
               type="submit"
+              variant="primary"
               disabled={loading}
-              className="w-full md:w-72 bg-blue-600 text-white font-semibold rounded-lg px-6 py-4 md:py-3 hover:bg-blue-700 transition-all shadow-md"
+              className="w-full md:w-72"
             >
               {loading ? "Saving..." : "Check-In"}
-            </button>
+            </Button>
           </div>
 
             <center>

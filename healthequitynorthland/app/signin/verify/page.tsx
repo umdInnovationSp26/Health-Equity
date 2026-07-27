@@ -11,6 +11,7 @@ import {
 } from "firebase/auth";
 import { auth, db } from "@/app/lib/firebaseClient";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
+import Button from "@/app/components/button";
 
 export default function VerifyPage() {
   const router = useRouter();
@@ -170,24 +171,26 @@ export default function VerifyPage() {
               </p>
             )}
 
-            <button
+            <Button
+              variant="primary"
               onClick={handleRefresh}
-              className="w-full py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm"
+              className="w-full"
             >
               I’ve Verified — Continue
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant="primary"
               onClick={handleResend}
               disabled={cooldown > 0}
-              className="w-full py-2.5 rounded-lg border text-sm"
+              className="w-full"
             >
               {cooldown > 0
                 ? `Resend in ${Math.floor(cooldown / 60)}:${String(
                     cooldown % 60
                   ).padStart(2, "0")}`
                 : "Resend Verification Email"}
-            </button>
+            </Button>
 
             <p className="text-center text-xs text-gray-500">
               <button onClick={handleLogout} className="hover:underline">

@@ -2,6 +2,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FaArrowLeft, FaAngleDown } from "react-icons/fa";
+import Button from "@/app/components/button";
 import { db } from "@/app/lib/firebaseClient";
 import {
   collection,
@@ -192,8 +193,9 @@ function ProduceTable({
                               onChange={(e) => setDraftValue(e.target.value)}
                               className="w-32 h-9 rounded-lg border border-slate-200 px-3 text-sm disabled:opacity-50"
                             />
-                            <button
+                            <Button
                               type="button"
+                              variant="success"
                               disabled={disabled}
                               onClick={() => {
                                 const parsed = parseFloat(draftValue);
@@ -201,10 +203,9 @@ function ProduceTable({
                                   onSetExact(row.original.name, row.original.displayLbs, parsed);
                                 }
                               }}
-                              className="h-9 px-3 rounded-lg border border-slate-300 text-sm font-medium disabled:opacity-50"
                             >
                               Set
-                            </button>
+                            </Button>
                           </div>
                         </div>
                         <div>
@@ -365,8 +366,9 @@ function MobileProduceList({
                     onChange={(e) => setDraftValue(e.target.value)}
                     className="w-full h-10 rounded-lg border border-slate-200 px-3 text-base disabled:opacity-50"
                   />
-                  <button
+                  <Button
                     type="button"
+                    variant="success"
                     disabled={disabled}
                     onClick={() => {
                       const parsed = parseFloat(draftValue);
@@ -374,10 +376,10 @@ function MobileProduceList({
                         onSetExact(row.name, row.displayLbs, parsed);
                       }
                     }}
-                    className="h-10 px-4 rounded-lg border border-slate-300 text-sm font-medium whitespace-nowrap disabled:opacity-50"
+                    className="whitespace-nowrap"
                   >
                     Set
-                  </button>
+                  </Button>
                 </div>
 
                 <label className="text-xs text-slate-500 mt-3 block">Quick adjustment</label>
@@ -448,14 +450,14 @@ function AddProduceForm({
           inputMode="decimal"
           className="sm:w-32 h-10 rounded-lg border border-slate-200 px-3 text-base disabled:opacity-50"
         />
-        <button
+        <Button
           type="button"
+          variant="success"
           disabled={disabled}
           onClick={submit}
-          className="h-10 px-4 rounded-lg border border-slate-300 text-sm font-medium disabled:opacity-50"
         >
           Add
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -483,22 +485,22 @@ function SubmitBar({
         {pendingCount === 1 ? "change" : "changes"} not yet saved
       </p>
       <div className="flex gap-2">
-        <button
+        <Button
           type="button"
+          variant="secondary"
           disabled={submitting}
           onClick={onDiscard}
-          className="h-10 px-4 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 disabled:opacity-50"
         >
           Discard
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="success"
           disabled={submitting}
           onClick={onSubmit}
-          className="h-10 px-4 rounded-lg bg-slate-900 text-sm font-medium text-white disabled:opacity-50"
         >
           {submitting ? "Submitting..." : "Submit"}
-        </button>
+        </Button>
       </div>
     </div>
   );

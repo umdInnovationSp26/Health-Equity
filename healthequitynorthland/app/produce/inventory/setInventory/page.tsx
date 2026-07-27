@@ -6,6 +6,7 @@ import { FaArrowLeft } from "react-icons/fa";
 
 import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
+import Button from "@/app/components/button";
 import { Chart, DoughnutController, ArcElement, Tooltip, Legend } from "chart.js";
 
 import {
@@ -63,12 +64,9 @@ function buildColumns(onRowClick: (id: string) => void) {
       id: "actions",
       header: "",
       cell: (info) => (
-        <button
-          onClick={() => onRowClick(info.row.original.id)}
-          className="rounded-lg border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
-        >
+        <Button variant="secondary" onClick={() => onRowClick(info.row.original.id)}>
           Count
-        </button>
+        </Button>
       ),
     }),
   ];
@@ -318,13 +316,9 @@ export default function SetNewInventoryLevels() {
             <span className="font-semibold text-slate-900">{items.length}</span>
             {" counted"}
           </p>
-          <button
-            onClick={handleSubmit}
-            disabled={submitting || countedCount === 0}
-            className="rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
+          <Button variant="success" onClick={handleSubmit} disabled={submitting || countedCount === 0}>
             {submitting ? "Submitting…" : "Submit Inventory"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
