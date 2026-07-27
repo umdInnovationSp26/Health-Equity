@@ -410,7 +410,7 @@ return (
                         onChange={(e) =>
                           setCustomFieldValues((prev) => ({ ...prev, [label]: e.target.value }))
                         }
-                        placeholder={`Enter ${label.toLowerCase()}`}
+                        placeholder={`Enter your response`}
                         className="block w-full rounded-lg border border-slate-300 bg-white text-sm p-3 outline-none focus:ring-1 focus:ring-indigo-400"
                       />
                     </div>

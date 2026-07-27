@@ -645,8 +645,24 @@ export default function EventDetailsPage({
 
           {/* Dashboard Section */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 items-start">
-            {/* Gray Stats Box */}
-            <div className="bg-slate-50 h-full rounded-3xl p-6 sm:p-8 gap-y-8 gap-x-4 shadow-sm border border-gray-100">
+         
+
+            {/* Check-In QR Code */}
+
+            {/* The QR code will only be shown if a check-in link exists for this event. */}
+            {/* The link will also be displayed in text form. */}
+            {event.checkInLink?.trim() ? (
+              <div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-5">
+                <h2 className="mb-4 text-sm font-semibold text-slate-500">
+                  Check-In QR Code
+                </h2>
+                <CheckInQRCode link={event.checkInLink} eventName={event.title} />
+              </div>
+            ) : null}
+
+            {/* Tracking */}
+            <div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-5">
+
               <div className="flex flex-col items-center">
                 <h1 className="text-1.7xl font-bold text-slate-800">
                   Attendees
@@ -678,6 +694,7 @@ export default function EventDetailsPage({
                       .map((key: string) => CheckInFieldOptions.find((f) => f.key === key)?.label ?? key)
                       .join(", ")}
                       </>
+                   
                 )
                 :     
             <label htmlFor="familySize" className="text-xs font-semibold text-slate-600">
@@ -686,24 +703,9 @@ export default function EventDetailsPage({
             })()}
           </span>
               </div>
-            </div>
+            
+              <br></br>
 
-
-            {/* Check-In QR Code */}
-
-            {/* The QR code will only be shown if a check-in link exists for this event. */}
-            {/* The link will also be displayed in text form. */}
-            {event.checkInLink?.trim() ? (
-              <div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-5">
-                <h2 className="mb-4 text-sm font-semibold text-slate-500">
-                  Check-In QR Code
-                </h2>
-                <CheckInQRCode link={event.checkInLink} eventName={event.title} />
-              </div>
-            ) : null}
-
-            {/* Tracking */}
-            <div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-5">
               <h2 className="mb-4 text-sm font-semibold text-slate-500">
                 Tracked Items
               </h2>
