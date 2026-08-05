@@ -5,7 +5,7 @@ export const CheckInFieldOptions = [
   { key: "age", label: "Age", defaultChecked: false },
   { key: "zipCode", label: "Zip code", defaultChecked: false },
   { key: "raceEthnicity", label: "Ethnicity/Ancestry/Heritage", defaultChecked: false },
-  { key: "other", label: "other", defaultChecked: false },
+  { key: "other", label: "other", defaultChecked: false, type: "text" , otherValues:[] },
 ] as const;
 
 export type CheckInFieldKey = (typeof CheckInFieldOptions)[number]["key"];

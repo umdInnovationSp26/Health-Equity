@@ -22,6 +22,7 @@ export interface Event {
     checkInFields?: string[]; // keys of enabled check-in fields
     trackableFields?: string[]; // keys of enabled trackable items
     customCheckInFields?: string[]; // labels for custom check-in fields
+    customCheckInFieldTypes?: string[]; // input types for custom check-in fields, aligned with customCheckInFields
     customTrackableFields?: string[]; // labels for custom trackable items
     otherFieldLabel?: string;
     otherTrackableFieldLabel?: string;
@@ -69,6 +70,7 @@ export function mapDocToEvent(id: string, docData: any): Event {
         otherTrackableFieldLabel: docData.otherTrackableFieldLabel ?? undefined,
         trackableFields: docData.trackableFields ?? [],
         customCheckInFields: docData.customCheckInFields ?? [],
+        customCheckInFieldTypes: docData.customCheckInFieldTypes ?? [],
         customTrackableFields: docData.customTrackableFields ?? [],
         producePerPersonLb: docData.producePerPersonLb ?? null,
         feedbackText: docData.feedbackText ?? "",

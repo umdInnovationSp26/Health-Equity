@@ -20,6 +20,7 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
   const [eventData, setEventData] = useState<any>(null);
   const [enabledFields, setEnabledFields] = useState<string[]>([]);
   const [customCheckInLabels, setCustomCheckInLabels] = useState<string[]>([]);
+  const [customCheckInTypes, setCustomCheckInTypes] = useState<string[]>([]);
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
   const [enabledTrackables, setEnabledTrackables] = useState<string[]>([]);
   const [customTrackableLabels, setCustomTrackableLabels] = useState<string[]>([]);
@@ -59,6 +60,9 @@ export default function CheckInForm({ params }: { params: Promise<{ eventId: str
         }
         if (Array.isArray(data.customCheckInFields)) {
           setCustomCheckInLabels(data.customCheckInFields);
+        }
+        if (Array.isArray(data.customCheckInFieldTypes)) {
+          setCustomCheckInTypes(data.customCheckInFieldTypes);
         }
         if (Array.isArray(data.trackableFields)) {
           setEnabledTrackables(data.trackableFields);
@@ -394,28 +398,100 @@ return (
                 customCheckInLabels.length > 0
                   ? customCheckInLabels
                   : [eventData?.otherFieldLabel || "Other"];
+              const inputTypes = customCheckInTypes.length > 0
+                ? customCheckInTypes
+                : Array(labels.length).fill("text");
               return (
+
                 <div key={field.key} className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 sm:p-6 space-y-4">
-                  {labels.map((label, i) => (
-                    <div key={`${label}-${i}`} className="space-y-2">
-                      <label
-                        htmlFor={`custom-${i}`}
-                        className="block text-sm font-semibold text-slate-700"
-                      >
-                        {label}
-                      </label>
-                      <input
-                        id={`custom-${i}`}
-                        type="text"
-                        value={customFieldValues[label] ?? ""}
-                        onChange={(e) =>
-                          setCustomFieldValues((prev) => ({ ...prev, [label]: e.target.value }))
-                        }
-                        placeholder={`Enter your response`}
-                        className="block w-full rounded-lg border border-slate-300 bg-white text-sm p-3 outline-none focus:ring-1 focus:ring-indigo-400"
-                      />
-                    </div>
-                  ))}
+                  {labels.map((label, i) => {
+                    const inputType = inputTypes[i] ?? "text";
+
+
+                  
+                    return (
+                      <div key={`${label}-${i}`} className="space-y-2">
+                        <label
+                          htmlFor={`custom-${i}`}
+                          className="block text-sm font-semibold text-slate-700"
+                        >
+                          {label}
+                        </label>
+
+                        {inputType === "number" ? (
+                          
+                          <input
+                            id={`custom-${i}`}
+                            type="number"
+                            value={customFieldValues[label] ?? ""}
+                            onChange={(e) =>
+                              setCustomFieldValues((prev) => ({ ...prev, [label]: e.target.value }))
+                            }
+                            className="block w-full rounded-lg border border-slate-300 bg-white text-sm p-3 outline-none focus:ring-1 focus:ring-indigo-400"
+                          />
+                        ) : null}
+
+                        {inputType === "yes/no" ? (
+                          <div className="space-y-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                id={`custom-${i}-yes`}
+                                name={`custom-${i}`}
+                                value="Yes"
+                                checked={customFieldValues[label] === "Yes"}
+                                onChange={(e) =>
+                                  setCustomFieldValues((prev) => ({ ...prev, [label]: e.target.value }))
+                                }
+                              />
+                              <span className="text-sm text-slate-600">Yes</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                id={`custom-${i}-no`}
+                                name={`custom-${i}`}
+                                value="No"
+                                checked={customFieldValues[label] === "No"}
+                                onChange={(e) =>
+                                  setCustomFieldValues((prev) => ({ ...prev, [label]: e.target.value }))
+                                }
+                              />
+                              <span className="text-sm text-slate-600">No</span>
+                            </label>
+                          </div>
+
+                  
+                         
+                        ) : inputType === "dropdown" ? (
+                          <select
+                            id={`custom-${i}`}
+                            value={customFieldValues[label] ?? ""}
+                            onChange={(e) =>
+                              setCustomFieldValues((prev) => ({ ...prev, [label]: e.target.value }))
+                            }
+                            className="block w-full rounded-lg border border-slate-300 bg-white text-sm p-3 outline-none focus:ring-1 focus:ring-indigo-400"
+                          >
+                            <option value="">Select an option</option>
+                            <option value="Option 1">Option 1</option>
+                            <option value="Option 2">Option 2</option>
+                            <option value="Option 3">Option 3</option>
+                          </select>
+                        ) : (
+                          <input
+                            id={`custom-${i}`}
+                            type={inputType}
+                            value={customFieldValues[label] ?? ""}
+                            onChange={(e) =>
+                              setCustomFieldValues((prev) => ({ ...prev, [label]: e.target.value }))
+                            }
+                            placeholder={`Enter your response`}
+                            className="block w-full rounded-lg border border-slate-300 bg-white text-sm p-3 outline-none focus:ring-1 focus:ring-indigo-400"
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               );
             }
@@ -438,7 +514,14 @@ return (
                 <input
                   id={field.key}
                   name={field.key}
-                  type={inputType}
+
+                  type={field.key === "age" || field.key === "zipCode"? "number" : inputType} 
+                 //Source - https://stackoverflow.com/a/58097342
+                //Posted by msahin
+                //Retrieved 2026-08-05, License - CC BY-SA 4.0
+
+                 onKeyDown={ field.key === "age" || field.key === "zipCode" ? (evt) => ["e", "E", "+", "-", "."].includes(evt.key) && evt.preventDefault() : undefined }
+
                   className="block w-full rounded-lg border border-slate-300 bg-white text-sm p-3 outline-none focus:ring-1 focus:ring-indigo-400"
 
                   placeholder={field.key =="age"? "your age":

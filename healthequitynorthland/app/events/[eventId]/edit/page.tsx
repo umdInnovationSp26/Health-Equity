@@ -235,7 +235,7 @@ export default function CreateEvent({
               <FaArrowLeft />
             </button>
           </div>
-
+          
           <h3 className="text-black absolute left-1/2 -translate-x-1/2 font-bold">
             Edit Event
           </h3>
@@ -245,6 +245,12 @@ export default function CreateEvent({
               ...
             </button>
           </div>
+
+        <div className="absolute left-1/2 -translate-x-1/2 top-12 w-full  px-4">
+          <h3 className="text-red-500 absolute left-1/2 -translate-x-1/2 font-bold">
+            * Settings regarding event check-in and trackable items are not editable after the event is created. 
+              </h3>
+              </div>
         </div>
 
         <div className="min-h-screen bg-gray-50 flex justify-center p-4">

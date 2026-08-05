@@ -36,24 +36,35 @@ import TimeSelect from "@/app/components/timeSelect";
 
 //QRcode generation imports
 
-
+const customCheckInTypeOptions = ["text", "number", "yes/no", "dropdown"];
 
 const KG = "kg";
 const LB = "lb";
 const OZ = "oz";
 
 
+
+
 export default function CreateEvent() {
   const router = useRouter();
   const [loading, setLoading] = useState(false); // variable for waiting for db to save data
   const [createCheckInLink, setCreateCheckInLink] = useState(true);
-  const [customCheckInFields, setCustomCheckInFields] = useState<string[]>([""]);
+  const [customCheckInFields, setCustomCheckInFields] = useState<Array<{label: string; type: string}>>([
+    { label: "", type: "text" },
+  ]);
   const [customTrackableFields, setCustomTrackableFields] = useState<string[]>([""]);
 
   const addCustomCheckInField = () =>
-    setCustomCheckInFields((prev) => [...prev, ""]);
+    setCustomCheckInFields((prev) => [...prev, { label: "", type: "text" }]);
   const updateCustomCheckInField = (index: number, value: string) =>
-    setCustomCheckInFields((prev) => prev.map((v, i) => (i === index ? value : v)));
+    setCustomCheckInFields((prev) =>
+      prev.map((field, i) => (i === index ? { ...field, label: value } : field)),
+    );
+  const updateCustomCheckInFieldType = (index: number, value: string) =>
+    setCustomCheckInFields((prev) =>
+      prev.map((field, i) => (i === index ? { ...field, type: value } : field)),
+    );
+ 
   const removeCustomCheckInField = (index: number) =>
     setCustomCheckInFields((prev) => prev.filter((_, i) => i !== index));
 
@@ -142,6 +153,7 @@ export default function CreateEvent() {
     setProduceRows(produceRows.filter((_, i) => i !== id));
   };
 
+
   // Submit the form to the db
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async function handleSubmit(event: any) {
@@ -166,9 +178,10 @@ export default function CreateEvent() {
     const includeCheckInOther = shouldCreateCheckInLink && checkInFields.other;
     const includeTrackableOther = shouldCreateCheckInLink && checkInTrackableFields.other;
 
-    const customCheckInFieldLabels = customCheckInFields
-      .map((label) => label.trim())
-      .filter(Boolean);
+    const customCheckInFieldConfigs = customCheckInFields
+      .filter((field) => field.label.trim().length > 0);
+    const customCheckInFieldLabels = customCheckInFieldConfigs.map((field) => field.label.trim());
+    const customCheckInFieldTypes = customCheckInFieldConfigs.map((field) => field.type);
     const customTrackableFieldLabels = customTrackableFields
       .map((label) => label.trim())
       .filter(Boolean);
@@ -217,6 +230,7 @@ export default function CreateEvent() {
             )
           : [],
         customCheckInFields: includeCheckInOther ? customCheckInFieldLabels : [],
+        customCheckInFieldTypes: includeCheckInOther ? customCheckInFieldTypes : [],
         customTrackableFields: includeTrackableOther ? customTrackableFieldLabels : [],
         producePerPersonLb: producePerPerson === "" ? null : Number(producePerPerson),
       });
@@ -353,7 +367,7 @@ export default function CreateEvent() {
                   </span>
                   <span className="block text-xs text-slate-500">
                     Create a shareable link and QR code so attendees can check
-                    in.
+                    in. These settings cannot be changed after the event is created.  
                   </span>
                 </span>
               </label>
@@ -382,16 +396,30 @@ export default function CreateEvent() {
 
                 {/* If the "other" option is checked, let the user add one or more custom fields */}
                         {field.key === "other" && checkInFields[field.key] && (
-                          <div className="space-y-2">
-                            {customCheckInFields.map((value, i) => (
+                          <div className="space-y-2 space-x-1">
+                            {customCheckInFields.map((field, i) => (
                               <div key={i} className="flex items-center gap-2">
+
                                 <input
                                   type="text"
-                                  value={value}
+                                  value={field.label}
                                   onChange={(e) => updateCustomCheckInField(i, e.target.value)}
                                   placeholder="Name this field (e.g. Preferred Language)"
                                   className="w-full rounded-lg border border-slate-300 bg-white p-2 text-sm outline-none focus:ring-1 focus:ring-indigo-400"
                                 />
+
+                                <select
+                                  value={field.type}
+                                  onChange={(e) => updateCustomCheckInFieldType(i, e.target.value)}
+                                  className="rounded-lg border border-slate-300 bg-white p-2 text-sm outline-none focus:ring-1 focus:ring-indigo-400"
+                                >
+                                  {customCheckInTypeOptions.map((option) => (
+                                    <option key={option} value={option}>
+                                      {option === "yes/no" ? "Yes/No" : option === "dropdown" ? "Dropdown" : option.charAt(0).toUpperCase() + option.slice(1)}
+                                    </option>
+                                  ))}
+                                </select>
+
                                 {customCheckInFields.length > 1 && (
                                   <button
                                     type="button"
