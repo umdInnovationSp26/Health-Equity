@@ -43,25 +43,37 @@ export default function CountersPage({ params }: { params: Promise<{ eventId: st
   // Listener for attendance counter
   useEffect(() => {
     const eventRef = doc(db, "event", eventId);
-    const unsubEvent = onSnapshot(eventRef, (docSnap) => {
-      if (docSnap.exists()) {
-        console.log("DATABASE DATA:", docSnap.data());
-        setEventData(mapDocToEvent(eventId, docSnap.data()));
-      }
-    });
+    const unsubEvent = onSnapshot(
+      eventRef,
+      (docSnap) => {
+        if (docSnap.exists()) {
+          setEventData(mapDocToEvent(eventId, docSnap.data()));
+        }
+      },
+      (error) => console.error("Event listener failed:", error),
+    );
 
     // Listener for counters collection
     const countersRef = collection(db, "event", eventId, "counters");
     const q = query(countersRef);
 
-    const unsubCounters = onSnapshot(q, (snapshot) => {
-      const fetchedCounters = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as CounterData[];
-      setCounters(fetchedCounters);
-      setLoading(false);
-    });
+    // setLoading(false) lives in these callbacks, so the error one keeps a
+    // failed listener from parking the page on its spinner forever.
+    const unsubCounters = onSnapshot(
+      q,
+      (snapshot) => {
+        const fetchedCounters = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as CounterData[];
+        setCounters(fetchedCounters);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Counters listener failed:", error);
+        setLoading(false);
+      },
+    );
 
     return () => {
       unsubEvent();

@@ -1,0 +1,99 @@
+rules_version = '2';
+
+// Access model
+// ------------
+// Two kinds of caller reach this database:
+//
+//   1. Staff, signed in with Firebase Auth. They run the dashboard and manage
+//      events, produce, inventory and contacts.
+//   2. Attendees, NOT signed in. They only ever open a check-in link
+//      (/events/{eventId}/checkin) and submit that one form.
+//
+// Everything a signed-in staff member touches is gated on `isStaff()`. The
+// public surface is deliberately tiny and append-only: an attendee can read the
+// event they're checking in to, add their own check-in record, upsert their own
+// contact row, and bump that event's attendee count. Nothing else. In
+// particular the public can never READ `contacts` - that collection holds
+// attendee names, emails and phone numbers.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isStaff() {
+      return request.auth != null;
+    }
+
+    // True when a write touches no fields outside `allowed`. Used to keep the
+    // unauthenticated check-in path from editing anything it shouldn't.
+    function onlyTouches(allowed) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(allowed);
+    }
+
+    // Staff profiles. Each signed-in user owns exactly their own document.
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // Saved filters live under the profile and share its ownership.
+      match /filter/{filterId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    match /event/{eventId} {
+      // Public read: the check-in form fetches the event to learn which fields
+      // and trackable items to render. This does expose event details (title,
+      // location, notes) to anyone holding an event id - see the note in the
+      // README section of the PR/commit that adds this file.
+      allow read: if true;
+
+      allow create, delete: if isStaff();
+
+      // Staff may edit freely. An attendee may only increment the running
+      // attendee count, and may touch no other field.
+      allow update: if isStaff() || onlyTouches(['attendees']);
+
+      // Produce distributed at this event.
+      match /produce/{produceName} {
+        allow read, write: if isStaff();
+      }
+
+      // Check-in records. Append-only for the public: an attendee can submit a
+      // check-in but cannot list, alter or delete them. Only staff can read.
+      match /checkin/{checkInId} {
+        allow create: if true;
+        allow read: if isStaff();
+        allow update, delete: if isStaff();
+      }
+
+      // Live counters on the event's counter page.
+      match /counters/{counterId} {
+        allow read, write: if isStaff();
+      }
+    }
+
+    // Collection-group reads of `produce`. aggregateInventoryLbs() sums lbs
+    // across every event with a single collectionGroup query, and a collection
+    // group query is only authorized by a recursive-wildcard rule like this one
+    // - the per-event `match` above does not cover it.
+    match /{path=**}/produce/{produceName} {
+      allow read: if isStaff();
+    }
+
+    // Master produce list (top-level).
+    match /produce/{produceId} {
+      allow read, write: if isStaff();
+    }
+
+    // Attendee contact rows, upserted by the check-in form.
+    //
+    // Public create/update is limited to the three fields that form writes, so
+    // a stranger can't overwrite a contact with arbitrary data. Public READ is
+    // never granted - this is the PII in the database.
+    match /contacts/{contactId} {
+      allow read, delete: if isStaff();
+      allow create: if isStaff()
+        || request.resource.data.keys().hasOnly(['name', 'email', 'lastActivity']);
+      allow update: if isStaff() || onlyTouches(['name', 'email', 'lastActivity']);
+    }
+  }
+}

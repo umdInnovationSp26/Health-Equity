@@ -32,6 +32,7 @@ import {
 import { CheckInFieldOptions, CheckInFieldKey } from "@/app/lib/check-in-fields";
 import { CheckInTrackableOptions, CheckInTrackableKey } from "@/app/lib/check-in-trackable-data";
 import Button from "@/app/components/button";
+import TimeSelect from "@/app/components/timeSelect";
 
 //QRcode generation imports
 
@@ -104,16 +105,22 @@ export default function CreateEvent() {
     const q = query(collection(db, "produce"), orderBy("name", "desc"));
 
     // Grab data from the db
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) =>
-        mapDocToProduceOption(doc.data()),
-      );
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const data = snapshot.docs.map((doc) =>
+          mapDocToProduceOption(doc.data()),
+        );
 
-      setProduceOptions(data); // update the options list
-    });
+        setProduceOptions(data); // update the options list
+      },
+      // Without this, a failed listener leaves the produce dropdown silently
+      // empty and looks like "there is no produce configured".
+      (error) => console.error("Produce options listener failed:", error),
+    );
 
     return () => unsubscribe();
-  }, ["name"]);
+  }, []);
 
   // Add a new row
   const addRow = () => {
@@ -494,23 +501,13 @@ export default function CreateEvent() {
                 <label className="text-sm font-semibold text-slate-700">
                   Start Time
                 </label>
-                <input
-                  name="startTime"
-                  required
-                  type="time"
-                  className="w-full p-3 bg-gray-100 rounded-lg outline-none"
-                />
+                <TimeSelect name="startTime" required />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700">
                   End Time
                 </label>
-                <input
-                  name="endTime"
-                  required
-                  type="time"
-                  className="w-full p-3 bg-gray-100 rounded-lg outline-none"
-                />
+                <TimeSelect name="endTime" required />
               </div>
             </div>
 

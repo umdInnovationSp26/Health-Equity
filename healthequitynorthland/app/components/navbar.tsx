@@ -40,14 +40,18 @@ export default function Navbar() {
       if (!user) return;
 
       const userRef = doc(db, "users", user.uid);
-      const unsubDoc = onSnapshot(userRef, (snap) => {
-        if (!snap.exists()) return;
-        const data = snap.data();
-        setProfile({
-          displayName: data.displayName || data.firstName || "User",
-          avatar: data.avatar || "",
-        });
-      });
+      const unsubDoc = onSnapshot(
+        userRef,
+        (snap) => {
+          if (!snap.exists()) return;
+          const data = snap.data();
+          setProfile({
+            displayName: data.displayName || data.firstName || "User",
+            avatar: data.avatar || "",
+          });
+        },
+        (error) => console.error("Navbar profile listener failed:", error),
+      );
 
       return () => unsubDoc();
     });

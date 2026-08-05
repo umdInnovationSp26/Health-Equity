@@ -1,6 +1,7 @@
 import { db } from "@/app/lib/firebaseClient";
 import {
   collection,
+  collectionGroup,
   doc,
   getDocs,
   increment,
@@ -21,21 +22,26 @@ const MANUAL_EVENT_ID = "manual-adjustments";
  * Sum the `lb` field for every produce name across all events' `produce`
  * subcollections. This mirrors exactly what the produce page computes, so
  * numbers stay in sync between the two views.
+ *
+ * One collection-group query rather than a read of `event` plus a read per
+ * event: the old shape cost 1+N round trips and got slower with every event
+ * added, and this needs no per-event context to do the sum.
+ *
+ * Note the parent guard. A collection group matches *every* collection with
+ * that id, and `produce` is also a top-level collection (the master item
+ * list). Those docs have no `lb` and their ids are auto-ids rather than
+ * produce names, so without the guard they'd land in `totals` as phantom
+ * zero-lb entries keyed by random id. Subcollection docs are the only ones
+ * with a parent document.
  */
-async function aggregateInventoryLbs(): Promise<Record<string, number>> {
-  const eventsSnap = await getDocs(collection(db, "event"));
-  const produceSubSnaps = await Promise.all(
-    eventsSnap.docs.map((eventDoc) =>
-      getDocs(collection(db, "event", eventDoc.id, "produce")),
-    ),
-  );
+export async function aggregateInventoryLbs(): Promise<Record<string, number>> {
+  const snap = await getDocs(collectionGroup(db, "produce"));
 
   const totals: Record<string, number> = {};
-  produceSubSnaps.forEach((snap) => {
-    snap.docs.forEach((d) => {
-      const name = d.id; // subcollection doc id is the produce name
-      totals[name] = (totals[name] ?? 0) + (d.data().lb ?? 0);
-    });
+  snap.docs.forEach((d) => {
+    if (d.ref.parent.parent === null) return; // top-level `produce`, not an event's
+    const name = d.id; // subcollection doc id is the produce name
+    totals[name] = (totals[name] ?? 0) + (d.data().lb ?? 0);
   });
 
   return totals;

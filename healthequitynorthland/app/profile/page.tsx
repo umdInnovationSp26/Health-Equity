@@ -17,17 +17,21 @@ export default function DashboardPage() {
 
       const userRef = doc(db, "users", user.uid);
 
-      const unsubscribeSnap = onSnapshot(userRef, (snap) => {
-        if (snap.exists()) {
-          const data = snap.data();
-          const isDark = data.darkMode ?? false;
+      const unsubscribeSnap = onSnapshot(
+        userRef,
+        (snap) => {
+          if (snap.exists()) {
+            const data = snap.data();
+            const isDark = data.darkMode ?? false;
 
-          setDarkMode(isDark);
+            setDarkMode(isDark);
 
-          // 🔥 THIS is the key part
-          document.documentElement.classList.toggle("dark", isDark);
-        }
-      });
+            // 🔥 THIS is the key part
+            document.documentElement.classList.toggle("dark", isDark);
+          }
+        },
+        (error) => console.error("Profile preferences listener failed:", error),
+      );
 
       return () => unsubscribeSnap();
     });

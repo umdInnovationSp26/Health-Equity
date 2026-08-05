@@ -5,14 +5,27 @@ import { useEffect, useState } from "react";
 import { FaTimes } from "react-icons/fa";
 import { GOOGLE_SCOPES, isGsiReady, loadGsi, requestAccessToken } from "@/app/lib/googleAuth";
 import Button, { buttonClasses } from "@/app/components/button";
+import { jsPDF } from "jspdf";
 
 /** CSV text, or a (possibly async) function that builds it when the user clicks download. */
 type CsvSource = string | (() => string | Promise<string>);
 
+/** One headline stat shown above the table in every export format. */
+export interface ExportSummaryItem {
+  label: string;
+  value: string;
+}
+
+/** Summary stats, or a (possibly async) function that computes them on click. */
+type SummarySource =
+  | ExportSummaryItem[]
+  | (() => ExportSummaryItem[] | Promise<ExportSummaryItem[]>);
+
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
 /**
- * Parse the CSV produced for download back into rows for the Sheets API.
+ * Parse the CSV produced for download back into rows for the Sheets API
+ * (and now also for the PDF report table).
  * Handles quoted fields, escaped quotes (""), and newlines inside quotes.
  */
 function parseCsv(text: string): string[][] {
@@ -66,8 +79,276 @@ interface DownloadOverlayProps {
    * produces it on demand — handy when the data has to be fetched on click.
    */
   csvContent?: CsvSource;
+  /**
+   * Optional headline stats (e.g. distribution totals) rendered above the table
+   * in the PDF and prepended as label/value rows in the CSV and Google Sheet.
+   */
+  summary?: SummarySource;
   /** Base file name (without extension) used for the downloaded file. */
   fileName?: string;
+}
+
+/* ------------------------------------------------------------------ */
+/* Create Check-In PDF report                                          */
+/* ------------------------------------------------------------------ */
+
+interface YesNoTally {
+  /** Header label with any "Took:" prefix stripped, e.g. "Produce". */
+  label: string;
+  /** Rows that answered yes. */
+  yes: number;
+  /** Rows that answered either yes or no (blanks excluded). */
+  answered: number;
+}
+
+/**
+ * Tallies every yes/no column separately, so the report shows how many people
+ * said yes to each question rather than a single combined total.
+ *
+ * Column selection: if the CSV has any "Took: <item>" columns (what the
+ * check-in export emits for tracked supplies) only those are counted. Otherwise
+ * every column whose filled-in values are all recognizably yes/no is counted,
+ * which covers exports that name their boolean columns differently.
+ *
+ * Blank cells are excluded from both `yes` and `answered`, so partially-filled
+ * sheets don't skew the totals.
+ */
+function countYesPerColumn(header: string[], body: string[][]): YesNoTally[] {
+  const normalize = (v: string) => v.trim().toLowerCase();
+  const isYes = (v: string) => ["yes", "y", "true", "1"].includes(normalize(v));
+  const isNo = (v: string) => ["no", "n", "false", "0"].includes(normalize(v));
+
+  /** Returns the tally for a column, or null if it isn't a yes/no column. */
+  const tally = (colIndex: number): YesNoTally | null => {
+    let yes = 0;
+    let answered = 0;
+    for (const row of body) {
+      const val = (row[colIndex] ?? "").trim();
+      if (!val) continue;
+      if (isYes(val)) {
+        yes++;
+        answered++;
+      } else if (isNo(val)) {
+        answered++;
+      } else {
+        return null; // not a yes/no column
+      }
+    }
+    if (answered === 0) return null;
+    const raw = (header[colIndex] ?? "").trim();
+    const label = raw.replace(/^took:\s*/i, "") || `Column ${colIndex + 1}`;
+    return { label, yes, answered };
+  };
+
+  const trackedIdx = header
+    .map((h, i) => (/^took:\s*/i.test(h ?? "") ? i : -1))
+    .filter((i) => i !== -1);
+
+  const indices = trackedIdx.length > 0 ? trackedIdx : header.map((_, i) => i);
+
+  return indices
+    .map(tally)
+    .filter((entry): entry is YesNoTally => entry !== null);
+}
+
+/**
+ * Builds a PDF report from the same rows that get exported to CSV / Sheets.
+ * First row of `rows` is treated as the header row.
+ */
+async function generatePDF(
+  eventName: string,
+  rows: string[][],
+  summary: ExportSummaryItem[] = [],
+) {
+  // load the HEN logo
+  const logoImg = new (globalThis as any).Image();
+  logoImg.src = "/HENsignin.png";
+  logoImg.crossOrigin = "anonymous";
+  await new Promise((resolve) => {
+    logoImg.onload = resolve;
+  });
+  const logoCanvas = document.createElement("canvas");
+  logoCanvas.width = logoImg.width;
+  logoCanvas.height = logoImg.height;
+  const logoCtx = logoCanvas.getContext("2d");
+  if (logoCtx) {
+    logoCtx.drawImage(logoImg, 0, 0);
+  }
+  const logoImage = logoCanvas.toDataURL("image/png");
+
+  // create a new PDF document (A4 portrait, mm units by default)
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  // Title
+  doc.setFontSize(24);
+  doc.setFont("helvetica", "bold");
+  doc.text(eventName, pageWidth / 2, 20, { align: "center" });
+
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "normal");
+  doc.text("Event Data Report", pageWidth / 2, 28, { align: "center" });
+
+  doc.setFontSize(9);
+  doc.setTextColor(120);
+  doc.text(`Generated ${new Date().toLocaleString()}`, pageWidth / 2, 34, {
+    align: "center",
+  });
+  doc.setTextColor(0);
+
+  const marginX = 10;
+  const bottomLimit = pageHeight - 55; // leave room for the logo on each page
+  const usableWidth = pageWidth - marginX * 2;
+  let tableTop = 42;
+
+  // Caller-supplied headline stats (e.g. distribution totals across events),
+  // one per line as "Label: Value".
+  if (summary.length > 0) {
+    const boxY = tableTop;
+    const padding = 4;
+    const lineHeight = 5.5;
+    const titleHeight = 6;
+    const boxHeight = summary.length * lineHeight + titleHeight + padding * 2;
+
+    doc.setDrawColor(200);
+    doc.setFillColor(245, 245, 245);
+    doc.rect(marginX, boxY, usableWidth, boxHeight, "FD");
+
+    doc.setTextColor(0);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text("Distribution Totals", marginX + padding, boxY + padding + 4);
+
+    doc.setFontSize(10);
+    summary.forEach((item, idx) => {
+      const lineY = boxY + padding + titleHeight + idx * lineHeight + 4;
+      doc.setFont("helvetica", "normal");
+      doc.text(item.label, marginX + padding, lineY);
+      doc.setFont("helvetica", "bold");
+      doc.text(item.value, pageWidth - marginX - padding, lineY, {
+        align: "right",
+      });
+    });
+
+    tableTop = boxY + boxHeight + 6;
+  }
+
+  // Summary box: one "yes" count per yes/no column, e.g.
+  // "Produce: 12 of 30    Brochures: 5 of 30".
+  if (rows.length > 0) {
+    const [header, ...body] = rows;
+    const tallies = countYesPerColumn(header, body);
+    if (tallies.length > 0) {
+      const boxY = tableTop;
+      const padding = 4;
+      const lineHeight = 5;
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(0);
+
+      const summaryText = `Answered Yes — ${tallies
+        .map((t) => `${t.label}: ${t.yes} of ${t.answered}`)
+        .join("    ")}`;
+      const lines: string[] = doc.splitTextToSize(
+        summaryText,
+        usableWidth - padding * 2,
+      );
+      const boxHeight = lines.length * lineHeight + padding * 2;
+
+      doc.setDrawColor(200);
+      doc.setFillColor(245, 245, 245);
+      doc.rect(marginX, boxY, usableWidth, boxHeight, "FD");
+      lines.forEach((line, idx) => {
+        doc.text(line, pageWidth / 2, boxY + padding + idx * lineHeight + 3.5, {
+          align: "center",
+        });
+      });
+
+      tableTop = boxY + boxHeight + 6;
+    }
+  }
+
+  if (rows.length === 0) {
+    doc.setFontSize(12);
+    doc.text("No data available.", pageWidth / 2, tableTop + 10, {
+      align: "center",
+    });
+  } else {
+    const [header, ...body] = rows;
+    const colCount = Math.max(header.length, 1);
+    const colWidth = usableWidth / colCount;
+    const bodyRowHeight = 8;
+    const headerLineHeight = 4;
+    const headerPadding = 2.5;
+    let y = tableTop;
+
+    // Wrap each header onto as many lines as its full label needs, then size
+    // the header row to the tallest one — labels are never truncated.
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    const headerLines: string[][] = header.map((h) =>
+      doc.splitTextToSize(String(h ?? ""), colWidth - 2),
+    );
+    const headerRowHeight =
+      Math.max(1, ...headerLines.map((lines) => lines.length)) *
+        headerLineHeight +
+      headerPadding * 2;
+
+    const drawHeaderRow = () => {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.setFillColor(230, 230, 230);
+      doc.rect(marginX, y, usableWidth, headerRowHeight, "F");
+      for (let i = 0; i < colCount; i++) {
+        const x = marginX + i * colWidth;
+        doc.setDrawColor(200);
+        doc.rect(x, y, colWidth, headerRowHeight);
+        (headerLines[i] ?? [""]).forEach((line, lineIdx) => {
+          doc.text(
+            line,
+            x + 1,
+            y + headerPadding + lineIdx * headerLineHeight + 3,
+          );
+        });
+      }
+      y += headerRowHeight;
+    };
+
+    const drawBodyRow = (cells: string[]) => {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      for (let i = 0; i < colCount; i++) {
+        const x = marginX + i * colWidth;
+        doc.setDrawColor(200);
+        doc.rect(x, y, colWidth, bodyRowHeight);
+        const raw = cells[i] ?? "";
+        const fitted = doc.splitTextToSize(raw, colWidth - 2);
+        doc.text(String(fitted[0] ?? ""), x + 1, y + bodyRowHeight - 2.5);
+      }
+      y += bodyRowHeight;
+    };
+
+    const addNewPage = () => {
+      doc.addPage();
+      y = 20;
+      drawHeaderRow();
+    };
+
+    drawHeaderRow();
+    for (const r of body) {
+      if (y + bodyRowHeight > bottomLimit) {
+        addNewPage();
+      }
+      drawBodyRow(r);
+    }
+  }
+
+  // Add logo at bottom of the current (last) page
+  doc.addImage(logoImage, "PNG", 5, pageHeight - 65, 100, 50);
+
+  doc.save(`${eventName}-event-data.pdf`);
 }
 
 /**
@@ -78,6 +359,7 @@ export default function DownloadOverlay({
   isOpen,
   onClose,
   csvContent,
+  summary,
   fileName = "export",
 }: DownloadOverlayProps) {
   const [busy, setBusy] = useState(false);
@@ -95,15 +377,40 @@ export default function DownloadOverlay({
 
   if (!isOpen) return null;
 
+  const resolveSummary = async (): Promise<ExportSummaryItem[]> => {
+    if (!summary) return [];
+    return typeof summary === "function" ? await summary() : summary;
+  };
+
+  /**
+   * Summary stats as leading spreadsheet rows: a title, one label/value pair
+   * per stat, then a blank row separating them from the data table.
+   */
+  const summaryRows = (items: ExportSummaryItem[]): string[][] =>
+    items.length === 0
+      ? []
+      : [
+          ["Distribution Totals"],
+          ...items.map((item) => [item.label, item.value]),
+          [],
+        ];
+
   const downloadCsv = async () => {
     if (!csvContent || busy) return;
     setBusy(true);
     try {
-      const text =
-        typeof csvContent === "function" ? await csvContent() : csvContent;
+      const [text, stats] = await Promise.all([
+        typeof csvContent === "function" ? csvContent() : csvContent,
+        resolveSummary(),
+      ]);
       if (!text) return;
 
-      const blob = new Blob(["﻿" + text], {
+      const escape = (value: string) => `"${value.replace(/"/g, '""')}"`;
+      const prefix = summaryRows(stats)
+        .map((row) => row.map(escape).join(","))
+        .join("\n");
+
+      const blob = new Blob(["﻿" + (prefix ? `${prefix}\n${text}` : text)], {
         type: "text/csv;charset=utf-8;",
       });
       const url = URL.createObjectURL(blob);
@@ -127,22 +434,34 @@ export default function DownloadOverlay({
     }
   };
 
-
-{/* PDF report download */}
-
+  /* PDF report download — reuses the same CSV data as the CSV/Sheets export */
   const downloadPDF = async () => {
-    if (busy) return;
+    if (!csvContent || busy) return;
     setBusy(true);
     try {
-
-
+      const [text, stats] = await Promise.all([
+        typeof csvContent === "function" ? csvContent() : csvContent,
+        resolveSummary(),
+      ]);
+      const rows = parseCsv(text ?? "");
+      if (rows.length === 0) {
+        throw new Error("There is no data to include in the report.");
+      }
+      await generatePDF(fileName, rows, stats);
+      onClose();
+    } catch (error) {
+      console.error("PDF generation failed:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to generate PDF. Please try again.",
+      );
     } finally {
-        setBusy(false);
+      setBusy(false);
     }
-};
+  };
 
-  {/* Google Sheets export */}
-
+  /* Google Sheets export */
   const exportToSheets = async () => {
     if (!csvContent || busy) return;
     if (!GOOGLE_CLIENT_ID) {
@@ -166,12 +485,15 @@ export default function DownloadOverlay({
     const tokenPromise = requestAccessToken(GOOGLE_SCOPES.sheets);
     // and build the CSV in parallel while the user consents.
     const dataPromise = (async () => {
-      const text = typeof csvContent === "function" ? await csvContent() : csvContent;
+      const [text, stats] = await Promise.all([
+        typeof csvContent === "function" ? csvContent() : csvContent,
+        resolveSummary(),
+      ]);
       const values = parseCsv(text ?? "");
       if (values.length === 0) {
         throw new Error("There is no data to export.");
       }
-      return values;
+      return [...summaryRows(stats), ...values];
     })();
 
     try {
@@ -273,10 +595,14 @@ export default function DownloadOverlay({
               <Button onClick={downloadCsv} disabled={!csvContent || busy}>
                 {busy ? "Working…" : "Download as CSV"}
               </Button>
+
+              <Button onClick={downloadPDF} disabled={!csvContent || busy}>
+                {busy ? "Working…" : "Download as PDF"}
+              </Button>
+
               <Button variant="success" onClick={exportToSheets} disabled={!csvContent || busy}>
                 {busy ? "Working…" : "Export to Google Sheets"}
               </Button>
-              {/* PDF export button to be added when downloadPDF is implemented. */}
             </div>
           </>
         )}

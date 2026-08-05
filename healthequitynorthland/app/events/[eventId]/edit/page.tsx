@@ -16,6 +16,7 @@ import * as eventTypeUtil from "@/app/lib/eventTypeUtil";
 import { Produce, convertKilogramsToOunces, convertKilogramsToPounds, convertOuncesToKilograms, convertOuncesToPounds, convertPoundsToKilograms, convertPoundsToOunces, mapDocToEventProduce, mapDocToProduceOption } from "@/app/lib/produceUtil";
 import { Event, mapDocToEvent } from "@/app/lib/eventInterface";
 import Button from "@/app/components/button";
+import TimeSelect from "@/app/components/timeSelect";
 
 
 const KG = "kg"
@@ -295,11 +296,9 @@ export default function CreateEvent({
                 <label className="text-sm font-semibold text-slate-700">
                   Start Time
                 </label>
-                <input
+                <TimeSelect
                   name="startTime"
                   required
-                  type="time"
-                  className="w-full p-3 bg-gray-100 rounded-lg outline-none"
                   defaultValue={getTimeInHTML(event?.dateStart)}
                 />
               </div>
@@ -307,11 +306,9 @@ export default function CreateEvent({
                 <label className="text-sm font-semibold text-slate-700">
                   End Time
                 </label>
-                <input
+                <TimeSelect
                   name="endTime"
                   required
-                  type="time"
-                  className="w-full p-3 bg-gray-100 rounded-lg outline-none"
                   defaultValue={getTimeInHTML(event?.dateEnd)}
                 />
               </div>

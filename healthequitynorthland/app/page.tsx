@@ -490,10 +490,21 @@ export default function HomePage() {
       setUser(currentUser);
 
       const userRef = doc(db, "users", currentUser.uid);
-      const unsubDoc = onSnapshot(userRef, (snap) => {
-        if (snap.exists()) setFirstName(snap.data().firstName ?? "");
-        setLoading(false);
-      });
+      // setLoading(false) only happens in these callbacks, so the error one is
+      // load-bearing: without it a failed listener leaves the whole page on its
+      // spinner indefinitely. Still drop the spinner on failure - a missing
+      // first name degrades the greeting, it shouldn't block the dashboard.
+      const unsubDoc = onSnapshot(
+        userRef,
+        (snap) => {
+          if (snap.exists()) setFirstName(snap.data().firstName ?? "");
+          setLoading(false);
+        },
+        (error) => {
+          console.error("User listener failed:", error);
+          setLoading(false);
+        },
+      );
 
       return () => unsubDoc();
     });
@@ -505,7 +516,9 @@ export default function HomePage() {
   useEffect(() => {
     if (!user) return;
     const q = query(collection(db, "event"), orderBy("timestampStart", "asc"));
-    const unsub = onSnapshot(q, (snapshot) => {
+    const unsub = onSnapshot(
+      q,
+      (snapshot) => {
       const now = Timestamp.now();
       const allEvents: FirestoreEvent[] = snapshot.docs.map((d) => {
         const data = d.data();
@@ -529,7 +542,9 @@ export default function HomePage() {
         )
         .slice(0, 2);
       setUpcomingEvents(upcoming);
-    });
+      },
+      (error) => console.error("Dashboard events listener failed:", error),
+    );
     return () => unsub();
   }, [user]);
 

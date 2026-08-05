@@ -211,7 +211,9 @@ export default function Profile() {
       setUser(currentUser);
 
       const userRef = doc(db, "users", currentUser.uid);
-      const unsubDoc = onSnapshot(userRef, (snap) => {
+      const unsubDoc = onSnapshot(
+        userRef,
+        (snap) => {
         if (!snap.exists()) return;
         const data = snap.data();
 
@@ -237,7 +239,9 @@ export default function Profile() {
         setProfile(loaded);
         setOriginalProfile(loaded);
         if (loaded.avatar) setAvatarPreview(loaded.avatar);
-      });
+        },
+        (error) => console.error("Profile listener failed:", error),
+      );
 
       return () => unsubDoc();
     });

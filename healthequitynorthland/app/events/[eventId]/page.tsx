@@ -435,7 +435,7 @@ export default function EventDetailsPage({
         "Party Size",
         ...enabledFields.flatMap((key: string) => {
           if (key === "other") return customFieldLabels;
-          if (key === "raceEthnicity") return ["Race/Ethnicity"];
+          if (key === "raceEthnicity") return ["Ethnicity"];
           if (key === "phoneNumber") return ["Phone Number"];
           if (key === "zipCode") return ["Zip Code"];
           if (key === "name") return ["Full Name"];
@@ -592,10 +592,10 @@ export default function EventDetailsPage({
 
             {/* Export Event Specific Data */}
             <Button className="whitespace-nowrap" onClick={() => setIsDownloadOpen(true)}>
-              Download Event Data
+              Export Event Data
             </Button>
 
-            <Button className="whitespace-nowrap" onClick={exportToGoogleCalendar}>
+            <Button  variant="success" className="whitespace-nowrap" onClick={exportToGoogleCalendar}>
               Export to Calendar
             </Button>
 

@@ -1,5 +1,4 @@
-import { db } from "@/app/lib/firebaseClient";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+
 import { generateIcsString } from "@/app/lib/calendarUtil";
 import { mapDocToEvent } from "@/app/lib/eventInterface";
 import { getAdminDb } from "@/app/lib/firebaseAdmin";

@@ -5,12 +5,11 @@ import { FaArrowLeft, FaAngleDown } from "react-icons/fa";
 import Button from "@/app/components/button";
 import { db } from "@/app/lib/firebaseClient";
 import {
-  collection,
   doc,
-  getDocs,
   increment,
   writeBatch,
 } from "firebase/firestore";
+import { aggregateInventoryLbs } from "@/app/produce/inventory/lib/actions";
 
 import {
   useReactTable,
@@ -551,22 +550,7 @@ export default function AddRemove() {
   const loadProduce = useCallback(async () => {
     setLoading(true);
     try {
-      const eventsSnap = await getDocs(collection(db, "event"));
-
-      const allProduceSnaps = await Promise.all(
-        eventsSnap.docs.map((eventDoc) =>
-          getDocs(collection(db, "event", eventDoc.id, "produce")),
-        ),
-      );
-
-      const totals: Record<string, number> = {};
-      allProduceSnaps.forEach((snap) => {
-        snap.docs.forEach((d) => {
-          const name = d.id;
-          const lb = d.data().lb ?? 0;
-          totals[name] = (totals[name] ?? 0) + lb;
-        });
-      });
+      const totals = await aggregateInventoryLbs();
 
       const loaded: ProduceStat[] = Object.entries(totals)
         .map(([name, lbs]) => ({ name, lbs: Math.round(lbs * 100) / 100 }))

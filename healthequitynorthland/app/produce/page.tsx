@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { db } from "@/app/lib/firebaseClient";
-import { collection, getDocs } from "firebase/firestore";
+import { aggregateInventoryLbs } from "@/app/produce/inventory/lib/actions";
 import Navbar from "@/app/components/navbar";
 import Footer from "@/app/components/footer";
 import { Chart, DoughnutController, ArcElement, Tooltip, Legend } from "chart.js";
@@ -17,13 +16,6 @@ type ProduceStat = {
 };
 
 
-type Contact = {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-};
-
 export default function ProducePage() {
   const [produce, setProduce] = useState<ProduceStat[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,27 +24,11 @@ export default function ProducePage() {
     const loadProduce = async () => {
       setLoading(true);
       try {
-        // 1. Get all events
-        const eventsSnap = await getDocs(collection(db, "event"));
+        // Aggregate lbs by produce name across all events. Shared with the
+        // inventory pages so the totals can't drift apart.
+        const totals = await aggregateInventoryLbs();
 
-        // 2. For each event, fetch its produce subcollection
-        const allProduceSnaps = await Promise.all(
-          eventsSnap.docs.map((eventDoc) =>
-            getDocs(collection(db, "event", eventDoc.id, "produce")),
-          ),
-        );
-
-        // 3. Aggregate lbs by produce name across all events
-        const totals: Record<string, number> = {};
-        allProduceSnaps.forEach((snap) => {
-          snap.docs.forEach((d) => {
-            const name = d.id; // doc ID is the produce name
-            const lb = d.data().lb ?? 0;
-            totals[name] = (totals[name] ?? 0) + lb;
-          });
-        });
-
-        // 4. Convert to array and sort descending by lbs
+        // Convert to array and sort descending by lbs
         const loaded: ProduceStat[] = Object.entries(totals)
           .map(([name, lbs]) => ({ name, lbs: Math.round(lbs * 100) / 100 }))
           .sort((a, b) => b.lbs - a.lbs);
@@ -66,29 +42,6 @@ export default function ProducePage() {
     };
 
     loadProduce();
-  }, []);
-
-  /* Load contacts */
-  useEffect(() => {
-    const loadContacts = async () => {
-      setLoading(true);
-
-      const snap = await getDocs(collection(db, "contacts"));
-
-      const data: Contact[] = snap.docs.map((doc) => {
-        const d = doc.data();
-        return {
-          id: doc.id,
-          name: d.name || "Unnamed",
-          email: d.email || "",
-          phone: d.phone || "",
-        };
-      });
-
-      setLoading(false);
-    };
-
-    loadContacts();
   }, []);
 
   return (
